@@ -113,3 +113,12 @@ EXTRA_PATTERNS += [
        r'\bhashlib\.(?:sha1|md5)\b|\b(?:SHA1|MD5)\.new\s*\(|MessageDigest\.getInstance\(\s*"(?:SHA-?1|MD5)"',
        "SHA-1 / MD5 (classically broken hash)", "high"),
 ]
+
+# ---------------- Day 4: keypair wrapper functions ----------------
+# Calls like generate_keypair(bits=128). The size comes from the call arguments.
+# (?<!def ) skips the definition line itself, so only real calls match.
+EXTRA_PATTERNS += [
+    mk("RSA-WRAPPER-CALL", "RSA",
+       r'(?<!def )\b(?:generate_keypair|generate_key_pair|gen_keypair|make_keypair|generate_rsa_keys?)\s*\(',
+       "Call to a keypair-generation wrapper function", "medium", True),
+]

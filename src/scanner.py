@@ -15,7 +15,13 @@ import re
 import sys
 from collections import Counter
 
-SCANNER_VERSION = "0.3.0"
+SCANNER_VERSION = "0.4.0"
+
+# Day 4: smarter key-size extraction lives in its own module
+try:
+    from key_size import extract_key_info
+except ImportError:
+    from src.key_size import extract_key_info
 
 SCAN_EXTENSIONS = {
     ".py", ".java", ".js", ".ts", ".c", ".cpp", ".h", ".go", ".rs",
@@ -63,7 +69,7 @@ RSA_PATTERNS = [
 
     # --- Textbook / hand-rolled RSA ---
     {"id": "RSA-MANUAL-PRIME",
-     "regex": r"\bgetPrime\s*\(\s*(?P<bits>\d+)",
+     "regex": r"\bgetPrime\s*\(\s*(?P<bits>\d+)?",
      "desc": "Prime generation, possible hand-rolled RSA key", "confidence": "medium", "keygen": True},
     {"id": "RSA-MANUAL-PHI",
      "regex": r"\b(?:phi|totient)\w*\s*=\s*\(?\s*p\s*-\s*1\s*\)?\s*\*\s*\(?\s*q\s*-\s*1",
@@ -80,7 +86,7 @@ RSA_PATTERNS = [
      "desc": "Prime generation via library helper, possible hand-rolled RSA key",
      "confidence": "medium", "keygen": True},
     {"id": "RSA-MANUAL-INVFUNC",
-     "regex": r"\b(?:mod_inverse|modinv|modinverse|invmod|inverse_mod)\s*\(",
+     "regex": r"\b(?:mod_inverse|modinv|modinverse|invmod|inverse_mod|number\.inverse|gmpy2\.invert)\s*\(",
      "desc": "Modular inverse helper call, private-exponent computation",
      "confidence": "medium", "keygen": False},
     {"id": "RSA-MANUAL-MODPOW-OP",
@@ -159,7 +165,7 @@ def scan_file(path, root):
                 "pattern_id": pat["id"],
                 "description": pat["desc"],
                 "confidence": pat["confidence"],
-                "key_size": extract_key_size(lines, idx, m) if pat["keygen"] else None,
+                **extract_key_info(lines, idx, m, pat),
                 "snippet": line.strip()[:200],
             })
     return findings

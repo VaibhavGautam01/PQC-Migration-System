@@ -76,7 +76,7 @@ RSA_PATTERNS = [
      "desc": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
      "confidence": "low", "keygen": False},
     {"id": "RSA-MANUAL-PRIME-LIB",
-     "regex": r"\b(?:randprime|nextprime|generate_prime)\s*\(\s*(?:2\s*\*\*\s*\d+\s*,\s*2\s*\*\*\s*(?P<bits>\d+))?",
+     "regex": r"(?<!def )\b(?:randprime|nextprime|generate_prime)\s*\(\s*(?:2\s*\*\*\s*\d+\s*,\s*2\s*\*\*\s*(?P<bits>\d+))?",
      "desc": "Prime generation via library helper, possible hand-rolled RSA key",
      "confidence": "medium", "keygen": True},
     {"id": "RSA-MANUAL-INVFUNC",

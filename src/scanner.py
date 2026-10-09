@@ -15,7 +15,7 @@ import re
 import sys
 from collections import Counter
 
-SCANNER_VERSION = "0.1.0"
+SCANNER_VERSION = "0.2.0"
 
 SCAN_EXTENSIONS = {
     ".py", ".java", ".js", ".ts", ".c", ".cpp", ".h", ".go", ".rs",
@@ -72,8 +72,24 @@ RSA_PATTERNS = [
      "regex": r"\bpow\s*\(\s*\w+\s*,\s*-1\s*,",
      "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation", "confidence": "medium", "keygen": False},
     {"id": "RSA-MODEXP",
-     "regex": r"\bpow\s*\(\s*[\w.\[\]]+\s*,\s*[\w.\[\]]+\s*,\s*[\w.\[\]]+\s*\)",
+     "regex": r"\bpow\s*\((?!\s*\w+\s*,\s*-1\s*,).+,.+,.+\)",
      "desc": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+     "confidence": "low", "keygen": False},
+    {"id": "RSA-MANUAL-PRIME-LIB",
+     "regex": r"\b(?:randprime|nextprime|generate_prime)\s*\(\s*(?:2\s*\*\*\s*\d+\s*,\s*2\s*\*\*\s*(?P<bits>\d+))?",
+     "desc": "Prime generation via library helper, possible hand-rolled RSA key",
+     "confidence": "medium", "keygen": True},
+    {"id": "RSA-MANUAL-INVFUNC",
+     "regex": r"\b(?:mod_inverse|modinv|modinverse|invmod|inverse_mod)\s*\(",
+     "desc": "Modular inverse helper call, private-exponent computation",
+     "confidence": "medium", "keygen": False},
+    {"id": "RSA-MANUAL-MODPOW-OP",
+     "regex": r"\(?\s*[A-Za-z_]\w*\s*\*\*\s*[A-Za-z_]\w*\s*\)?\s*%\s*[A-Za-z_]\w*",
+     "desc": "(x ** k) % n, textbook modular exponentiation without pow()",
+     "confidence": "low", "keygen": False},
+    {"id": "RSA-PUBLIC-EXP",
+     "regex": r"\b(?:65537|0x10001)\b",
+     "desc": "Common RSA public exponent e = 65537",
      "confidence": "low", "keygen": False},
 
     # --- Key material ---

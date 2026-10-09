@@ -2,3 +2,8 @@
 # Stage 4 (Shor's demo) needs Qiskit and its local simulator.
 qiskit>=1.0
 qiskit-aer>=0.14
+
+# Dashboard
+streamlit>=1.35
+pandas>=2.0
+plotly>=5.20

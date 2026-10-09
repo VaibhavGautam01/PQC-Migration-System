@@ -19,7 +19,7 @@ RAW_RSA_PATTERNS = [
 
 # Imports that signal crypto libraries
 CRYPTO_IMPORT_PATTERNS = [
-    r"from\s+Crypto", r"import\s+rsa", r"from\s+cryptography",
+    r"from\s+Crypto", r"import\s+rsa\b", r"from\s+cryptography",
     r"import\s+hashlib", r"from\s+Cryptodome",
 ]
 

@@ -15,7 +15,7 @@ import re
 import sys
 from collections import Counter
 
-SCANNER_VERSION = "0.2.0"
+SCANNER_VERSION = "0.3.0"
 
 SCAN_EXTENSIONS = {
     ".py", ".java", ".js", ".ts", ".c", ".cpp", ".h", ".go", ".rs",
@@ -104,7 +104,21 @@ KEY_SIZE_REGEXES = [
     re.compile(r"\binitialize\s*\(\s*(\d+)"),
 ]
 
+# Day 3: baaki primitives (ECC/DSA/DH/AES/SHA) alag file se aate hain
+try:
+    from extra_patterns import EXTRA_PATTERNS
+except ImportError:
+    from src.extra_patterns import EXTRA_PATTERNS
+
+# Purane RSA patterns mein "primitive" key nahi thi, ab sab mein "RSA" lagao
 for _p in RSA_PATTERNS:
+    _p.setdefault("primitive", "RSA")
+
+# Scanner ab is ek list par chalega: RSA + baaki sab
+ALL_PATTERNS = RSA_PATTERNS + EXTRA_PATTERNS
+
+# Regex ek baar compile karo (har line par dobara compile karna slow hota hai)
+for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
 
 
@@ -134,14 +148,14 @@ def scan_file(path, root):
     rel_path = os.path.relpath(path, root).replace(os.sep, "/")
     findings = []
     for idx, line in enumerate(lines):
-        for pat in RSA_PATTERNS:
+        for pat in ALL_PATTERNS:
             m = pat["compiled"].search(line)
             if not m:
                 continue
             findings.append({
                 "file": rel_path,
                 "line": idx + 1,
-                "primitive": "RSA",
+                "primitive": pat["primitive"],
                 "pattern_id": pat["id"],
                 "description": pat["desc"],
                 "confidence": pat["confidence"],
@@ -173,6 +187,7 @@ def build_report(root, findings):
             "total_findings": len(findings),
             "files_with_findings": len({f["file"] for f in findings}),
             "by_pattern": dict(Counter(f["pattern_id"] for f in findings)),
+            "by_primitive": dict(Counter(f["primitive"] for f in findings)),
         },
         "findings": findings,
     }
@@ -192,6 +207,7 @@ def main():
     s = report["summary"]
     print(f"Scanned: {report['scan_root']}")
     print(f"Findings: {s['total_findings']} in {s['files_with_findings']} file(s)")
+    print("By primitive: " + ", ".join(f"{k}={v}" for k, v in sorted(s["by_primitive"].items())))
     for pid, n in sorted(s["by_pattern"].items()):
         print(f"  {pid}: {n}")
 

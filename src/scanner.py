@@ -104,20 +104,20 @@ KEY_SIZE_REGEXES = [
     re.compile(r"\binitialize\s*\(\s*(\d+)"),
 ]
 
-# Day 3: baaki primitives (ECC/DSA/DH/AES/SHA) alag file se aate hain
+# Day 3: the remaining primitives (ECC/DSA/DH/AES/SHA) come from a separate file
 try:
     from extra_patterns import EXTRA_PATTERNS
 except ImportError:
     from src.extra_patterns import EXTRA_PATTERNS
 
-# Purane RSA patterns mein "primitive" key nahi thi, ab sab mein "RSA" lagao
+# The older RSA patterns had no "primitive" key, so tag all of them with "RSA" now
 for _p in RSA_PATTERNS:
     _p.setdefault("primitive", "RSA")
 
-# Scanner ab is ek list par chalega: RSA + baaki sab
+# The scanner now runs on this single list: RSA + everything else
 ALL_PATTERNS = RSA_PATTERNS + EXTRA_PATTERNS
 
-# Regex ek baar compile karo (har line par dobara compile karna slow hota hai)
+# Compile each regex once (recompiling on every line is slow)
 for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
 

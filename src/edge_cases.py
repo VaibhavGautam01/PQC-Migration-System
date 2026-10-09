@@ -6,6 +6,7 @@ Detects:
   2. Indirect crypto usage (imported in one file, used in another)
 """
 import re
+import ast
 from pathlib import Path
 
 # Patterns showing SECURE padding is present
@@ -57,12 +58,56 @@ def find_crypto_imports(repo_path):
     return results
 
 
-def find_indirect_usage(repo_path):
-    """TODO (Day 3): detect crypto defined in one file and used in another."""
-    raise NotImplementedError
+def find_indirect_usage(repo_path, provider_files=None):
+    """Flag files that import a crypto-providing module defined elsewhere.
+
+    provider_files: file names known to contain crypto (e.g. from
+    findings.json). If None, providers are auto-detected by pattern.
+    """
+    repo = Path(repo_path)
+    py_files = [f for f in repo.rglob("*.py")
+                if "venv" not in f.parts and "__pycache__" not in f.parts]
+
+    if provider_files is None:
+        providers = set()
+        for f in py_files:
+            text = f.read_text(errors="ignore")
+            if any(re.search(p, text)
+                   for p in CRYPTO_IMPORT_PATTERNS + RAW_RSA_PATTERNS):
+                providers.add(f.stem)
+    else:
+        providers = {Path(p).stem for p in provider_files}
+
+    flags = []
+    for f in py_files:
+        try:
+            tree = ast.parse(f.read_text(errors="ignore"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module in providers:
+                module, names = node.module, [a.name for a in node.names]
+            elif isinstance(node, ast.Import):
+                hits = [a.name for a in node.names if a.name in providers]
+                if not hits:
+                    continue
+                module, names = hits[0], hits
+            else:
+                continue
+            if module == f.stem:
+                continue
+            flags.append({
+                "flag": "INDIRECT_USAGE",
+                "file": f.name,
+                "line": node.lineno,
+                "detail": f"imports crypto module '{module}' ({', '.join(names)})",
+            })
+    return flags
 
 
 if __name__ == "__main__":
     import sys
     target = sys.argv[1] if len(sys.argv) > 1 else "."
-    print(find_crypto_imports(target))
+    print("Crypto imports:", find_crypto_imports(target))
+    for fl in find_indirect_usage(target):
+        print(fl)

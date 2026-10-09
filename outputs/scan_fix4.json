@@ -1,0 +1,129 @@
+{
+  "scanner_version": "0.4.0",
+  "scan_root": "C:\\Users\\DELL\\Desktop\\port\\PQC-Migration-System\\tests\\fixtures\\sample_keygen_styles.py",
+  "summary": {
+    "total_findings": 9,
+    "files_with_findings": 1,
+    "by_pattern": {
+      "RSA-IMPORT-PYCRYPTODOME": 1,
+      "RSA-GEN-PYCRYPTODOME": 2,
+      "RSA-GEN-CRYPTOGRAPHY": 1,
+      "RSA-PUBLIC-EXP": 1,
+      "RSA-WRAPPER-CALL": 2,
+      "RSA-MANUAL-PRIME": 2
+    },
+    "by_primitive": {
+      "RSA": 9
+    }
+  },
+  "findings": [
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 2,
+      "primitive": "RSA",
+      "pattern_id": "RSA-IMPORT-PYCRYPTODOME",
+      "description": "Imports RSA from PyCryptodome",
+      "confidence": "medium",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "from Crypto.PublicKey import RSA"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 6,
+      "primitive": "RSA",
+      "pattern_id": "RSA-GEN-PYCRYPTODOME",
+      "description": "RSA key generation (PyCryptodome)",
+      "confidence": "high",
+      "key_size": 2048,
+      "modulus_bits": 2048,
+      "size_basis": "literal in call",
+      "snippet": "k1 = RSA.generate(2048)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 7,
+      "primitive": "RSA",
+      "pattern_id": "RSA-GEN-PYCRYPTODOME",
+      "description": "RSA key generation (PyCryptodome)",
+      "confidence": "high",
+      "key_size": 3072,
+      "modulus_bits": 3072,
+      "size_basis": "resolved from 'KEY_BITS'",
+      "snippet": "k2 = RSA.generate(KEY_BITS)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 8,
+      "primitive": "RSA",
+      "pattern_id": "RSA-GEN-CRYPTOGRAPHY",
+      "description": "RSA key generation (cryptography lib)",
+      "confidence": "high",
+      "key_size": 4096,
+      "modulus_bits": 4096,
+      "size_basis": "keyword argument",
+      "snippet": "k3 = rsa.generate_private_key(public_exponent=65537, key_size=4096)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 8,
+      "primitive": "RSA",
+      "pattern_id": "RSA-PUBLIC-EXP",
+      "description": "Common RSA public exponent e = 65537",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "k3 = rsa.generate_private_key(public_exponent=65537, key_size=4096)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 9,
+      "primitive": "RSA",
+      "pattern_id": "RSA-WRAPPER-CALL",
+      "description": "Call to a keypair-generation wrapper function",
+      "confidence": "medium",
+      "key_size": 128,
+      "modulus_bits": 256,
+      "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
+      "snippet": "pub, priv = generate_keypair(bits=128)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 10,
+      "primitive": "RSA",
+      "pattern_id": "RSA-WRAPPER-CALL",
+      "description": "Call to a keypair-generation wrapper function",
+      "confidence": "medium",
+      "key_size": 1024,
+      "modulus_bits": 1024,
+      "size_basis": "keyword argument",
+      "snippet": "pub2, priv2 = generate_keypair(key_size=1024)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 14,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME",
+      "description": "Prime generation, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": 1024,
+      "modulus_bits": 2048,
+      "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
+      "snippet": "p = number.getPrime(half)"
+    },
+    {
+      "file": "sample_keygen_styles.py",
+      "line": 15,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME",
+      "description": "Prime generation, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": 256,
+      "modulus_bits": 512,
+      "size_basis": "literal in call (per-prime, modulus = 2 x)",
+      "snippet": "q = number.getPrime(256)"
+    }
+  ]
+}

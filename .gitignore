@@ -1,0 +1,11 @@
+
+# Streamlit secrets, logs, temp outputs, archives, coverage
+.streamlit/secrets.toml
+*.log
+outputs/*_test.json
+outputs/tmp_*
+*.zip
+*.rar
+*.7z
+.coverage
+htmlcov/

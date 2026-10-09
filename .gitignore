@@ -28,3 +28,6 @@ data/targets/
 .DS_Store
 
 outputs/scan_*.json
+outputs/*.png
+outputs/toykeys/
+outputs/findings_*_merged.json

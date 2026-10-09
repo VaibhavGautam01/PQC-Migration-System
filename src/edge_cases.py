@@ -1,34 +1,57 @@
 """
 edge_cases.py - Edge-case detection for the PQC Migration Advisor.
 
-Detects:
-  1. RSA used without secure padding (textbook RSA)
-  2. Indirect crypto usage (imported in one file, used in another)
+Finds crypto problems that a plain signature scan reports only as
+"RSA is used":
+
+  1. check_padding        - RSA used without OAEP/PKCS1 padding (textbook RSA)
+  2. find_crypto_imports  - files that import known crypto libraries
+  3. find_indirect_usage  - files that use crypto defined in another file
+
+Used by run_padding_check.py and merge_flags.py.
 """
-import re
 import ast
+import re
 from pathlib import Path
 
-# Patterns showing SECURE padding is present
+# Patterns showing a secure padding scheme is present
 SAFE_PADDING_PATTERNS = [r"OAEP", r"PKCS1_OAEP", r"PKCS1_v1_5", r"PSS"]
 
-# Patterns showing raw (textbook) RSA
+# Patterns showing raw (textbook) RSA arithmetic
 RAW_RSA_PATTERNS = [
     r"pow\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\)",   # pow(m, e, n)
     r"\*\*\s*\w+\s*%\s*\w+",                       # m**e % n
 ]
 
-# Imports that signal crypto libraries
+# Imports that signal a crypto library
 CRYPTO_IMPORT_PATTERNS = [
-    r"from\s+Crypto", r"import\s+rsa\b", r"from\s+cryptography",
-    r"import\s+hashlib", r"from\s+Cryptodome",
+    r"from\s+Crypto",
+    r"import\s+rsa\b",          # \b avoids matching 'import rsa_utils'
+    r"from\s+cryptography",
+    r"import\s+hashlib",
+    r"from\s+Cryptodome",
 ]
 
-WINDOW = 15  # lines around an RSA hit to search for padding
+# Lines searched on each side of an RSA hit when looking for padding
+WINDOW = 15
+
+# Folders skipped when walking a repository
+SKIP_DIRS = {"venv", "__pycache__", ".git"}
+
+
+def _python_files(repo_path):
+    """All .py files under repo_path, skipping virtualenvs and caches."""
+    return [f for f in Path(repo_path).rglob("*.py")
+            if not SKIP_DIRS.intersection(f.parts)]
 
 
 def check_padding(file_path, rsa_line):
-    """Return a flag dict if no secure padding appears near an RSA line."""
+    """Flag RSA usage with no secure padding near the given line.
+
+    Looks WINDOW lines either side of rsa_line. Returns a flag dict if raw
+    RSA arithmetic is present or no padding pattern is found, else None.
+    This is a heuristic: confirm each flag by reading the code.
+    """
     lines = Path(file_path).read_text(errors="ignore").splitlines()
     start = max(0, rsa_line - WINDOW)
     end = min(len(lines), rsa_line + WINDOW)
@@ -48,9 +71,9 @@ def check_padding(file_path, rsa_line):
 
 
 def find_crypto_imports(repo_path):
-    """Map each file to the crypto libraries it imports."""
+    """Map each file to the crypto-import patterns it matches."""
     results = {}
-    for f in Path(repo_path).rglob("*.py"):
+    for f in _python_files(repo_path):
         text = f.read_text(errors="ignore")
         hits = [p for p in CRYPTO_IMPORT_PATTERNS if re.search(p, text)]
         if hits:
@@ -59,14 +82,13 @@ def find_crypto_imports(repo_path):
 
 
 def find_indirect_usage(repo_path, provider_files=None):
-    """Flag files that import a crypto-providing module defined elsewhere.
+    """Flag files that import a crypto module defined in another file.
 
-    provider_files: file names known to contain crypto (e.g. from
+    provider_files: file names known to contain crypto (for example from
     findings.json). If None, providers are auto-detected by pattern.
+    Returns a list of INDIRECT_USAGE flag dicts.
     """
-    repo = Path(repo_path)
-    py_files = [f for f in repo.rglob("*.py")
-                if "venv" not in f.parts and "__pycache__" not in f.parts]
+    py_files = _python_files(repo_path)
 
     if provider_files is None:
         providers = set()

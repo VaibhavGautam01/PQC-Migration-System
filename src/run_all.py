@@ -14,6 +14,8 @@ Output:
 """
 import json
 import os
+import re
+import subprocess
 import sys
 
 # Make "import scanner" work no matter which folder we run this from.
@@ -36,6 +38,7 @@ OUT_PATH = "outputs/findings.json"
 REQUIRED_KEYS = {
     "project", "file", "line", "primitive", "pattern_id", "description",
     "confidence", "key_size", "modulus_bits", "size_basis", "snippet",
+    "is_default",
 }
 
 
@@ -63,6 +66,62 @@ def check_schema(findings):
     return problems
 
 
+def git_commit(path):
+    """Return the HEAD commit hash of a cloned target repo, or None.
+
+    Saving it makes a scan reproducible: anyone can check out the same
+    commit of the target project and get the same findings.
+    """
+    try:
+        res = subprocess.run(["git", "-C", path, "rev-parse", "HEAD"],
+                             capture_output=True, text=True, timeout=15)
+        return res.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def comes_from_default(name, lines, depth=0):
+    """True if variable `name` ultimately comes from a function DEFAULT value.
+
+    Both of these count:
+        def generate_keypair(bits=256):    # name == "bits"
+        half = key_size // 2               # name == "half"; key_size has a default
+    A default is not proof of real use: callers may pass a different value.
+    """
+    if depth > 3:
+        return False
+    esc = re.escape(name)
+    def_rx = re.compile(r"\bdef\s+\w+\s*\(.*\b" + esc + r"\s*(?::\s*\w+)?\s*=\s*\d+")
+    div_rx = re.compile(r"^\s*" + esc + r"\s*=\s*(\w+)\s*//\s*\d+")
+    for ln in lines:
+        if def_rx.search(ln):
+            return True
+    for ln in lines:
+        m = div_rx.match(ln)
+        if m and comes_from_default(m.group(1), lines, depth + 1):
+            return True
+    return False
+
+
+def mark_defaults(root, findings):
+    """Add finding["is_default"] = True when key_size is only a default value.
+
+    Fixes the dashboard overcount: rsa_utils.py defaults (bits=256) are not
+    the sizes really used (callers pass bits=128).
+    """
+    cache = {}
+    for f in findings:
+        f["is_default"] = False
+        m = re.match(r"resolved from '(\w+)'", f.get("size_basis") or "")
+        if not m:
+            continue
+        path = os.path.join(root, f["file"])
+        if path not in cache:
+            with open(path, encoding="utf-8", errors="ignore") as fh:
+                cache[path] = fh.read().splitlines()
+        f["is_default"] = comes_from_default(m.group(1), cache[path])
+
+
 def main():
     projects = {}      # per-project summary (counts), copied from scanner
     all_findings = []  # merged list of every finding from both repos
@@ -73,7 +132,9 @@ def main():
             return 1
         # scan_path walks the folder; tag_and_sort labels and orders results
         found = tag_and_sort(name, scanner.scan_path(path))
+        mark_defaults(path, found)  # flag sizes that are only defaults
         projects[name] = scanner.build_report(path, found)["summary"]
+        projects[name]["commit"] = git_commit(path)  # reproducibility
         all_findings.extend(found)
 
     # Safety net: refuse to write a file that downstream stages cannot read.
@@ -85,7 +146,7 @@ def main():
         overall[f["primitive"]] = overall.get(f["primitive"], 0) + 1
 
     report = {
-        "schema_version": "1.0",                    # bump if field names change
+        "schema_version": "1.1",                    # bump if field names change
         "scanner_version": scanner.SCANNER_VERSION,  # which scanner produced this
         "projects": projects,
         "by_primitive": overall,

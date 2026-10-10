@@ -88,6 +88,8 @@ def load(path, mtime):
 
 def risk_label(row):
     """Classify one finding. Weak RSA-style keys are breakable WITHOUT quantum."""
+    if bool(row.get("is_default", False)):
+        return "Default value"
     if row["primitive"] in SHOR:
         m = row["modulus_bits"]
         if pd.notna(m) and m < 1024:
@@ -101,7 +103,7 @@ def risk_label(row):
 
 
 RISK_COLORS = {"Classically breakable": "#FF1744", "Weak key + Shor": "#FF9100",
-               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE"}
+               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE", "Default value": "#FFD740"}
 
 if not os.path.isfile(DATA_PATH):
     st.error("outputs/findings.json not found. Run: python src/run_all.py")

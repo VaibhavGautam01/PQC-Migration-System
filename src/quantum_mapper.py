@@ -90,6 +90,24 @@ ALIASES = {
 
 _SIZE_PATTERN = re.compile(r"(128|192|224|256|384|512)")
 
+# Routing rule: which quantum algorithm attacks which primitive family.
+FAMILY_TO_ALGORITHM = {
+    "asymmetric": SHOR,    # factoring / discrete log -> full break
+    "symmetric": GROVER,   # key search -> quadratic speed-up only
+    "hash": GROVER,        # preimage search -> quadratic speed-up only
+}
+
+
+def _validate_table():
+    """Fail fast if a table entry disagrees with the routing rule."""
+    for name, entry in PRIMITIVE_TABLE.items():
+        expected = FAMILY_TO_ALGORITHM[entry["family"]]
+        if entry["quantum_algorithm"] != expected:
+            raise ValueError(f"{name}: {entry['family']} must route to {expected}")
+
+
+_validate_table()
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -106,7 +124,7 @@ def canonical_primitive(name):
         return ALIASES[norm]
     if norm.startswith("AES"):
         return "AES"
-    if norm.startswith("SHA") or norm.startswith("SHAKE"):
+    if norm.startswith(("SHA", "HMACSHA")):
         return "SHA"
     return None
 
@@ -136,6 +154,35 @@ def map_primitive(name):
     return entry
 
 
+def route_algorithm(name):
+    """Return the quantum algorithm (SHOR / GROVER) for a primitive name.
+
+    Returns None if the primitive is not recognised.
+    """
+    entry = map_primitive(name)
+    return entry["quantum_algorithm"] if entry else None
+
+
+def grover_assessment(canonical, bits):
+    """Plain-English reading of Grover's impact for AES/SHA findings.
+
+    Returns None for primitives that Grover's does not target.
+    """
+    if canonical not in ("AES", "SHA"):
+        return None
+    if not bits:
+        return "Size unknown; Grover's impact cannot be quantified."
+    half = bits // 2
+    if half >= 128:
+        text = f"About {half}-bit post-quantum security: comfortable margin."
+    else:
+        text = (f"About {half}-bit by naive Grover halving: reduced margin, not a "
+                "break. A larger size (AES-256, SHA-384 or longer) adds headroom.")
+    if canonical == "SHA" and bits == 160:
+        text += " SHA-1 is also classically weak (practical collisions exist)."
+    return text
+
+
 def map_finding(finding):
     """Enrich one scanner finding with its quantum-threat information.
 
@@ -157,6 +204,7 @@ def map_finding(finding):
             "post_quantum_security_bits": None,
             "size_used_bits": finding.get("modulus_bits") or finding.get("key_size"),
             "size_warning": None,
+            "grover_assessment": None,
             "mapper_note": f"Unrecognised primitive: {name!r}",
         })
         return result
@@ -189,6 +237,7 @@ def map_finding(finding):
         "post_quantum_security_bits": post_quantum_bits,
         "size_used_bits": bits,
         "size_warning": size_warning,
+        "grover_assessment": grover_assessment(canonical, bits),
         "mapper_note": entry["note"],
     })
     return result

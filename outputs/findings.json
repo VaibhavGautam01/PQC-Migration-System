@@ -21,10 +21,11 @@
       "commit": "45148063f99577e3064e3ef45392e2ecbd8c0e45"
     },
     "Final-Year-project-part1": {
-      "total_findings": 15,
+      "total_findings": 17,
       "files_with_findings": 4,
       "by_pattern": {
         "RSA-WRAPPER-CALL": 3,
+        "RSA-MANUAL-PRIME-ISPRIME": 2,
         "RSA-MANUAL-PHI": 2,
         "RSA-MANUAL-MODINV": 1,
         "RSA-MANUAL-PRIME-LIB": 5,
@@ -33,16 +34,16 @@
         "RSA-MODEXP": 2
       },
       "by_primitive": {
-        "RSA": 15
+        "RSA": 17
       },
       "commit": "bb6d944c17c964acab98a10dad0071eb26633e79"
     }
   },
   "by_primitive": {
-    "RSA": 23,
+    "RSA": 25,
     "SHA": 1
   },
-  "total_findings": 24,
+  "total_findings": 26,
   "findings": [
     {
       "file": "app.py",
@@ -216,6 +217,20 @@
     },
     {
       "file": "r_channel_stego.py",
+      "line": 42,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-ISPRIME",
+      "description": "Primality test used to pick primes, possible hand-rolled (tiny) RSA key",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "primes = [p for p in range(2, 40) if isprime(p)]",
+      "project": "Final-Year-project-part1",
+      "is_default": false
+    },
+    {
+      "file": "r_channel_stego.py",
       "line": 52,
       "primitive": "RSA",
       "pattern_id": "RSA-MANUAL-PHI",
@@ -225,6 +240,20 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "phi = (p - 1) * (q - 1)",
+      "project": "Final-Year-project-part1",
+      "is_default": false
+    },
+    {
+      "file": "r_channel_stego.py",
+      "line": 54,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-ISPRIME",
+      "description": "Primality test used to pick primes, possible hand-rolled (tiny) RSA key",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "e_candidates = [c for c in range(3, phi) if isprime(c) and phi % c != 0]",
       "project": "Final-Year-project-part1",
       "is_default": false
     },

@@ -1,0 +1,131 @@
+{
+  "scanner_version": "0.4.0",
+  "scan_root": "C:\\Users\\DELL\\Desktop\\port\\PQC-Migration-System\\data\\targets\\steganography",
+  "summary": {
+    "total_findings": 9,
+    "files_with_findings": 3,
+    "by_pattern": {
+      "RSA-WRAPPER-CALL": 1,
+      "HASH-SHA2-HASHLIB": 1,
+      "RSA-PUBLIC-EXP": 1,
+      "RSA-MANUAL-PRIME": 2,
+      "RSA-MANUAL-PHI": 1,
+      "RSA-MANUAL-INVFUNC": 1,
+      "RSA-MODEXP": 2
+    },
+    "by_primitive": {
+      "RSA": 8,
+      "SHA": 1
+    }
+  },
+  "findings": [
+    {
+      "file": "app.py",
+      "line": 263,
+      "primitive": "RSA",
+      "pattern_id": "RSA-WRAPPER-CALL",
+      "description": "Call to a keypair-generation wrapper function",
+      "confidence": "medium",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "priv_path, pub_path = rsa_crypto.generate_keypair("
+    },
+    {
+      "file": "frame_selector.py",
+      "line": 32,
+      "primitive": "SHA",
+      "pattern_id": "HASH-SHA2-HASHLIB",
+      "description": "SHA-2 hash (hashlib)",
+      "confidence": "high",
+      "key_size": 256,
+      "modulus_bits": null,
+      "size_basis": "literal in call",
+      "snippet": "digest_hex = hashlib.sha256(secret_key.encode(\"utf-8\")).hexdigest()"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 45,
+      "primitive": "RSA",
+      "pattern_id": "RSA-PUBLIC-EXP",
+      "description": "Common RSA public exponent e = 65537",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "e = 65537"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 48,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME",
+      "description": "Prime generation, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": 512,
+      "modulus_bits": 1024,
+      "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
+      "snippet": "p = number.getPrime(half)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 49,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME",
+      "description": "Prime generation, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": 512,
+      "modulus_bits": 1024,
+      "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
+      "snippet": "q = number.getPrime(half)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 53,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PHI",
+      "description": "Euler totient (p-1)(q-1), textbook RSA key setup",
+      "confidence": "high",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "phi = (p - 1) * (q - 1)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 56,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-INVFUNC",
+      "description": "Modular inverse helper call, private-exponent computation",
+      "confidence": "medium",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "d = number.inverse(e, phi)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 142,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "c = pow(m, e, n)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 170,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "modulus_bits": null,
+      "size_basis": null,
+      "snippet": "m = pow(c, d, n)"
+    }
+  ]
+}

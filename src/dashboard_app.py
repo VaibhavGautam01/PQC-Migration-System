@@ -1,4 +1,4 @@
-"""
+﻿"""
 dashboard_app.py - Streamlit dashboard for the PQC Migration Advisor.
 
 Reads outputs/findings.json (made by src/run_all.py) and shows the results
@@ -9,8 +9,10 @@ Run (from the repo root):
     pip install streamlit pandas plotly
     streamlit run src/dashboard_app.py
 """
+import importlib.util
 import json
 import os
+import sys
 
 import pandas as pd
 import plotly.express as px
@@ -18,6 +20,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from team_progress import evaluate, find, names, text  # noqa: E402
 DATA_PATH = os.path.join(ROOT, "outputs", "findings.json")
 
 # One colour per primitive, reused in every chart so the eye can follow it.
@@ -105,6 +109,20 @@ if not os.path.isfile(DATA_PATH):
 
 raw, df = load(DATA_PATH, os.path.getmtime(DATA_PATH))
 
+# Team status is detected from repo files; it drives the stage and week cards.
+TEAM = evaluate(ROOT, raw)
+TEAM_PCT = sum(m["pct"] for m in TEAM) / len(TEAM)
+_p = {m["name"].split()[0]: m["pct"] for m in TEAM}
+_st = lambda x: "done" if x >= 1 else "wip" if x > 0 else "planned"
+STAGES = [("🔍 Detection", "scanner, extra_patterns, key_size, run_all", _st(_p["Tarun"])),
+          ("🕵️ Edge cases", "padding checks, indirect usage", _st(_p["Vaibhav"])),
+          ("⚛️ Quantum mapping", "primitive to Shor / Grover", _st(_p["Uday"])),
+          ("📊 Risk and qubit cost", "estimator done; risk report and CBOM in Week 3",
+           "wip" if find(ROOT, "qubit_estimator.py") else "planned"),
+          ("🎬 Shor's demo", "circuit skeleton built; simulator run in Week 2",
+           "wip" if find(ROOT, "shors_demo.py") else "planned")]
+WEEKS[0] = ("Week 1", f"Team deliverables: {TEAM_PCT:.0%} complete", _st(TEAM_PCT))
+
 
 def style(fig, h=340):
     """Shared dark look for every plotly chart."""
@@ -142,6 +160,7 @@ st.markdown(f"""
 <span class="chip">Scanner v{raw['scanner_version']}</span>
 <span class="chip">{raw['total_findings']} findings</span>
 <span class="chip">{len(raw['projects'])} projects</span>
+<span class="chip">Team Week 1: {TEAM_PCT:.0%}</span>
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
 kpis = [("Findings shown", len(f), "#00B0FF"), ("Files with crypto", f["file"].nunique(), "#B388FF"),
@@ -154,7 +173,9 @@ for col, (label, val, color) in zip(st.columns(len(kpis)), kpis):
                  unsafe_allow_html=True)
 st.write("")
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🔑 Key sizes and risk", "📋 Findings", "🧭 Pipeline and progress"])
+tab0, tab1, tab2, tab3, tabE, tabM, tabQ, tab4 = st.tabs(
+    ["👥 Team Week 1", "📊 Overview", "🔑 Key sizes and risk", "📋 Findings", "🕵️ Edge cases",
+     "⚛️ Mapping", "📈 Qubit cost", "🧭 Pipeline and progress"])
 
 # ------------------------------------------------------------------ tab 1
 with tab1:
@@ -241,4 +262,108 @@ with tab4:
         done = sum(1 for w in WEEKS if w[2] == "done")
         st.progress(done / len(WEEKS), text=f"Sprint progress: {done} of {len(WEEKS)} weeks complete")
 
+# ------------------------------------------------------------------ team
+EDGE_ROWS = [
+    ("Image project", "NO_PADDING", "rsa_utils.py:54", "Confirmed", "return pow(m, e, n): textbook RSA, no OAEP/PKCS1"),
+    ("Image project", "NO_PADDING", "rsa_utils.py:59", "Confirmed", "return pow(c, d, n): textbook RSA, no padding"),
+    ("Image project", "INDIRECT_USAGE", "app.py, main.py, rsa_lsb_stego.py, r_channel_stego.py", "Confirmed", "import functions from rsa_utils.py"),
+    ("Image project", "INDIRECT_USAGE", "app.py:25, main.py:12", "Confirmed", "import from r_channel_stego.py, which has its own RSA setup"),
+    ("Image project", "False positive", "app.py, main.py", "Fixed", "`import rsa` matched `import rsa_utils`; fixed with \\b"),
+    ("Video project", "NO_PADDING", "rsa_crypto.py:142", "Confirmed", "c = pow(m, e, n): textbook RSA encryption"),
+    ("Video project", "NO_PADDING", "rsa_crypto.py:170", "Confirmed", "m = pow(c, d, n): textbook RSA decryption"),
+    ("Video project", "INDIRECT_USAGE", "app.py, pipeline.py", "Confirmed", "import rsa_crypto and frame_selector"),
+]
+MAP = [("RSA", "Shor's", "Integer factoring", "Completely broken", "Critical"),
+       ("ECC", "Shor's", "Elliptic-curve discrete log", "Completely broken", "Critical"),
+       ("DSA", "Shor's", "Discrete log", "Completely broken", "Critical"),
+       ("DH", "Shor's", "Discrete log", "Completely broken", "Critical"),
+       ("AES", "Grover's", "Key search", "Effective strength about halved", "Moderate"),
+       ("SHA", "Grover's", "Preimage search", "Effective strength about halved", "Moderate")]
+
+
+def kpi_row(items):
+    for col, (label, val, color) in zip(st.columns(len(items)), items):
+        col.markdown(f'<div class="kpi" style="--c:{color}"><b>{val}</b><span>{label}</span></div>',
+                     unsafe_allow_html=True)
+
+
+with tab0:
+    st.markdown('<div class="note">🔄 Status is detected from the files in this repo. When a member '
+                'pushes his files, refresh the page and his tasks turn Done.</div>', unsafe_allow_html=True)
+    st.progress(TEAM_PCT, text=f"Team Week 1: {TEAM_PCT:.0%} · "
+                f"{sum(x[2] for m in TEAM for x in m['tasks']):g} of 20 tasks")
+    for col, m in zip(st.columns(4), TEAM):
+        col.markdown(f'<div class="kpi" style="--c:{m["color"]}"><b>{m["pct"]:.0%}</b>'
+                     f'<span>{m["name"]}<br>{m["role"]}</span></div>', unsafe_allow_html=True)
+        for day, label, score, note in m["tasks"]:
+            badge, color = (("✅ Done", "#00C853") if score == 1 else
+                            ("🔄 Partial", "#FFAB00") if score > 0 else ("⏳ Pending", "#78909C"))
+            extra = f'<br><span style="color:#FFAB00;font-size:.75rem">{note}</span>' if note else ""
+            col.markdown(f'<div class="card"><span class="badge" style="background:{color}">{badge}</span> '
+                         f'<b>{day}</b><br><span style="font-size:.85rem">{label}</span>{extra}</div>',
+                         unsafe_allow_html=True)
+
+with tabE:
+    st.caption("Vaibhav Gautam · src/edge_cases.py · results from docs/edge_case_validation.md "
+               "(this tab ignores the sidebar filters)")
+    e = pd.DataFrame(EDGE_ROWS, columns=["Project", "Flag", "Location", "Result", "Evidence"])
+    kpi_row([("Padding flags confirmed", int((e["Flag"] == "NO_PADDING").sum()), "#FF5252"),
+             ("Indirect-usage groups", int((e["Flag"] == "INDIRECT_USAGE").sum()), "#B388FF"),
+             ("False positives fixed", int((e["Flag"] == "False positive").sum()), "#FFAB40"),
+             ("Merged into findings.json", "yes" if TEAM[1]["tasks"][4][2] == 1 else "not yet", "#00B0FF")])
+    st.dataframe(e, hide_index=True)
+    st.markdown("""<div class="note">🔓 <b>Reduced-key attacks.</b> A 31-bit modulus (image project) was factored in
+0.0002 s and a 95-bit modulus (video project) in 0.23 s; both recovered the message from public information only.
+Length + CRC32 framing is not real padding, and frame selection covers only indices 0-255.</div>""",
+                unsafe_allow_html=True)
+    st.caption("Functions in edge_cases.py: " + ", ".join(sorted(names(find(ROOT, "edge_cases.py")))))
+
+with tabM:
+    st.caption("Uday Pratap Singh · src/quantum_mapper.py (this tab ignores the sidebar filters)")
+    mp = find(ROOT, "quantum_mapper.py")
+    if mp:
+        st.success("✅ quantum_mapper.py detected: " + ", ".join(sorted(names(mp))))
+    else:
+        st.warning("⏳ quantum_mapper.py is not in the repo yet. The table below is a preview built from the "
+                   "roadmap's mapping rules; it will sit next to Uday's module once it is pushed.")
+    t = pd.DataFrame(MAP, columns=["Primitive", "Broken by", "Attack", "Impact", "Severity"])
+    t["Findings"] = t["Primitive"].map(df["primitive"].value_counts()).fillna(0).astype(int)
+    st.dataframe(t, hide_index=True)
+    n_s, n_g = int(df["primitive"].isin(SHOR).sum()), int(df["primitive"].isin(GROVER).sum())
+    st.plotly_chart(style(px.pie(names=["Shor's", "Grover's"], values=[n_s, n_g], hole=0.55,
+                                 title="Findings by quantum algorithm",
+                                 color_discrete_sequence=["#7C4DFF", "#00E5FF"]), 300), key="algo")
+    rep = find(ROOT, pred=lambda n: n.startswith("mapping_report") and n.endswith(".md"))
+    if rep:
+        with st.expander("mapping_report.md"):
+            st.markdown(text(rep))
+
+with tabQ:
+    st.caption("Yatharth Raghuvanshi · notebook/qubit_estimator.py (this tab ignores the sidebar filters)")
+    ep = find(ROOT, "qubit_estimator.py")
+    if not ep:
+        st.warning("qubit_estimator.py not found.")
+    else:
+        spec = importlib.util.spec_from_file_location("qubit_estimator", ep)
+        qe = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(qe)
+        k = df[df["primitive"].isin(SHOR) & df["modulus_bits"].notna()]
+        q = k.groupby("modulus_bits").size().reset_index(name="findings")
+        q["label"] = q.apply(lambda r: f"{int(r['modulus_bits'])} bits (n={r['findings']})", axis=1)
+        q["logical_qubits"] = q["modulus_bits"].astype(int).map(qe.shor_logical_qubits)
+        st.plotly_chart(style(px.bar(q, x="label", y="logical_qubits", text="logical_qubits",
+                                     title="Shor's logical qubits for the moduli found (q = 2n + 3)",
+                                     color_discrete_sequence=["#1DE9B6"])), key="qubits")
+        st.caption(f"{int(df['primitive'].isin(SHOR).sum()) - len(k)} Shor-vulnerable findings have no "
+                   "modulus size and are skipped.")
+        bits = st.select_slider("Try a key size (bits)", [128, 256, 512, 1024, 2048, 3072, 4096], 2048)
+        st.metric(f"Shor's on {bits}-bit RSA", f"{qe.shor_logical_qubits(bits):,} logical qubits")
+        g = pd.DataFrame([(b, qe.grover_effective_security(b), qe.grover_logical_qubits(b),
+                           qe.grover_verdict(b)) for b in (128, 192, 256)],
+                         columns=["AES key bits", "Effective bits", "Logical qubits", "Verdict"])
+        st.dataframe(g, hide_index=True)
+        st.markdown('<div class="note">All counts are <b>logical</b> qubits. Real hardware needs far more '
+                    'physical qubits for error correction.</div>', unsafe_allow_html=True)
+
 st.caption("Built with ❤️ and a healthy fear of quantum computers · HCST Mathura · AKTU")
+

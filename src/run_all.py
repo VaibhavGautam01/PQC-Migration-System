@@ -19,6 +19,7 @@ import sys
 # Make "import scanner" work no matter which folder we run this from.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scanner  # our Stage 1 scanner (uses scan_path and build_report)
+from edge_merge import add_edge_flags
 
 # Display name -> local folder. data/targets/ is gitignored, so the target
 # repos are never pushed; they must be cloned there first.
@@ -92,6 +93,7 @@ def main():
         "findings": all_findings,
     }
 
+    add_edge_flags(report, TARGETS)
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2)

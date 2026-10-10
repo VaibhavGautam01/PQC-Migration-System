@@ -85,6 +85,15 @@ RSA_PATTERNS = [
      "regex": r"(?<!def )\b(?:randprime|nextprime|generate_prime)\s*\(\s*(?:2\s*\*\*\s*\d+\s*,\s*2\s*\*\*\s*(?P<bits>\d+))?",
      "desc": "Prime generation via library helper, possible hand-rolled RSA key",
      "confidence": "medium", "keygen": True},
+    # Week 2 Day 2 fix (found by cross-check Check B): r_channel_stego.py picks its
+    # RSA primes with sympy isprime(), e.g. primes = [p for p in range(2, 40) if isprime(p)].
+    # The older prime patterns (getPrime / randprime / nextprime) never matched this
+    # style, so the prime-selection step went unflagged (phi and modular-inverse lines in that file were already caught). Confidence is "low" because
+    # isprime() is a generic helper that can also appear in non-crypto code.
+    {"id": "RSA-MANUAL-PRIME-ISPRIME",
+     "regex": r"(?<!def )\bisprime\s*\(",
+     "desc": "Primality test used to pick primes, possible hand-rolled (tiny) RSA key",
+     "confidence": "low", "keygen": False},
     {"id": "RSA-MANUAL-INVFUNC",
      "regex": r"\b(?:mod_inverse|modinv|modinverse|invmod|inverse_mod|number\.inverse|gmpy2\.invert)\s*\(",
      "desc": "Modular inverse helper call, private-exponent computation",

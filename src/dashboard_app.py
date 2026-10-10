@@ -88,6 +88,8 @@ def load(path, mtime):
 
 def risk_label(row):
     """Classify one finding. Weak RSA-style keys are breakable WITHOUT quantum."""
+    if bool(row.get("is_default", False)):
+        return "Default value"
     if row["primitive"] in SHOR:
         m = row["modulus_bits"]
         if pd.notna(m) and m < 1024:
@@ -101,7 +103,7 @@ def risk_label(row):
 
 
 RISK_COLORS = {"Classically breakable": "#FF1744", "Weak key + Shor": "#FF9100",
-               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE"}
+               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE", "Default value": "#FFD740"}
 
 if not os.path.isfile(DATA_PATH):
     st.error("outputs/findings.json not found. Run: python src/run_all.py")
@@ -304,19 +306,40 @@ with tab0:
                          unsafe_allow_html=True)
 
 with tabE:
-    st.caption("Vaibhav Gautam · src/edge_cases.py · results from docs/edge_case_validation.md "
+    st.caption("Vaibhav Gautam ? src/edge_cases.py ? read live from outputs/findings.json "
                "(this tab ignores the sidebar filters)")
-    e = pd.DataFrame(EDGE_ROWS, columns=["Project", "Flag", "Location", "Result", "Evidence"])
-    kpi_row([("Padding flags confirmed", int((e["Flag"] == "NO_PADDING").sum()), "#FF5252"),
-             ("Indirect-usage groups", int((e["Flag"] == "INDIRECT_USAGE").sum()), "#B388FF"),
-             ("False positives fixed", int((e["Flag"] == "False positive").sum()), "#FFAB40"),
-             ("Merged into findings.json", "yes" if TEAM[1]["tasks"][4][2] == 1 else "not yet", "#00B0FF")])
-    st.dataframe(e, hide_index=True)
-    st.markdown("""<div class="note">🔓 <b>Reduced-key attacks.</b> A 31-bit modulus (image project) was factored in
-0.0002 s and a 95-bit modulus (video project) in 0.23 s; both recovered the message from public information only.
-Length + CRC32 framing is not real padding, and frame selection covers only indices 0-255.</div>""",
-                unsafe_allow_html=True)
+    ec = raw.get("edge_cases") or {}
+    if not ec:
+        st.warning("No edge_cases section in findings.json yet. Run src/run_all.py after the edge-case merge.")
+    else:
+        # The flagged finding for each padding site, so the table can show the actual code line
+        code_of = {(f.get("project"), f["file"], f["line"]): f.get("snippet", "")
+                   for f in raw["findings"] if "edge_flag" in f}
+        pad, ind = [], []
+        for proj, groups in ec.items():
+            for r in groups.get("padding", []):
+                pad.append({"Project": proj, "File": r["file"], "Line": r["line"], "Flag": r["flag"],
+                            "Code": code_of.get((proj, r["file"], r["line"]), ""),
+                            "Why it matters": r["detail"]})
+            for r in groups.get("indirect_usage", []):
+                ind.append({"Project": proj, "File": r["file"], "Line": r["line"], "Detail": r["detail"]})
+        for col, (label, val, color) in zip(st.columns(4), [
+                ("Padding flags", len(pad), "#FF5252"),
+                ("Indirect-usage links", len(ind), "#B388FF"),
+                ("Projects covered", len(ec), "#FFAB40"),
+                ("Findings carrying a flag", len(code_of), "#00B0FF")]):
+            col.markdown(f'<div class="kpi" style="--c:{color}"><b>{val}</b><span>{label}</span></div>',
+                         unsafe_allow_html=True)
+        st.subheader("Textbook RSA: no OAEP/PKCS1 padding")
+        st.dataframe(pd.DataFrame(pad), hide_index=True)
+        st.subheader("Crypto imported in one file, used in another")
+        st.dataframe(pd.DataFrame(ind), hide_index=True)
+        st.markdown('<div class="note">?? <b>Reduced-key attacks</b> (from docs/edge_case_validation.md): '
+                    'a 31-bit modulus (image project) was factored in 0.0002 s and a 95-bit modulus '
+                    '(video project) in 0.23 s; both recovered the message from public information only.</div>',
+                    unsafe_allow_html=True)
     st.caption("Functions in edge_cases.py: " + ", ".join(sorted(names(find(ROOT, "edge_cases.py")))))
+
 
 with tabM:
     st.caption("Uday Pratap Singh · src/quantum_mapper.py (this tab ignores the sidebar filters)")

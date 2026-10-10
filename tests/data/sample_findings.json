@@ -1,0 +1,12 @@
+[
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/rsa_demo.py", "line": 10, "primitive": "RSA", "pattern_id": "rsa_keygen", "confidence": "high", "key_size": 1024, "modulus_bits": 1024, "size_basis": "sample", "snippet": "generate_keypair(1024)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/rsa_small.py", "line": 4, "primitive": "RSA", "pattern_id": "rsa_keygen", "confidence": "medium", "key_size": 16, "modulus_bits": null, "size_basis": "prime size (modulus unknown)", "snippet": "p = getPrime(16)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/ecc_demo.py", "line": 22, "primitive": "ECDSA", "pattern_id": "ecc_sign", "confidence": "high", "key_size": 256, "modulus_bits": null, "size_basis": "sample", "snippet": "ec.generate_private_key(SECP256R1())"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/dsa_demo.py", "line": 8, "primitive": "DSA", "pattern_id": "dsa_keygen", "confidence": "high", "key_size": 2048, "modulus_bits": 2048, "size_basis": "sample", "snippet": "dsa.generate_private_key(2048)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/dh_demo.py", "line": 15, "primitive": "Diffie-Hellman", "pattern_id": "dh_params", "confidence": "high", "key_size": 2048, "modulus_bits": 2048, "size_basis": "sample", "snippet": "dh.generate_parameters(2, 2048)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/aes_demo.py", "line": 30, "primitive": "AES-128", "pattern_id": "aes_cipher", "confidence": "high", "key_size": 128, "modulus_bits": null, "size_basis": "sample", "snippet": "AES.new(key16, AES.MODE_CBC)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/aes_demo.py", "line": 45, "primitive": "AES-256", "pattern_id": "aes_cipher", "confidence": "high", "key_size": 256, "modulus_bits": null, "size_basis": "sample", "snippet": "AES.new(key32, AES.MODE_GCM)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/hash_demo.py", "line": 6, "primitive": "SHA-256", "pattern_id": "sha_digest", "confidence": "high", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "hashlib.sha256(data)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/hash_demo.py", "line": 12, "primitive": "SHA-1", "pattern_id": "sha_digest", "confidence": "high", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "hashlib.sha1(data)"},
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/other.py", "line": 3, "primitive": "Blowfish", "pattern_id": "unknown", "confidence": "low", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "Blowfish.new(key)"}
+]

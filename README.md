@@ -142,7 +142,7 @@ A static scanner that walks a codebase line by line and matches **46 signature p
 | Project | Findings | Primitives | Key observation |
 |:---|:-:|:---|:---|
 | 🎥 **Secure-Video-Steganography** | 9 | RSA 8, SHA 1 | RSA keys of 1024 / 2048 / 3072 bits chosen in the UI; SHA-256 used for frame selection |
-| 🖼️ **Final-Year-project-part1** | 15 | RSA 15 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
+| 🖼️ **Final-Year-project-part1** | 17 | RSA 17 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
 
 > ⚠️ **Two kinds of risk are visible already.**
 > **Quantum risk:** all RSA here falls to Shor's algorithm.

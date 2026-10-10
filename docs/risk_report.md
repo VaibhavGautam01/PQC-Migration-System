@@ -6,7 +6,7 @@ All qubit counts are LOGICAL qubits.
 
 ## 1. Summary
 
-| Project | Findings | By primitive | RSA findings | RSA size unresolved | No-padding flags | Indirect usage |
+| Project | Findings | By primitive | RSA findings | RSA findings without a size | No-padding flags | Indirect usage |
 |---|---|---|---|---|---|---|
 | Final-Year-project-part1 | 17 | RSA: 17 | 17 | 11 | 2 | 6 |
 | Secure-Video-Steganography | 9 | RSA: 8, SHA: 1 | 8 | 6 | 2 | 4 |
@@ -19,7 +19,9 @@ All qubit counts are LOGICAL qubits.
 | Final-Year-project-part1 | 512 | 3 | 1027 | BROKEN | 0 | rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30 |
 | Secure-Video-Steganography | 1024 | 2 | 2051 | BROKEN | 0 | rsa_crypto.py:48, rsa_crypto.py:49 |
 
-Findings whose size is not on the flagged line (for example wrapper calls) are counted as unresolved in the summary.
+Qubit cost is computed for RSA only. A project listed with several sizes has call sites that use different key sizes; see the Locations column.
+
+RSA findings without a size are lines such as pow(), phi or wrapper calls, where no key size can be read.
 
 ## 3. Padding weaknesses
 
@@ -46,6 +48,8 @@ Findings whose size is not on the flagged line (for example wrapper calls) are c
 | Secure-Video-Steganography | pipeline.py:23 | imports crypto module 'rsa_crypto' (rsa_crypto) |
 
 ## 5. Other primitives
+
+No qubit estimate is computed for these primitives.
 
 | Project | Location | Primitive | Quantum algorithm | Impact | Post-quantum security bits | Size used |
 |---|---|---|---|---|---|---|

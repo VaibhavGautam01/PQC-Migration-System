@@ -215,7 +215,7 @@ def map_finding(finding):
     bits = (finding.get("modulus_bits") or finding.get("key_size")
             or _infer_bits(name, canonical))
     size_warning = None
-    if (entry["family"] == "asymmetric" and not finding.get("modulus_bits")
+    if (canonical in ("RSA", "DSA", "DH") and not finding.get("modulus_bits")
             and finding.get("key_size")):
         size_warning = ("modulus_bits missing; key_size may be the prime size, "
                         "not the modulus size")
@@ -283,8 +283,11 @@ def _cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def generate_mapping_report(mapped, out_path):
-    """Write mapping_report.md: per-project summary, detail table, caveats."""
+def generate_mapping_report(mapped, out_path, draft=False):
+    """Write mapping_report.md: per-project summary, detail table, caveats.
+
+    With draft=True a banner marks the report as built from sample data.
+    """
     projects = {}
     for item in mapped:
         projects.setdefault(item.get("project") or "(unknown project)", []).append(item)
@@ -300,6 +303,10 @@ def generate_mapping_report(mapped, out_path):
         f"**Projects:** {len(projects)}",
         "",
     ]
+
+    if draft:
+        lines[2:2] = ["> **DRAFT: generated from SAMPLE (dummy) findings, "
+                      "not from real scanner output.**", ""]
 
     for project, items in sorted(projects.items()):
         lines += [f"## {project}", "", "### Summary", "",
@@ -345,16 +352,10 @@ def generate_mapping_report(mapped, out_path):
 
 
 # ---------------------------------------------------------------------------
-# CLI:  python quantum_mapper.py <findings.json> <mapped_out.json> [report.md]
-# No arguments -> quick demo with dummy findings.
+# Command line
 # ---------------------------------------------------------------------------
-if __name__ == "__main__" and len(sys.argv) in (3, 4):
-    _mapped = map_findings_file(sys.argv[1], sys.argv[2])
-    summarise(_mapped)
-    if len(sys.argv) == 4:
-        generate_mapping_report(_mapped, sys.argv[3])
-        print(f"Report written to {sys.argv[3]}")
-elif __name__ == "__main__":
+def _demo():
+    """Print the mapping for a handful of dummy findings."""
     dummy_findings = [
         {"primitive": "RSA", "key_size": 1024},
         {"primitive": "ECDSA", "key_size": 256},
@@ -367,3 +368,31 @@ elif __name__ == "__main__":
     for item in map_findings(dummy_findings):
         print(f"{item['primitive']:<16} -> {item['quantum_algorithm']:<18} "
               f"{item['impact']:<9} PQ-security bits: {item['post_quantum_security_bits']}")
+
+
+def main(argv=None):
+    """CLI entry point.
+
+    python quantum_mapper.py                              demo with dummy data
+    python quantum_mapper.py IN.json OUT.json             map a findings file
+    python quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+    """
+    args = list(sys.argv[1:] if argv is None else argv)
+    draft = "--draft" in args
+    paths = [a for a in args if a != "--draft"]
+    if not paths:
+        _demo()
+        return 0
+    if len(paths) not in (2, 3):
+        print("usage: quantum_mapper.py IN.json OUT.json [REPORT.md] [--draft]")
+        return 2
+    mapped = map_findings_file(paths[0], paths[1])
+    summarise(mapped)
+    if len(paths) == 3:
+        generate_mapping_report(mapped, paths[2], draft=draft)
+        print(f"Report written to {paths[2]}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

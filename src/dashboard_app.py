@@ -1,4 +1,4 @@
-"""
+﻿"""
 dashboard_app.py - Streamlit dashboard for the PQC Migration Advisor.
 
 Reads outputs/findings.json (made by src/run_all.py) and shows the results
@@ -333,7 +333,7 @@ with tabM:
     st.plotly_chart(style(px.pie(names=["Shor's", "Grover's"], values=[n_s, n_g], hole=0.55,
                                  title="Findings by quantum algorithm",
                                  color_discrete_sequence=["#7C4DFF", "#00E5FF"]), 300), key="algo")
-    rep = find(ROOT, "mapping_report.md")
+    rep = find(ROOT, pred=lambda n: n.startswith("mapping_report") and n.endswith(".md"))
     if rep:
         with st.expander("mapping_report.md"):
             st.markdown(text(rep))
@@ -366,3 +366,4 @@ with tabQ:
                     'physical qubits for error correction.</div>', unsafe_allow_html=True)
 
 st.caption("Built with ❤️ and a healthy fear of quantum computers · HCST Mathura · AKTU")
+

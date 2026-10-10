@@ -70,13 +70,16 @@ RSA_PATTERNS = [
     # --- Textbook / hand-rolled RSA ---
     {"id": "RSA-MANUAL-PRIME",
      "regex": r"\bgetPrime\s*\(\s*(?P<bits>\d+)?",
-     "desc": "Prime generation, possible hand-rolled RSA key", "confidence": "medium", "keygen": True},
+     "desc": "Prime generation, possible hand-rolled RSA key",
+     "confidence": "medium", "keygen": True},
     {"id": "RSA-MANUAL-PHI",
      "regex": r"\b(?:phi|totient)\w*\s*=\s*\(?\s*p\s*-\s*1\s*\)?\s*\*\s*\(?\s*q\s*-\s*1",
-     "desc": "Euler totient (p-1)(q-1), textbook RSA key setup", "confidence": "high", "keygen": False},
+     "desc": "Euler totient (p-1)(q-1), textbook RSA key setup",
+     "confidence": "high", "keygen": False},
     {"id": "RSA-MANUAL-MODINV",
      "regex": r"\bpow\s*\(\s*\w+\s*,\s*-1\s*,",
-     "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation", "confidence": "medium", "keygen": False},
+     "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation",
+     "confidence": "medium", "keygen": False},
     {"id": "RSA-MODEXP",
      "regex": r"\bpow\s*\((?!\s*\w+\s*,\s*-1\s*,).+,.+,.+\)",
      "desc": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
@@ -88,7 +91,8 @@ RSA_PATTERNS = [
     # Week 2 Day 2 fix (found by cross-check Check B): r_channel_stego.py picks its
     # RSA primes with sympy isprime(), e.g. primes = [p for p in range(2, 40) if isprime(p)].
     # The older prime patterns (getPrime / randprime / nextprime) never matched this
-    # style, so the prime-selection step went unflagged (phi and modular-inverse lines in that file were already caught). Confidence is "low" because
+    # style, so the prime-selection step went unflagged (phi and modular-inverse lines in that
+    # file were already caught). Confidence is "low" because
     # isprime() is a generic helper that can also appear in non-crypto code.
     {"id": "RSA-MANUAL-PRIME-ISPRIME",
      "regex": r"(?<!def )\bisprime\s*\(",
@@ -209,7 +213,8 @@ def build_report(root, findings):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scan a codebase for quantum-vulnerable crypto (RSA).")
+    parser = argparse.ArgumentParser(
+        description="Scan a codebase for quantum-vulnerable crypto (RSA).")
     parser.add_argument("path", help="Directory or file to scan")
     parser.add_argument("--out", help="Write findings JSON to this path")
     args = parser.parse_args()

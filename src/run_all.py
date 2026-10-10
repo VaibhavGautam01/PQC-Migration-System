@@ -23,8 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scanner  # our Stage 1 scanner (uses scan_path and build_report)
 from edge_merge import add_edge_flags
 
-# Display name -> local folder. data/targets/ is gitignored, so the target
-# repos are never pushed; they must be cloned there first.
+# Display name -> local folder. These are git submodules (see
+# .gitmodules). After cloning, run: git submodule update --init
 TARGETS = {
     "Secure-Video-Steganography": "data/targets/steganography",
     "Final-Year-project-part1": "data/targets/final-year-part1",

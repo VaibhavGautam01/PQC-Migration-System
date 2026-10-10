@@ -1,13 +1,35 @@
-"""quantum_mapper.py
+"""quantum_mapper.py - Stage 2 of the PQC Migration Advisor pipeline.
 
-Maps classical cryptographic primitives (found by the Stage 1 scanner) to the
-quantum algorithm that threatens them, and to a recommended PQC replacement.
+Pipeline position:
+    scanner (findings.json) -> quantum_mapper -> qubit_estimator -> risk report
 
-    Asymmetric (RSA, ECC, DSA, DH)  -> Shor's algorithm   -> fully broken
-    Symmetric / hash (AES, SHA)     -> Grover's algorithm -> security halved
+Takes the classical-crypto findings from the Stage 1 scanner and attaches, to
+each one, the quantum algorithm that threatens it, the post-quantum security
+level, and a recommended PQC replacement.
 
-This mapping is fixed cryptography theory, so it does not depend on what the
-scanner finds. Standard library only.
+    Asymmetric (RSA, ECC, DSA, DH)  -> Shor's algorithm   -> broken
+    Symmetric / hash (AES, SHA)     -> Grover's algorithm -> security roughly halved
+
+Input
+    A list of dicts with at least "primitive". Optional: "modulus_bits" and
+    "key_size". For RSA/DSA/DH, modulus_bits is preferred, because the
+    scanner's key_size can be the PRIME size rather than the modulus size.
+
+Output
+    The same dicts plus: canonical_primitive, family, quantum_algorithm,
+    hard_problem, impact, pqc_replacement, post_quantum_security_bits,
+    size_used_bits, size_warning, grover_assessment, mapper_note.
+
+Usage
+    python src/quantum_mapper.py                          demo with dummy data
+    python src/quantum_mapper.py IN.json OUT.json         map a findings file
+    python src/quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+
+Limits
+    This is a theory-level mapping: it says which quantum attack applies, not
+    that the attack is practical today. Padding weaknesses (e.g. textbook RSA)
+    and classical key-strength problems are separate findings, reported
+    elsewhere. Standard library only.
 """
 
 import json
@@ -15,6 +37,14 @@ import re
 import sys
 from copy import deepcopy
 
+__all__ = [
+    "SHOR", "GROVER", "PRIMITIVE_TABLE", "ALIASES", "FAMILY_TO_ALGORITHM",
+    "canonical_primitive", "map_primitive", "route_algorithm", "grover_assessment",
+    "map_finding", "map_findings", "load_findings", "map_findings_file",
+    "summarise", "generate_mapping_report", "main",
+]
+
+# Quantum algorithm labels used throughout the pipeline.
 SHOR = "Shor's algorithm"
 GROVER = "Grover's algorithm"
 
@@ -118,7 +148,11 @@ def _normalise(name):
 
 
 def canonical_primitive(name):
-    """Return the canonical primitive ('RSA', 'ECC', ...) or None if unknown."""
+    """Return the canonical primitive ('RSA', 'ECC', ...) or None if unknown.
+
+    Handles aliases (ECDSA -> ECC), case and punctuation, and families named
+    by prefix (AES-256-GCM -> AES, HMAC-SHA256 -> SHA).
+    """
     norm = _normalise(name)
     if norm in ALIASES:
         return ALIASES[norm]
@@ -130,7 +164,11 @@ def canonical_primitive(name):
 
 
 def _infer_bits(name, canonical):
-    """Pull a size out of names like 'AES-256' or 'SHA256'; None if absent."""
+    """Pull a size (bits) out of names like 'AES-256' or 'SHA256'.
+
+    SHA-1 is special-cased to its 160-bit output. Returns None if no size is
+    present in the name.
+    """
     norm = _normalise(name)
     if canonical == "SHA" and norm in ("SHA1", "SHA"):
         return 160 if norm == "SHA1" else None
@@ -186,8 +224,16 @@ def grover_assessment(canonical, bits):
 def map_finding(finding):
     """Enrich one scanner finding with its quantum-threat information.
 
-    `finding` is a dict with at least a 'primitive' key and, optionally,
-    'key_size' (bits). The input dict is not modified.
+    Args:
+        finding: dict with a 'primitive' key and, optionally, 'modulus_bits'
+            and/or 'key_size' (bits). 'modulus_bits' wins when both exist.
+
+    Returns:
+        A new dict (the input is not modified) holding every original field
+        plus the quantum-threat fields listed in the module docstring.
+        post_quantum_security_bits is 0 for Shor-broken primitives, half the
+        size for Grover-weakened ones, and None when the size is unknown.
+        size_warning is set when an RSA/DSA/DH size may be a prime size.
     """
     result = dict(finding)
     name = finding.get("primitive", "")
@@ -244,19 +290,29 @@ def map_finding(finding):
 
 
 def map_findings(findings):
-    """Map a list of findings (e.g. the contents of findings.json)."""
+    """Map a list of findings (e.g. the contents of findings.json).
+
+    Order and length are preserved; unrecognised primitives are flagged as
+    UNKNOWN rather than dropped.
+    """
     return [map_finding(f) for f in findings]
 
 
 def load_findings(path):
-    """Load findings from JSON: either a bare list or {"findings": [...]}."""
+    """Load findings from a JSON file.
+
+    Accepts either a bare list or an object of the form {"findings": [...]}.
+    """
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
     return data["findings"] if isinstance(data, dict) else data
 
 
 def map_findings_file(in_path, out_path):
-    """Read findings.json, map every finding, write the enriched JSON."""
+    """Read a findings file, map every finding, write the enriched JSON.
+
+    Returns the mapped list so callers can chain into report generation.
+    """
     mapped = map_findings(load_findings(in_path))
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump(mapped, fh, indent=2)
@@ -264,7 +320,7 @@ def map_findings_file(in_path, out_path):
 
 
 def summarise(mapped):
-    """Print a per-project / per-primitive count plus any size warnings."""
+    """Print per-project / per-primitive counts, then totals, warnings, unknowns."""
     counts = {}
     for item in mapped:
         key = (item.get("project"), item.get("canonical_primitive"))
@@ -277,7 +333,7 @@ def summarise(mapped):
 
 
 def _cell(value):
-    """Format a value for a Markdown table cell."""
+    """Format a value for a Markdown table cell ('-' for empty, '|' escaped)."""
     if value is None or value == "":
         return "-"
     return str(value).replace("|", "\\|").replace("\n", " ")

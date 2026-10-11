@@ -58,6 +58,30 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 | rsa_crypto.py:142 | RSA | - | - | 0 | - |
 | rsa_crypto.py:170 | RSA | - | - | 0 | - |
 
+## Data caveats
+
+Resolve these before treating the sizes above as final.
+
+- Secure-Video-Steganography app.py:263: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:45: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:53: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:56: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:142: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:170: RSA has no size information.
+- Final-Year-project-part1 r_channel_stego.py:42: RSA has no size information.
+- Final-Year-project-part1 r_channel_stego.py:52: RSA has no size information.
+- Final-Year-project-part1 r_channel_stego.py:54: RSA has no size information.
+- Final-Year-project-part1 r_channel_stego.py:59: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:22: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:33: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:35: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:37: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:39: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:45: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:50: RSA has no size information.
+- Override 'part1-keygen-256' is unconfirmed and was NOT applied (would change 10 finding(s)); source: Tarun, manual note 1 on findings.json v1.
+- Override 'part1-rchannel-8bit' is unconfirmed and was NOT applied (would change 4 finding(s)); source: Tarun, manual note 2 on findings.json v1.
+
 ## Notes and limitations
 
 - Asymmetric primitives (RSA, ECC, DSA, DH) are broken by Shor's algorithm once a large enough fault-tolerant quantum computer exists. PQ-security is shown as 0 for these.

@@ -43,7 +43,7 @@ __all__ = [
     "map_finding", "map_findings", "load_findings", "map_findings_file",
     "summarise", "generate_mapping_report", "main",
     "REQUIRED_FIELDS", "validate_findings", "load_overrides", "apply_overrides",
-    "prepare_findings", "write_json",
+    "prepare_findings", "write_json", "collect_caveats",
 ]
 
 # Quantum algorithm labels used throughout the pipeline.
@@ -440,10 +440,36 @@ def _cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def generate_mapping_report(mapped, out_path, draft=False):
+def collect_caveats(mapped, override_report=None):
+    """List the data-quality caveats a reader of the report must know about.
+
+    Covers: size warnings (a size that may be a prime size), findings with no
+    size at all for sized primitives, unrecognised primitives, and manual
+    overrides that are unconfirmed or matched nothing.
+    """
+    caveats = []
+    for item in mapped:
+        where = f"{item.get('project')} {item.get('file')}:{item.get('line')}"
+        if item.get("size_warning"):
+            caveats.append(f"{where}: {item['size_warning']} (size used: {item.get('size_used_bits')}).")
+        elif item.get("size_used_bits") is None and item.get("canonical_primitive") in ("RSA", "DSA", "DH", "ECC", "AES"):
+            caveats.append(f"{where}: {item['primitive']} has no size information.")
+        if item.get("canonical_primitive") is None:
+            caveats.append(f"{where}: unrecognised primitive {item.get('primitive')!r}; needs manual review.")
+    for ov in override_report or []:
+        if not ov["confirmed"]:
+            caveats.append(f"Override '{ov['id']}' is unconfirmed and was NOT applied "
+                           f"(would change {ov['matched']} finding(s)); source: {ov.get('source') or 'n/a'}.")
+        elif ov["matched"] == 0:
+            caveats.append(f"Override '{ov['id']}' is confirmed but matched no findings; check its 'match' rule.")
+    return caveats
+
+
+def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
     """Write mapping_report.md: per-project summary, detail table, caveats.
 
     With draft=True a banner marks the report as built from sample data.
+    `caveats` (see collect_caveats) is rendered as a "Data caveats" section.
     """
     projects = {}
     for item in mapped:
@@ -486,6 +512,12 @@ def generate_mapping_report(mapped, out_path, draft=False):
                 f"| {_cell(loc)} | {_cell(it.get('primitive'))} | "
                 f"{_cell(it.get('size_used_bits'))} | {_cell(it.get('size_basis'))} | "
                 f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} |")
+        lines.append("")
+
+    if caveats:
+        lines += ["## Data caveats", "",
+                  "Resolve these before treating the sizes above as final.", ""]
+        lines += [f"- {c}" for c in caveats]
         lines.append("")
 
     warned = sum(1 for m in mapped if m.get("size_warning"))
@@ -573,7 +605,8 @@ def main(argv=None):
     write_json(paths[1], mapped)
     summarise(mapped)
     if len(paths) == 3:
-        generate_mapping_report(mapped, paths[2], draft=draft)
+        generate_mapping_report(mapped, paths[2], draft=draft,
+                                caveats=collect_caveats(mapped, ov_report))
         print(f"Report written to {paths[2]}")
     return 1 if (strict and problems) else 0
 

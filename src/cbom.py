@@ -151,3 +151,304 @@ def validate_cbom(cbom):
         label = ids[i] or f"entry #{i}"
         problems += [f"{label}: {p}" for p in validate_entry(entry)]
     return problems
+
+# ---------------------------------------------------------------------------
+# Building the CBOM from mapped findings
+# ---------------------------------------------------------------------------
+PQC_RECOMMENDATIONS = {
+    "RSA": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish "
+                     "a shared secret, then encrypt the data with AES-256-GCM "
+                     "(do not use bare RSA-style encryption). Parameter set 768 "
+                     "targets NIST security category 3. If this RSA is used for "
+                     "signatures instead, use ML-DSA-65 (FIPS 204).",
+    },
+    "ECC": {
+        "algorithm": "ML-KEM-768 (key exchange) / ML-DSA-65 (signatures)",
+        "standard": "NIST FIPS 203 / FIPS 204",
+        "rationale": "ECDH-style key agreement maps to ML-KEM; ECDSA/EdDSA-style "
+                     "signatures map to ML-DSA. Shor's algorithm breaks the "
+                     "elliptic-curve discrete log.",
+    },
+    "DSA": {
+        "algorithm": "ML-DSA-65",
+        "standard": "NIST FIPS 204",
+        "rationale": "DSA signatures rely on the discrete log problem, which "
+                     "Shor's algorithm solves.",
+    },
+    "DH": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "Diffie-Hellman key exchange relies on the discrete log "
+                     "problem; ML-KEM replaces it. Recorded traffic is exposed to "
+                     "harvest-now-decrypt-later attacks.",
+    },
+    "AES": {
+        "algorithm": "AES-256 (no PQC replacement needed)",
+        "standard": "NIST FIPS 197",
+        "rationale": "Grover's algorithm only halves the effective key size, so "
+                     "AES-256 keeps about 128-bit security.",
+    },
+    "SHA": {
+        "algorithm": "SHA-256 or larger (SHA-2 / SHA-3)",
+        "standard": "NIST FIPS 180-4 / FIPS 202",
+        "rationale": "Grover's algorithm halves preimage resistance; a 256-bit "
+                     "or larger output keeps about 128-bit security.",
+    },
+}
+
+# Field names under which the edge-case module might store a padding flag.
+PADDING_FLAG_KEYS = ("padding", "padding_status", "padding_flag", "edge_flags",
+                     "edge_case_flags", "flags")
+
+
+def load_facts(path):
+    """Load data/manual_facts.json (per-project padding facts, attack evidence)."""
+    with open(path, "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def classical_assessment(canonical, bits, primitive_name=""):
+    """Classical (non-quantum) strength of a primitive at its size.
+
+    Returns {"status": one of CLASSICAL_STATUSES, "basis": explanation}.
+    """
+    def result(status, basis):
+        return {"status": status, "basis": basis}
+
+    if canonical in ("RSA", "DSA", "DH"):
+        if not bits:
+            return result("unknown", "Size unknown, so classical strength cannot be assessed.")
+        if bits <= 512:
+            return result("practically-breakable",
+                          f"A {bits}-bit modulus can be attacked with ordinary hardware "
+                          "or rented cloud time. No quantum computer is needed.")
+        if bits < 2048:
+            return result("below-minimum",
+                          f"A {bits}-bit modulus is below the 2048-bit minimum (this "
+                          "project flags RSA under 2048 bits; NIST guidance agrees). "
+                          "This is a classical finding, separate from the quantum threat.")
+        return result("meets-minimum",
+                      f"A {bits}-bit modulus meets the 2048-bit minimum against classical attacks.")
+    if canonical == "ECC":
+        if not bits:
+            return result("unknown", "Curve size unknown.")
+        if bits < 224:
+            return result("below-minimum", f"A {bits}-bit curve gives under 112-bit classical security.")
+        return result("meets-minimum", f"A {bits}-bit curve meets the 224-bit minimum.")
+    if canonical == "AES":
+        if not bits:
+            return result("unknown", "Key size unknown.")
+        if bits < 128:
+            return result("below-minimum", f"A {bits}-bit AES key is below 128 bits.")
+        return result("meets-minimum", f"A {bits}-bit AES key meets the 128-bit minimum.")
+    if canonical == "SHA":
+        if bits == 160 or qm._normalise(primitive_name) == "SHA1":
+            return result("weak-collision-resistance",
+                          "SHA-1 has practical collision attacks; use SHA-256 or larger.")
+        if not bits:
+            return result("unknown", "Output size unknown.")
+        if bits < 224:
+            return result("below-minimum", f"A {bits}-bit hash output is below 224 bits.")
+        return result("meets-minimum", f"A {bits}-bit hash output is adequate classically.")
+    return result("unknown", "Primitive not assessed.")
+
+
+def padding_assessment(canonical, group, project_facts):
+    """Padding / construction risk. Only meaningful for RSA.
+
+    Priority: manually confirmed project facts, then the edge-case flags that
+    were merged into findings.json, then 'unknown'.
+    Returns {"status", "weakness", "source"}.
+    """
+    if canonical != "RSA":
+        return {"status": "not-applicable", "weakness": None,
+                "source": "Padding schemes apply to RSA encryption and signatures."}
+    manual = (project_facts or {}).get("padding")
+    if manual:
+        return {"status": manual.get("status", "unknown"),
+                "weakness": manual.get("weakness"),
+                "source": manual.get("source", "manual facts")}
+    for item in group:
+        for key in PADDING_FLAG_KEYS:
+            value = item.get(key)
+            if value:
+                text = value if isinstance(value, str) else json.dumps(value, sort_keys=True)
+                return {"status": "flagged", "weakness": text,
+                        "source": f"edge-case flag '{key}' in findings.json"}
+    return {"status": "unknown", "weakness": None,
+            "source": "No padding information in findings or manual facts."}
+
+
+def _size_status(group):
+    """How trustworthy the size of a group of findings is."""
+    if any(item.get("override_ids") for item in group):
+        return "override-confirmed"
+    if any(item.get("size_warning") for item in group):
+        return "unverified"
+    if group[0].get("size_used_bits") is None:
+        return "unknown"
+    return "scanner-reported"
+
+
+def _group_findings(mapped):
+    """Group mapped findings by (project, primitive, size). Returns (groups, unmapped)."""
+    groups, unmapped = {}, []
+    for item in mapped:
+        canonical = item.get("canonical_primitive")
+        if canonical is None:
+            unmapped.append({"project": item.get("project"), "file": item.get("file"),
+                             "line": item.get("line"), "primitive": item.get("primitive")})
+            continue
+        key = (item.get("project"), canonical, item.get("size_used_bits"))
+        groups.setdefault(key, []).append(item)
+    return groups, unmapped
+
+
+def _file_refs(group):
+    """Sorted, de-duplicated 'file:line' references for a group."""
+    pairs = {(str(g.get("file")), g.get("line") if isinstance(g.get("line"), int) else 0)
+             for g in group}
+    return [f"{file}:{line}" for file, line in sorted(pairs)]
+
+
+def _build_entry(entry_id, key, group, project_facts):
+    """Build one CBOM entry from a group of findings."""
+    project, canonical, bits = key
+    first = group[0]
+    bases = sorted({str(g["size_basis"]) for g in group if g.get("size_basis")})
+    status = _size_status(group)
+    qubits = shor_logical_qubits(bits) if canonical == "RSA" and bits else None
+    if qubits:
+        estimate_basis = (f"Logical qubits to factor a {bits}-bit modulus with the 2n+3 circuit "
+                          "(Beauregard 2003). Logical qubits only: error-correction overhead is "
+                          "excluded, so physical qubit counts are far higher.")
+    else:
+        estimate_basis = "No qubit estimate is computed for this primitive."
+    classical = classical_assessment(canonical, bits, first.get("primitive", ""))
+    if status == "unverified" and bits:
+        caution = "UNVERIFIED SIZE (the scanner value may be a prime size, not the modulus size). "
+        estimate_basis = caution + estimate_basis
+        classical["basis"] = caution + classical["basis"]
+    classical["evidence"] = list((project_facts or {}).get("attack_evidence", [])) if canonical == "RSA" else []
+    notes = []
+    if status in ("unverified", "unknown"):
+        notes.append("Key size is not verified; the qubit estimate and classical "
+                     "assessment depend on it.")
+    return {
+        "id": entry_id,
+        "project": project,
+        "primitive": canonical,
+        "key_size_bits": bits,
+        "size_basis": "; ".join(bases) if bases else "scanner field or primitive name",
+        "size_status": status,
+        "files": _file_refs(group),
+        "quantum_risk": {
+            "algorithm": first["quantum_algorithm"],
+            "impact": first["impact"],
+            "logical_qubits_estimate": qubits,
+            "estimate_basis": estimate_basis,
+            "post_quantum_security_bits": first["post_quantum_security_bits"],
+        },
+        "classical_risk": classical,
+        "padding_risk": padding_assessment(canonical, group, project_facts),
+        "recommended_pqc": dict(PQC_RECOMMENDATIONS[canonical]),
+        "notes": notes,
+    }
+
+
+def build_cbom(mapped, facts=None):
+    """Build the CBOM dict from mapped findings (quantum_mapper output).
+
+    One entry per (project, primitive, size). Output is deterministic: no
+    timestamps, stable ordering and ids.
+    """
+    project_facts = (facts or {}).get("projects", {})
+    groups, unmapped = _group_findings(mapped)
+    order = list(qm.PRIMITIVE_TABLE)
+
+    def sort_key(key):
+        project, canonical, bits = key
+        return (str(project), order.index(canonical), -1 if bits is None else bits)
+
+    entries = [
+        _build_entry(f"CBOM-{n:03d}", key, groups[key], project_facts.get(key[0], {}))
+        for n, key in enumerate(sorted(groups, key=sort_key), start=1)
+    ]
+    return {
+        "cbom_version": CBOM_VERSION,
+        "project_count": len({e["project"] for e in entries}),
+        "entry_count": len(entries),
+        "finding_count": len(mapped),
+        "entries": entries,
+        "unmapped": unmapped,
+        "references": list(REFERENCES),
+        "notes": list(NOTES),
+    }
+
+
+def build_cbom_from_files(findings_path, facts_path=None):
+    """Read findings (+ optional manual facts), map them, build the CBOM.
+
+    Confirmed size overrides in the facts file are applied before mapping.
+    Returns (cbom, mapped).
+    """
+    findings, _problems, _report = qm.prepare_findings(findings_path, facts_path)
+    mapped = qm.map_findings(findings)
+    facts = load_facts(facts_path) if facts_path else None
+    return build_cbom(mapped, facts), mapped
+
+
+def write_cbom_json(cbom, path):
+    """Write the CBOM as indented UTF-8 JSON (machine-readable output)."""
+    qm.write_json(path, cbom)
+
+
+def _parse(args, value_flags, bool_flags=()):
+    """Tiny argument parser. Returns (paths, values, bools) or None on error."""
+    values = {flag: None for flag in value_flags}
+    bools = {flag: False for flag in bool_flags}
+    paths = []
+    it = iter(args)
+    for arg in it:
+        if arg in values:
+            value = next(it, None)
+            if value is None:
+                return None
+            values[arg] = value
+        elif arg in bools:
+            bools[arg] = True
+        else:
+            paths.append(arg)
+    return paths, values, bools
+
+
+USAGE = "usage: cbom.py FINDINGS.json [--facts FILE] [--json OUT.json]"
+
+
+def main(argv=None):
+    """CLI entry point.
+
+    python cbom.py FINDINGS.json [--facts data/manual_facts.json] [--json docs/cbom.json]
+    """
+    parsed = _parse(list(sys.argv[1:] if argv is None else argv), ("--facts", "--json"))
+    if parsed is None or len(parsed[0]) != 1:
+        print(USAGE)
+        return 2
+    paths, values, _ = parsed
+    cbom, _mapped = build_cbom_from_files(paths[0], values["--facts"])
+    problems = validate_cbom(cbom)
+    for problem in problems:
+        print(f"CBOM INVALID: {problem}")
+    print(f"CBOM: {cbom['entry_count']} entries from {cbom['finding_count']} findings "
+          f"({len(cbom['unmapped'])} unmapped)")
+    if values["--json"]:
+        write_cbom_json(cbom, values["--json"])
+        print(f"JSON written to {values['--json']}")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -51,8 +51,5 @@ Scope: read the module only; the unit tests were not reviewed.
 \## Questions for Uday
 
 
-
-\- What does the SHA finding in the real findings.json show for size? The scanner's primitive is "SHA" with no size in the name, so inference may find none and report "Size unknown".
-
 \- Do the unit tests cover the unmapped names above?
 

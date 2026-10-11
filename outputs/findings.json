@@ -499,15 +499,15 @@
         },
         {
           "flag": "INDIRECT_USAGE",
-          "file": "rsa_lsb_stego.py",
-          "line": 11,
-          "detail": "imports crypto module 'rsa_utils' (encrypt_text, decrypt_text)"
-        },
-        {
-          "flag": "INDIRECT_USAGE",
           "file": "r_channel_stego.py",
           "line": 23,
           "detail": "imports crypto module 'rsa_utils' (encrypt_int, decrypt_int)"
+        },
+        {
+          "flag": "INDIRECT_USAGE",
+          "file": "rsa_lsb_stego.py",
+          "line": 11,
+          "detail": "imports crypto module 'rsa_utils' (encrypt_text, decrypt_text)"
         }
       ]
     }

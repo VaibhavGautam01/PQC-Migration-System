@@ -91,6 +91,7 @@ class TestOverrides(unittest.TestCase):
 
     def test_unrecognised_match_primitive_never_matches(self):
         ov = self.ov(match={"primitive": "ROT13"})
+        ov = self.ov(match={"primitive": "Blowfish"})
         _, report = qm.apply_overrides([rsa()], [ov])
         self.assertEqual(report[0]["matched"], 0)
 

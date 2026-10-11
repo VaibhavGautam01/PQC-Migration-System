@@ -46,6 +46,7 @@ and `DHE` (DH), `DSA-2048` (DSA), `AES-256-GCM`, `SHA3-512`, `HMAC-SHA256`,
 `TripleDES`, `DES-EDE3`, `ARCFOUR`. A size in the name (`RSA-2048`, `P-256`) is used
 only when the finding has no `modulus_bits` or `key_size`. Anything else becomes
 UNKNOWN and is listed for manual review.
+output size is roughly halved (AES-128 about 64 bits, AES-256 about 128 bits).
 
 ## Input
 
@@ -74,6 +75,7 @@ A JSON list (or `{"findings": [...]}`). Fields used:
 | size_warning | Set when an RSA/DSA/DH size may be a prime size |
 | grover_assessment | Plain-English reading for AES, SHA and legacy-cipher findings |
 | classically_weak | True for legacy ciphers, False for the rest, None if unrecognised |
+| grover_assessment | Plain-English reading for AES/SHA findings |
 | override_ids | Ids of confirmed manual overrides applied to this finding |
 
 ## Manual overrides
@@ -107,6 +109,7 @@ python -m unittest discover -s tests -v
   not quantum findings and are reported separately. The mapping report shows the
   edge-case module's `edge_flag` in a "Padding flag" column beside each finding, but
   it never changes the quantum result.
+  not quantum findings and are reported separately.
 - Sizes are only as good as the scanner plus the confirmed overrides; check the
   Data caveats section of the report.
 - Everything quantum in this project runs on a simulator at toy sizes.

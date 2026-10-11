@@ -41,6 +41,8 @@ class TestCollectCaveats(unittest.TestCase):
     def test_unknown_primitive_is_a_caveat(self):
         caveats = qm.collect_caveats(qm.map_findings([finding(primitive="ROT13")]))
         self.assertTrue(any("ROT13" in c for c in caveats))
+        caveats = qm.collect_caveats(qm.map_findings([finding(primitive="Blowfish")]))
+        self.assertTrue(any("Blowfish" in c for c in caveats))
 
     def test_unconfirmed_override_is_listed(self):
         report = [{"id": "o1", "confirmed": False, "matched": 2, "source": "Tarun"}]

@@ -20,6 +20,7 @@ TOY_PRIMES = {15: (3, 5), 21: (3, 7)}
 
 
 def make_toy_keys(n):
+    """Return (public, private) toy RSA keys for N = 15 or 21."""
     p, q = TOY_PRIMES[n]
     phi = (p - 1) * (q - 1)
     e = next(x for x in range(3, phi) if gcd(x, phi) == 1)
@@ -38,11 +39,13 @@ def encode(text, n):
 
 
 def decode(digits, n):
+    """Rebuild text from base-N digit pairs."""
     return "".join(chr(digits[i] * n + digits[i + 1])
                    for i in range(0, len(digits), 2))
 
 
 def main():
+    """Run the toy-RSA stego attack for N = 15 or 21."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True)
     ap.add_argument("--n", type=int, default=21, choices=[15, 21])

@@ -649,6 +649,12 @@ def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
         lines += [f"- {c}" for c in caveats]
         lines.append("")
 
+    if caveats:
+        lines += ["## Data caveats", "",
+                  "Resolve these before treating the sizes above as final.", ""]
+        lines += [f"- {c}" for c in caveats]
+        lines.append("")
+
     warned = sum(1 for m in mapped if m.get("size_warning"))
     unknown = sum(1 for m in mapped if m.get("canonical_primitive") is None)
     lines += [

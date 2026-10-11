@@ -15,11 +15,13 @@ from PIL import Image
 
 
 def lsb_ones_fraction(path):
+    """Return the fraction of ones in the image's LSB plane."""
     arr = np.array(Image.open(path).convert("RGB")).reshape(-1)
     return float((arr & 1).mean())
 
 
 def looks_like_hex(extract_lsb, path):
+    """Return (is_hex, info) for whether extract_lsb yields a clean hex string."""
     try:
         s = extract_lsb(path)
     except Exception as e:
@@ -31,6 +33,7 @@ def looks_like_hex(extract_lsb, path):
 
 
 def main():
+    """Report LSB bias and hex-extraction results for each image."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True)
     ap.add_argument("--image", nargs="+", required=True)

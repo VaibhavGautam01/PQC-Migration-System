@@ -41,8 +41,8 @@ SKIP_DIRS = {"venv", "__pycache__", ".git"}
 
 def _python_files(repo_path):
     """All .py files under repo_path, skipping virtualenvs and caches."""
-    return [f for f in Path(repo_path).rglob("*.py")
-            if not SKIP_DIRS.intersection(f.parts)]
+    return sorted(f for f in Path(repo_path).rglob("*.py")
+              if not SKIP_DIRS.intersection(f.parts))
 
 
 def check_padding(file_path, rsa_line):

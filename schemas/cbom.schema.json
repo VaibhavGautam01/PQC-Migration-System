@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PQC Migration Advisor CBOM",
+  "type": "object",
+  "required": [
+    "cbom_version",
+    "project_count",
+    "entry_count",
+    "finding_count",
+    "entries",
+    "unmapped",
+    "references",
+    "notes"
+  ],
+  "properties": {
+    "cbom_version": {
+      "type": "string"
+    },
+    "project_count": {
+      "type": "integer"
+    },
+    "entry_count": {
+      "type": "integer"
+    },
+    "finding_count": {
+      "type": "integer"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "project",
+          "primitive",
+          "key_size_bits",
+          "size_basis",
+          "size_status",
+          "files",
+          "quantum_risk",
+          "classical_risk",
+          "padding_risk",
+          "recommended_pqc",
+          "notes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "project": {
+            "type": "string"
+          },
+          "primitive": {
+            "enum": [
+              "RSA",
+              "ECC",
+              "DSA",
+              "DH",
+              "AES",
+              "SHA"
+            ]
+          },
+          "key_size_bits": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "size_basis": {
+            "type": "string"
+          },
+          "size_status": {
+            "enum": [
+              "override-confirmed",
+              "scanner-reported",
+              "unverified",
+              "unknown"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "quantum_risk": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "algorithm",
+              "impact",
+              "logical_qubits_estimate",
+              "estimate_basis",
+              "post_quantum_security_bits"
+            ],
+            "properties": {
+              "algorithm": {
+                "type": "string"
+              },
+              "impact": {
+                "type": "string"
+              },
+              "logical_qubits_estimate": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "estimate_basis": {
+                "type": "string"
+              },
+              "post_quantum_security_bits": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          },
+          "classical_risk": {
+            "type": "object",
+            "required": [
+              "status",
+              "basis",
+              "evidence"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "practically-breakable",
+                  "below-minimum",
+                  "meets-minimum",
+                  "weak-collision-resistance",
+                  "unknown"
+                ]
+              },
+              "basis": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "array"
+              }
+            }
+          },
+          "padding_risk": {
+            "type": "object",
+            "required": [
+              "status",
+              "weakness",
+              "source"
+            ],
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "weakness": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          },
+          "recommended_pqc": {
+            "type": "object",
+            "required": [
+              "algorithm",
+              "standard",
+              "rationale"
+            ],
+            "properties": {
+              "algorithm": {
+                "type": "string"
+              },
+              "standard": {
+                "type": "string"
+              },
+              "rationale": {
+                "type": "string"
+              }
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "unmapped": {
+      "type": "array"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 """quantum_mapper.py - Stage 2 of the PQC Migration Advisor pipeline.
 
 Pipeline position:
-    scanner (findings.json) -> quantum_mapper -> qubit_estimator -> risk report
+    scanner (findings.json) -> quantum_mapper -> qubit_estimator -> CBOM / risk report
 
 Takes the classical-crypto findings from the Stage 1 scanner and attaches, to
 each one, the quantum algorithm that threatens it, the post-quantum security
@@ -11,25 +11,35 @@ level, and a recommended PQC replacement.
     Symmetric / hash (AES, SHA)     -> Grover's algorithm -> security roughly halved
 
 Input
-    A list of dicts with at least "primitive". Optional: "modulus_bits" and
-    "key_size". For RSA/DSA/DH, modulus_bits is preferred, because the
-    scanner's key_size can be the PRIME size rather than the modulus size.
+    A list of dicts (or {"findings": [...]}) with at least project, file,
+    line and primitive. Optional: "modulus_bits" and "key_size". For
+    RSA/DSA/DH, modulus_bits is preferred, because the scanner's key_size can
+    be the PRIME size rather than the modulus size.
+
+Manual overrides
+    Some facts cannot be read from source code (for example the key size a
+    function is actually called with). data/manual_facts.json lists them as
+    "size_overrides". An override is applied only if "confirmed" is true, so
+    facts the team has not agreed on never change results silently. Applied
+    overrides are recorded in each finding's "override_ids".
 
 Output
     The same dicts plus: canonical_primitive, family, quantum_algorithm,
     hard_problem, impact, pqc_replacement, post_quantum_security_bits,
     size_used_bits, size_warning, grover_assessment, mapper_note.
 
-Usage
+Command line
     python src/quantum_mapper.py                          demo with dummy data
-    python src/quantum_mapper.py IN.json OUT.json         map a findings file
-    python src/quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+    python src/quantum_mapper.py IN.json OUT.json [REPORT.md]
+        --overrides FILE   apply confirmed manual overrides
+        --draft            label the report as built from sample data
+        --strict           exit 1 if the findings fail validation
 
 Limits
     This is a theory-level mapping: it says which quantum attack applies, not
     that the attack is practical today. Padding weaknesses (e.g. textbook RSA)
     and classical key-strength problems are separate findings, reported
-    elsewhere. Standard library only.
+    elsewhere. Standard library only. See docs/quantum_mapper.md.
 """
 
 import json

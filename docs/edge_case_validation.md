@@ -1,3 +1,5 @@
+> **Version note:** the key sizes and line numbers below, and the 31-bit and 95-bit break results, refer to my local small-key copies (image project: rsa_utils.py with bits=16; video project: video_stego_project_updated). The project of record is the pinned GitHub commits (final-year-part1 at bb6d944, steganography at 4514806), where the padding sites are rsa_utils.py:45 and :50 and rsa_crypto.py:142 and :170. Results for the pinned versions are being re-checked.
+
 # Edge-Case Flag Validation
 
 Manual check of automated flags against both target projects.

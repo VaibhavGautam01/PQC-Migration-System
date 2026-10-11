@@ -14,6 +14,8 @@ Output:
 """
 import json
 import os
+import re
+import subprocess
 import sys
 
 # Make "import scanner" work no matter which folder we run this from.
@@ -21,8 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scanner  # our Stage 1 scanner (uses scan_path and build_report)
 from edge_merge import add_edge_flags
 
-# Display name -> local folder. data/targets/ is gitignored, so the target
-# repos are never pushed; they must be cloned there first.
+# Display name -> local folder. These are git submodules (see
+# .gitmodules). After cloning, run: git submodule update --init
 TARGETS = {
     "Secure-Video-Steganography": "data/targets/steganography",
     "Final-Year-project-part1": "data/targets/final-year-part1",
@@ -36,6 +38,7 @@ OUT_PATH = "outputs/findings.json"
 REQUIRED_KEYS = {
     "project", "file", "line", "primitive", "pattern_id", "description",
     "confidence", "key_size", "modulus_bits", "size_basis", "snippet",
+    "is_default",
 }
 
 
@@ -63,7 +66,83 @@ def check_schema(findings):
     return problems
 
 
+def git_commit(path):
+    """Return the HEAD commit hash of a cloned target repo, or None.
+
+    Saving it makes a scan reproducible: anyone can check out the same
+    commit of the target project and get the same findings.
+    """
+    try:
+        res = subprocess.run(["git", "-C", path, "rev-parse", "HEAD"],
+                             capture_output=True, text=True, timeout=15)
+        return res.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def comes_from_default(name, lines, depth=0):
+    """True if variable `name` ultimately comes from a function DEFAULT value.
+
+    Both of these count:
+        def generate_keypair(bits=256):    # name == "bits"
+        half = key_size // 2               # name == "half"; key_size has a default
+    A default is not proof of real use: callers may pass a different value.
+    """
+    # Depth limit: stops endless loops between derived names.
+    if depth > 3:
+        return False
+    # re.escape: the name is placed inside a regex as plain text.
+    esc = re.escape(name)
+    def_rx = re.compile(r"\bdef\s+\w+\s*\(.*\b" + esc + r"\s*(?::\s*\w+)?\s*=\s*\d+")
+    div_rx = re.compile(r"^\s*" + esc + r"\s*=\s*(\w+)\s*//\s*\d+")
+    # Pass 1: is the name a parameter with a default, like def f(bits=256)?
+    for ln in lines:
+        if def_rx.search(ln):
+            return True
+    # Pass 2: a derived name (half = key_size // 2) is a default if its source is.
+    for ln in lines:
+        m = div_rx.match(ln)
+        if m and comes_from_default(m.group(1), lines, depth + 1):
+            return True
+    # No default found: the value was passed in by a caller, or is unknown.
+    return False
+
+
+def mark_defaults(root, findings):
+    """Add finding["is_default"] = True when key_size is only a default value.
+
+    Fixes the dashboard overcount: rsa_utils.py defaults (bits=256) are not
+    the sizes really used (callers pass bits=128).
+    """
+    # cache: file path -> its lines, so every source file is read only once.
+    cache = {}
+    for f in findings:
+        f["is_default"] = False
+        # size_basis reads like: resolved from 'half' (...). Only a size that
+        # came from a variable can be a default; a literal such as bits=128 is
+        # a real value chosen by the caller, so it stays False.
+        m = re.match(r"resolved from '(\w+)'", f.get("size_basis") or "")
+        if not m:
+            continue
+        path = os.path.join(root, f["file"])
+        if path not in cache:
+            # errors="ignore": an odd byte in a target file must not crash this.
+            with open(path, encoding="utf-8", errors="ignore") as fh:
+                cache[path] = fh.read().splitlines()
+        # m.group(1) is the variable name the size was resolved from.
+        f["is_default"] = comes_from_default(m.group(1), cache[path])
+
+
 def main():
+    """Scan both target repos and write the single outputs/findings.json.
+
+    Every finding is tagged with its project and the is_default flag, the
+    edge-case flags (padding, indirect usage) are attached, and the schema
+    is checked before the file is considered valid.
+
+    Returns:
+        0 on success, 1 if a target folder is missing.
+    """
     projects = {}      # per-project summary (counts), copied from scanner
     all_findings = []  # merged list of every finding from both repos
 
@@ -73,7 +152,9 @@ def main():
             return 1
         # scan_path walks the folder; tag_and_sort labels and orders results
         found = tag_and_sort(name, scanner.scan_path(path))
+        mark_defaults(path, found)  # flag sizes that are only defaults
         projects[name] = scanner.build_report(path, found)["summary"]
+        projects[name]["commit"] = git_commit(path)  # reproducibility
         all_findings.extend(found)
 
     # Safety net: refuse to write a file that downstream stages cannot read.
@@ -85,7 +166,7 @@ def main():
         overall[f["primitive"]] = overall.get(f["primitive"], 0) + 1
 
     report = {
-        "schema_version": "1.0",                    # bump if field names change
+        "schema_version": "1.1",                    # bump if field names change
         "scanner_version": scanner.SCANNER_VERSION,  # which scanner produced this
         "projects": projects,
         "by_primitive": overall,

@@ -1,0 +1,6 @@
+[submodule "data/targets/final-year-part1"]
+	path = data/targets/final-year-part1
+	url = https://github.com/tarunsaxena2/Final-Year-project-part1
+[submodule "data/targets/steganography"]
+	path = data/targets/steganography
+	url = https://github.com/tarunsaxena2/Secure-Video-Steganography

@@ -142,7 +142,7 @@ A static scanner that walks a codebase line by line and matches **46 signature p
 | Project | Findings | Primitives | Key observation |
 |:---|:-:|:---|:---|
 | 🎥 **Secure-Video-Steganography** | 9 | RSA 8, SHA 1 | RSA keys of 1024 / 2048 / 3072 bits chosen in the UI; SHA-256 used for frame selection |
-| 🖼️ **Final-Year-project-part1** | 15 | RSA 15 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
+| 🖼️ **Final-Year-project-part1** | 17 | RSA 17 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
 
 > ⚠️ **Two kinds of risk are visible already.**
 > **Quantum risk:** all RSA here falls to Shor's algorithm.
@@ -273,3 +273,18 @@ Each member works on a personal branch and merges into `main` after review.
 🎓 HCST Mathura · AKTU · Final-Year B.Tech CSE
 
 </div>
+
+## Pinned target repositories
+
+findings.json is only reproducible when everyone scans the same target commits.
+Clone the two targets into data/targets/ and check out these commits before running src/run_all.py:
+
+| Target (dashboard name) | Folder | Commit |
+|---|---|---|
+| Final-Year-project-part1 | data/targets/final-year-part1 | bb6d944 (22 Sep, "final touches") |
+| Secure-Video-Steganography | data/targets/steganography | 4514806 (25 Sep, "Initial commit") |
+
+    git -C data/targets/final-year-part1 checkout bb6d944
+    git -C data/targets/steganography checkout 4514806
+
+Expected result: 26 findings (steganography 9, part1 17), 4 padding flags, 10 indirect-usage links.

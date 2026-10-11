@@ -81,5 +81,21 @@ class TestRenderMarkdown(unittest.TestCase):
         self.assertNotIn("b.py:7", self.md)
 
 
+class TestDefaultBasis(unittest.TestCase):
+    def test_default_flag_is_carried(self):
+        flag = check_finding({"primitive": "RSA", "modulus_bits": 512, "is_default": True})
+        self.assertTrue(flag["is_default"])
+
+    def test_rows_are_labelled_by_basis(self):
+        md = render_markdown(check_findings([
+            {"project": "P", "file": "a.py", "line": 1, "primitive": "RSA",
+             "modulus_bits": 512, "is_default": True},
+            {"project": "P", "file": "b.py", "line": 2, "primitive": "RSA",
+             "modulus_bits": 256},
+        ]))
+        self.assertIn("| default only |", md)
+        self.assertIn("| in use |", md)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

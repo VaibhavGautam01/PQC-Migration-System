@@ -44,6 +44,7 @@ def check_finding(f):
         "project": f.get("project"), "file": f.get("file"), "line": f.get("line"),
         "primitive": f["primitive"], "modulus_bits": bits,
         "level": level, "reason": reason, "note": note,
+        "is_default": bool(f.get("is_default")),
     }
 
 
@@ -61,17 +62,20 @@ def render_markdown(flags):
         "These ratings are independent of the quantum risk score. A short "
         "RSA/DSA/DH key can be broken by ordinary computers today, with no "
         "quantum computer involved.", "",
-        "| Project | File:line | Modulus (bits) | Rating | Reason |",
-        "|---|---|---|---|---|",
+        "| Project | File:line | Modulus (bits) | Basis | Rating | Reason |",
+        "|---|---|---|---|---|---|",
     ]
     for x in sorted(sized, key=lambda x: (x["project"] or "", x["file"] or "", x["line"] or 0)):
         lines.append(f"| {x['project']} | {x['file']}:{x['line']} | "
-                     f"{x['modulus_bits']} | {x['level']} | {x['reason']} |")
+                     f"{x['modulus_bits']} | {'default only' if x['is_default'] else 'in use'} | "
+                     f"{x['level']} | {x['reason']} |")
     lines += [
         "",
         f"{unsized} further RSA/DSA/DH findings carry no modulus size and are not rated.",
         "",
         "Sizes are the modulus sizes resolved by the scanner's key-size extraction.",
+        "Rows marked 'default only' take the size from a function default value; the size "
+        "really used by callers or the UI may differ.",
     ]
     return "\n".join(lines) + "\n"
 
@@ -91,7 +95,8 @@ def main():
     print(f"{len(flags)} RSA/DSA/DH findings, {len(sized)} with a modulus size")
     for x in sorted(sized, key=lambda x: (x["project"] or "", x["modulus_bits"])):
         print(f"  {x['level']:<9} {x['project']} {x['file']}:{x['line']} "
-              f"{x['modulus_bits']} bits - {x['reason']}")
+              f"{x['modulus_bits']} bits"
+              f"{' (default only)' if x['is_default'] else ''} - {x['reason']}")
     unknown = len(flags) - len(sized)
     if unknown:
         print(f"  {unknown} findings have no modulus size, so they are not rated")

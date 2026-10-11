@@ -16,7 +16,6 @@ import sys
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -389,4 +388,3 @@ with tabQ:
                     'physical qubits for error correction.</div>', unsafe_allow_html=True)
 
 st.caption("Built with ❤️ and a healthy fear of quantum computers · HCST Mathura · AKTU")
-

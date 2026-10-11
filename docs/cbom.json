@@ -1,0 +1,251 @@
+{
+  "cbom_version": "1.0",
+  "project_count": 2,
+  "entry_count": 6,
+  "finding_count": 26,
+  "entries": [
+    {
+      "id": "CBOM-001",
+      "project": "Final-Year-project-part1",
+      "primitive": "RSA",
+      "key_size_bits": null,
+      "size_basis": "scanner field or primitive name",
+      "size_status": "unknown",
+      "files": [
+        "r_channel_stego.py:42",
+        "r_channel_stego.py:52",
+        "r_channel_stego.py:54",
+        "r_channel_stego.py:59",
+        "rsa_utils.py:22",
+        "rsa_utils.py:33",
+        "rsa_utils.py:35",
+        "rsa_utils.py:37",
+        "rsa_utils.py:39",
+        "rsa_utils.py:45",
+        "rsa_utils.py:50"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": null,
+        "estimate_basis": "No qubit estimate is computed for this primitive.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "unknown",
+        "basis": "Size unknown, so classical strength cannot be assessed.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": [
+        "Key size is not verified; the qubit estimate and classical assessment depend on it."
+      ]
+    },
+    {
+      "id": "CBOM-002",
+      "project": "Final-Year-project-part1",
+      "primitive": "RSA",
+      "key_size_bits": 256,
+      "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
+      "size_status": "scanner-reported",
+      "files": [
+        "app.py:239",
+        "app.py:385",
+        "main.py:101"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": 515,
+        "estimate_basis": "Logical qubits to factor a 256-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "practically-breakable",
+        "basis": "A 256-bit modulus can be attacked with ordinary hardware or rented cloud time. No quantum computer is needed.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": []
+    },
+    {
+      "id": "CBOM-003",
+      "project": "Final-Year-project-part1",
+      "primitive": "RSA",
+      "key_size_bits": 512,
+      "size_basis": "resolved from 'bits' (per-prime, modulus = 2 x)",
+      "size_status": "scanner-reported",
+      "files": [
+        "rsa_utils.py:27",
+        "rsa_utils.py:28",
+        "rsa_utils.py:30"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": 1027,
+        "estimate_basis": "Logical qubits to factor a 512-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "practically-breakable",
+        "basis": "A 512-bit modulus can be attacked with ordinary hardware or rented cloud time. No quantum computer is needed.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": []
+    },
+    {
+      "id": "CBOM-004",
+      "project": "Secure-Video-Steganography",
+      "primitive": "RSA",
+      "key_size_bits": null,
+      "size_basis": "scanner field or primitive name",
+      "size_status": "unknown",
+      "files": [
+        "app.py:263",
+        "rsa_crypto.py:45",
+        "rsa_crypto.py:53",
+        "rsa_crypto.py:56",
+        "rsa_crypto.py:142",
+        "rsa_crypto.py:170"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": null,
+        "estimate_basis": "No qubit estimate is computed for this primitive.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "unknown",
+        "basis": "Size unknown, so classical strength cannot be assessed.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": [
+        "Key size is not verified; the qubit estimate and classical assessment depend on it."
+      ]
+    },
+    {
+      "id": "CBOM-005",
+      "project": "Secure-Video-Steganography",
+      "primitive": "RSA",
+      "key_size_bits": 1024,
+      "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
+      "size_status": "scanner-reported",
+      "files": [
+        "rsa_crypto.py:48",
+        "rsa_crypto.py:49"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": 2051,
+        "estimate_basis": "Logical qubits to factor a 1024-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "below-minimum",
+        "basis": "A 1024-bit modulus is below the 2048-bit minimum (this project flags RSA under 2048 bits; NIST guidance agrees). This is a classical finding, separate from the quantum threat.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": []
+    },
+    {
+      "id": "CBOM-006",
+      "project": "Secure-Video-Steganography",
+      "primitive": "SHA",
+      "key_size_bits": 256,
+      "size_basis": "literal in call",
+      "size_status": "scanner-reported",
+      "files": [
+        "frame_selector.py:32"
+      ],
+      "quantum_risk": {
+        "algorithm": "Grover's algorithm",
+        "impact": "WEAKENED",
+        "logical_qubits_estimate": null,
+        "estimate_basis": "No qubit estimate is computed for this primitive.",
+        "post_quantum_security_bits": 128
+      },
+      "classical_risk": {
+        "status": "meets-minimum",
+        "basis": "A 256-bit hash output is adequate classically.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "not-applicable",
+        "weakness": null,
+        "source": "Padding schemes apply to RSA encryption and signatures."
+      },
+      "recommended_pqc": {
+        "algorithm": "SHA-256 or larger (SHA-2 / SHA-3)",
+        "standard": "NIST FIPS 180-4 / FIPS 202",
+        "rationale": "Grover's algorithm halves preimage resistance; a 256-bit or larger output keeps about 128-bit security."
+      },
+      "notes": []
+    }
+  ],
+  "unmapped": [],
+  "references": [
+    "Shor, P. W. (1997). Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer. SIAM J. Comput. 26(5), 1484-1509.",
+    "Grover, L. K. (1996). A fast quantum mechanical algorithm for database search. Proc. 28th ACM STOC, 212-219.",
+    "Beauregard, S. (2003). Circuit for Shor's algorithm using 2n+3 qubits. Quantum Information & Computation 3(2), 175-185. arXiv:quant-ph/0205095.",
+    "Gidney, C. and Ekera, M. (2021). How to factor 2048 bit RSA integers in 8 hours using 20 million noisy qubits. Quantum 5, 433. arXiv:1905.09749.",
+    "NIST FIPS 203 (2024). Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM).",
+    "NIST FIPS 204 (2024). Module-Lattice-Based Digital Signature Standard (ML-DSA)."
+  ],
+  "notes": [
+    "Quantum risk, classical risk and padding risk are reported separately. Padding weaknesses such as textbook RSA are classical problems, not consequences of Shor's algorithm.",
+    "Logical-qubit estimates use the 2n+3 circuit for factoring an n-bit modulus. They exclude error-correction overhead, so physical qubit counts are much larger.",
+    "All quantum demonstrations in this project run on a simulator at toy sizes. Resource figures for RSA-1024/2048 are published estimates, not measurements.",
+    "Grover's algorithm is a quadratic speed-up, not a full break: symmetric and hash primitives keep about half their classical security bits."
+  ]
+}

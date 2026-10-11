@@ -39,6 +39,8 @@ class TestCollectCaveats(unittest.TestCase):
         self.assertIn("AES", caveats[0])
 
     def test_unknown_primitive_is_a_caveat(self):
+        caveats = qm.collect_caveats(qm.map_findings([finding(primitive="ROT13")]))
+        self.assertTrue(any("ROT13" in c for c in caveats))
         caveats = qm.collect_caveats(qm.map_findings([finding(primitive="Blowfish")]))
         self.assertTrue(any("Blowfish" in c for c in caveats))
 

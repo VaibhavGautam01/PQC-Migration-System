@@ -24,6 +24,7 @@ def factor_n(n):
 
 
 def hex_width(n):
+    """Return the hex-string width of one ciphertext block for modulus n."""
     return ((n.bit_length() + 7) // 8) * 2
 
 
@@ -49,6 +50,7 @@ def break_rsa(pub, cipher_ints):
 
 
 def main():
+    """Embed with a small key, then extract, factor and decrypt using only public data."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True, help="path to stego project")
     ap.add_argument("--demo", action="store_true")

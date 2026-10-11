@@ -487,21 +487,66 @@ def write_cbom_markdown(cbom, path):
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(render_markdown(cbom))
 
+# ---------------------------------------------------------------------------
+# Consistency check
+# ---------------------------------------------------------------------------
+def check_consistency(cbom, mapped, json_path=None, md_path=None):
+    """Verify the CBOM agrees with its source data and with its output files.
 
-USAGE = "usage: cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] [--md OUT.md]"
+    Checks: schema validity, entry/finding counts against the mapped
+    findings, each entry's size, algorithm and file references against its
+    source group, and (if paths are given) that the JSON and Markdown files on
+    disk match the in-memory CBOM exactly. Returns a list of problems.
+    """
+    problems = list(validate_cbom(cbom))
+    groups, unmapped = _group_findings(mapped)
+    if cbom.get("finding_count") != len(mapped):
+        problems.append(f"finding_count {cbom.get('finding_count')} != {len(mapped)} mapped findings")
+    if len(cbom.get("unmapped", [])) != len(unmapped):
+        problems.append("unmapped count differs from the mapped findings")
+    entries = cbom.get("entries", [])
+    if len(entries) != len(groups):
+        problems.append(f"{len(entries)} entries but {len(groups)} source groups")
+    for entry in entries:
+        key = (entry.get("project"), entry.get("primitive"), entry.get("key_size_bits"))
+        group = groups.get(key)
+        if group is None:
+            problems.append(f"{entry.get('id')}: no source findings for {key}")
+            continue
+        if entry["quantum_risk"]["algorithm"] != group[0]["quantum_algorithm"]:
+            problems.append(f"{entry['id']}: quantum algorithm differs from the mapper output")
+        if entry["files"] != _file_refs(group):
+            problems.append(f"{entry['id']}: file references differ from the source findings")
+    if json_path:
+        with open(json_path, "r", encoding="utf-8") as fh:
+            if json.load(fh) != cbom:
+                problems.append(f"{json_path} does not match the CBOM")
+    if md_path:
+        with open(md_path, "r", encoding="utf-8") as fh:
+            if fh.read() != render_markdown(cbom):
+                problems.append(f"{md_path} does not match the CBOM")
+    return problems
+
+
+USAGE = ("usage: cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] "
+         "[--md OUT.md] [--check]")
 
 
 def main(argv=None):
     """CLI entry point.
 
-    python cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] [--md OUT.md]
+    python cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] [--md OUT.md] [--check]
+
+    --check re-reads the written JSON and Markdown files and verifies they
+    agree with each other and with the source findings (exit 1 if not).
     """
-    parsed = _parse(list(sys.argv[1:] if argv is None else argv), ("--facts", "--json", "--md"))
+    parsed = _parse(list(sys.argv[1:] if argv is None else argv),
+                    ("--facts", "--json", "--md"), ("--check",))
     if parsed is None or len(parsed[0]) != 1:
         print(USAGE)
         return 2
-    paths, values, _ = parsed
-    cbom, _mapped = build_cbom_from_files(paths[0], values["--facts"])
+    paths, values, flags = parsed
+    cbom, mapped = build_cbom_from_files(paths[0], values["--facts"])
     problems = validate_cbom(cbom)
     for problem in problems:
         print(f"CBOM INVALID: {problem}")
@@ -513,8 +558,13 @@ def main(argv=None):
     if values["--md"]:
         write_cbom_markdown(cbom, values["--md"])
         print(f"Markdown written to {values['--md']}")
+    if flags["--check"]:
+        found = check_consistency(cbom, mapped, values["--json"], values["--md"])
+        for problem in found:
+            print(f"CONSISTENCY: {problem}")
+        print("CONSISTENCY: OK" if not found else f"CONSISTENCY: {len(found)} problem(s)")
+        problems += found
     return 1 if problems else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

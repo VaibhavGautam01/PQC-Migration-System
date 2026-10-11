@@ -45,7 +45,7 @@ class TestBuildFromSample(unittest.TestCase):
     def test_counts(self):
         self.assertEqual(self.doc["finding_count"], 10)
         self.assertEqual(len(self.doc["unmapped"]), 1)
-        self.assertEqual(self.doc["unmapped"][0]["primitive"], "Blowfish")
+        self.assertEqual(self.doc["unmapped"][0]["primitive"], "ROT13")
 
     def test_every_finding_is_accounted_for(self):
         covered = sum(len(e["files"]) for e in self.doc["entries"])

@@ -16,3 +16,4 @@ outputs/tmp_*
 *.7z
 .coverage
 htmlcov/
+outputs/mapped_findings.json

@@ -28,7 +28,8 @@ is deterministic, not because of Shor's algorithm.
   "padding_risk": {
     "status": "none (textbook RSA) | flagged | unknown | not-applicable",
     "weakness": "what is wrong, or null",
-    "source": "who confirmed it"
+    "source": "who confirmed it",
+    "automated_flag": "edge_flag text from findings.json, or null"
   },
   "recommended_pqc": {
     "algorithm": "ML-KEM-768",
@@ -48,6 +49,8 @@ is deterministic, not because of Shor's algorithm.
 - `size_status` says how far to trust the size. `unverified` and `unknown` entries
   are listed under "Open data questions" in the Markdown output.
 - `quantum_risk` must never contain padding fields (checked by `validate_entry`).
+- `primitive` is one of RSA, ECC, DSA, DH, AES, SHA or a legacy cipher (3DES, DES, RC4, BLOWFISH). Legacy ciphers route to Grover's and are marked classically weak.
+- `automated_flag` is the edge-case module's flag (`edge_flag`). It sits beside the manually confirmed status and never feeds the quantum score.
 - The CBOM has no timestamp, so re-running the generator on the same input gives
   byte-identical output.
 

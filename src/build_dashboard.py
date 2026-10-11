@@ -94,7 +94,7 @@ def render_summary(ctx):
         f"- **Findings:** {len(mapped)} across {len(projects)} project(s): "
         + ", ".join(projects) + ".",
         f"- **Broken by Shor's algorithm** (RSA, ECC, DSA, DH): {shor} finding(s).",
-        f"- **Weakened by Grover's algorithm** (AES, SHA): {grover} finding(s). "
+        f"- **Weakened by Grover's algorithm** (AES, SHA, legacy ciphers): {grover} finding(s). "
         "This is a quadratic speed-up, not a full break.",
         f"- **Unrecognised primitives:** {unknown}.",
         f"- **Open data caveats:** {len(ctx['caveats'])} (listed under Mapping).",

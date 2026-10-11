@@ -81,7 +81,7 @@ class TestCheckConsistency(unittest.TestCase):
 
     def test_schema_problems_are_included(self):
         bad = copy.deepcopy(self.doc)
-        bad["entries"][0]["primitive"] = "Blowfish"
+        bad["entries"][0]["primitive"] = "ROT13"
         self.assertTrue(cbom.check_consistency(bad, self.mapped))
 
 

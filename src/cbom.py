@@ -198,10 +198,18 @@ PQC_RECOMMENDATIONS = {
                      "or larger output keeps about 128-bit security.",
     },
 }
+_LEGACY_RECOMMENDATION = {
+    "algorithm": "AES-256-GCM (replace the legacy cipher)",
+    "standard": "NIST FIPS 197 / SP 800-38D",
+    "rationale": "This cipher is already weak classically, so replace it now. "
+                 "AES-256 is also comfortable against Grover's algorithm.",
+}
+for _name in qm.LEGACY_CIPHERS:
+    PQC_RECOMMENDATIONS[_name] = dict(_LEGACY_RECOMMENDATION)
 
 # Field names under which the edge-case module might store a padding flag.
-PADDING_FLAG_KEYS = ("padding", "padding_status", "padding_flag", "edge_flags",
-                     "edge_case_flags", "flags")
+PADDING_FLAG_KEYS = ("edge_flag", "padding", "padding_status", "padding_flag",
+                     "edge_flags", "edge_case_flags", "flags")
 
 
 def load_facts(path):
@@ -238,6 +246,20 @@ def classical_assessment(canonical, bits, primitive_name=""):
         if bits < 224:
             return result("below-minimum", f"A {bits}-bit curve gives under 112-bit classical security.")
         return result("meets-minimum", f"A {bits}-bit curve meets the 224-bit minimum.")
+    if canonical == "DES":
+        return result("practically-breakable",
+                      "A 56-bit DES key can be brute-forced on ordinary hardware.")
+    if canonical == "3DES":
+        return result("below-minimum",
+                      "About 112-bit effective strength and a 64-bit block size "
+                      "(Sweet32 birthday attacks); deprecated by NIST.")
+    if canonical == "RC4":
+        return result("below-minimum",
+                      "RC4 has known keystream biases and is prohibited in TLS (RFC 7465).")
+    if canonical == "BLOWFISH":
+        return result("below-minimum",
+                      "A 64-bit block size makes long sessions vulnerable to "
+                      "birthday-bound (Sweet32) attacks.")
     if canonical == "AES":
         if not bits:
             return result("unknown", "Key size unknown.")
@@ -256,30 +278,42 @@ def classical_assessment(canonical, bits, primitive_name=""):
     return result("unknown", "Primitive not assessed.")
 
 
+def _automated_flag(group):
+    """First non-empty edge-case flag in a group of findings, as text (or None)."""
+    for item in group:
+        for key in PADDING_FLAG_KEYS:
+            text = qm._flag_text(item.get(key))
+            if text:
+                return text, key
+    return None, None
+
+
 def padding_assessment(canonical, group, project_facts):
     """Padding / construction risk. Only meaningful for RSA.
 
-    Priority: manually confirmed project facts, then the edge-case flags that
-    were merged into findings.json, then 'unknown'.
-    Returns {"status", "weakness", "source"}.
+    Priority: manually confirmed project facts, then the edge-case flag that
+    was merged into findings.json (edge_flag), then 'unknown'. The automated
+    flag, when present, is always reported in "automated_flag" so both views
+    stay visible. Returns {"status", "weakness", "source", "automated_flag"}.
     """
     if canonical != "RSA":
         return {"status": "not-applicable", "weakness": None,
-                "source": "Padding schemes apply to RSA encryption and signatures."}
+                "source": "Padding schemes apply to RSA encryption and signatures.",
+                "automated_flag": None}
+    flag, key = _automated_flag(group)
     manual = (project_facts or {}).get("padding")
     if manual:
         return {"status": manual.get("status", "unknown"),
                 "weakness": manual.get("weakness"),
-                "source": manual.get("source", "manual facts")}
-    for item in group:
-        for key in PADDING_FLAG_KEYS:
-            value = item.get(key)
-            if value:
-                text = value if isinstance(value, str) else json.dumps(value, sort_keys=True)
-                return {"status": "flagged", "weakness": text,
-                        "source": f"edge-case flag '{key}' in findings.json"}
+                "source": manual.get("source", "manual facts"),
+                "automated_flag": flag}
+    if flag:
+        return {"status": "flagged", "weakness": flag,
+                "source": f"edge-case flag '{key}' in findings.json",
+                "automated_flag": flag}
     return {"status": "unknown", "weakness": None,
-            "source": "No padding information in findings or manual facts."}
+            "source": "No padding information in findings or manual facts.",
+            "automated_flag": None}
 
 
 def _size_status(group):

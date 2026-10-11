@@ -8,5 +8,5 @@
   {"project": "SAMPLE-DUMMY-DATA", "file": "sample/aes_demo.py", "line": 45, "primitive": "AES-256", "pattern_id": "aes_cipher", "confidence": "high", "key_size": 256, "modulus_bits": null, "size_basis": "sample", "snippet": "AES.new(key32, AES.MODE_GCM)"},
   {"project": "SAMPLE-DUMMY-DATA", "file": "sample/hash_demo.py", "line": 6, "primitive": "SHA-256", "pattern_id": "sha_digest", "confidence": "high", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "hashlib.sha256(data)"},
   {"project": "SAMPLE-DUMMY-DATA", "file": "sample/hash_demo.py", "line": 12, "primitive": "SHA-1", "pattern_id": "sha_digest", "confidence": "high", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "hashlib.sha1(data)"},
-  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/other.py", "line": 3, "primitive": "Blowfish", "pattern_id": "unknown", "confidence": "low", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "Blowfish.new(key)"}
+  {"project": "SAMPLE-DUMMY-DATA", "file": "sample/other.py", "line": 3, "primitive": "ROT13", "pattern_id": "unknown", "confidence": "low", "key_size": null, "modulus_bits": null, "size_basis": "sample", "snippet": "rot13(text)"}
 ]

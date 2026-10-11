@@ -57,7 +57,7 @@ class TestRenderMarkdown(unittest.TestCase):
 
     def test_unmapped_section_lists_blowfish(self):
         self.assertIn("## Unmapped findings", self.text)
-        self.assertIn("Blowfish", self.text)
+        self.assertIn("ROT13", self.text)
 
     def test_notes_and_references_are_included(self):
         self.assertIn("## Notes", self.text)

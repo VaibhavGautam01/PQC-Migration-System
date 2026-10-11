@@ -72,7 +72,7 @@ class TestValidateEntry(unittest.TestCase):
 
     def test_bad_values_are_rejected(self):
         cases = {
-            "primitive": ("primitive", "Blowfish"),
+            "primitive": ("primitive", "ROT13"),
             "size_status": ("size_status", "maybe"),
             "key_size_bits": ("key_size_bits", -4),
             "files": ("files", []),
@@ -133,7 +133,7 @@ class TestValidateCbom(unittest.TestCase):
 
     def test_entry_problems_are_labelled_with_the_entry_id(self):
         doc = good_cbom()
-        doc["entries"][0]["primitive"] = "Blowfish"
+        doc["entries"][0]["primitive"] = "ROT13"
         self.assertTrue(any(p.startswith("CBOM-001:") for p in cbom.validate_cbom(doc)))
 
 

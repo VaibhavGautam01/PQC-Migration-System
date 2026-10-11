@@ -37,7 +37,7 @@ class TestSections(unittest.TestCase):
         grover = sum(1 for m in mapped if m["quantum_algorithm"] == "Grover's algorithm")
         text = bd.render_summary(self.ctx)
         self.assertIn(f"(RSA, ECC, DSA, DH): {shor} finding(s)", text)
-        self.assertIn(f"(AES, SHA): {grover} finding(s)", text)
+        self.assertIn(f"(AES, SHA, legacy ciphers): {grover} finding(s)", text)
 
     def test_detection_table_has_one_row_per_project(self):
         text = bd.render_detection(self.ctx)

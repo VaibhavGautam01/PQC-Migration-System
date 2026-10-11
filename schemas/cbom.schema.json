@@ -58,7 +58,11 @@
               "DSA",
               "DH",
               "AES",
-              "SHA"
+              "SHA",
+              "3DES",
+              "DES",
+              "RC4",
+              "BLOWFISH"
             ]
           },
           "key_size_bits": {
@@ -166,6 +170,12 @@
               },
               "source": {
                 "type": "string"
+              },
+              "automated_flag": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },

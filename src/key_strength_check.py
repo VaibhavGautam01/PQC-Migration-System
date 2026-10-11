@@ -77,6 +77,7 @@ def render_markdown(flags):
 
 
 def main():
+    """Rate findings and optionally write the flags as JSON and Markdown."""
     ap = argparse.ArgumentParser()
     ap.add_argument("findings")
     ap.add_argument("--out", help="write the flags as JSON")

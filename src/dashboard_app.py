@@ -33,16 +33,16 @@ GROVER = {"AES", "SHA"}                    # strength roughly halved by Grover's
 # Edit these as the project moves forward (status: done / wip / planned).
 STAGES = [
     ("🔍 Detection", "scanner, extra_patterns, key_size, run_all", "done"),
-    ("🕵️ Edge cases", "padding checks, indirect usage", "wip"),
-    ("⚛️ Quantum mapping", "primitive to Shor / Grover", "wip"),
-    ("📊 Risk and qubit cost", "estimator, risk report, CBOM", "wip"),
+    ("🕵️ Edge cases", "padding checks, indirect usage", "done"),
+    ("⚛️ Quantum mapping", "primitive to Shor / Grover", "done"),
+    ("📊 Risk and qubit cost", "estimator, risk report, CBOM", "done"),
     ("🎬 Shor's demo", "Qiskit, N = 15 and 21", "planned"),
 ]
 WEEKS = [
     ("Week 1", "Detection engine v0.4.0 and findings.json v1", "done"),
-    ("Week 2", "Validation, unit tests, Shor's demo, merge to main", "wip"),
-    ("Week 3", "Risk scoring, qubit cost, CBOM, ML-KEM-768", "planned"),
-    ("Week 4", "Final dashboard, report, rehearsal", "planned"),
+    ("Week 2", "Validation, unit tests, Shor's demo, merge to main", "done"),
+    ("Week 3", "Risk scoring, qubit cost, CBOM, ML-KEM-768", "done"),
+    ("Week 4", "Final dashboard, report, rehearsal", "wip"),
 ]
 STATUS_STYLE = {"done": ("✅ Done", "#00C853"), "wip": ("🔄 In progress", "#FFAB00"),
                 "planned": ("⏳ Planned", "#78909C")}

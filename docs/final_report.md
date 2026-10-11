@@ -118,4 +118,4 @@ Padding and indirect usage (edge-case module): 2 no-padding flags in each projec
 ## 7. Pending
 
 - Risk report: mark default-value sizes separately.
-- CBOM and the classical key-strength check (not found in the repository at the time of writing).
+- CBOM (JSON and Markdown): to be merged from Uday's branch.

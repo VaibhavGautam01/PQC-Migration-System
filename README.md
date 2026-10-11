@@ -14,8 +14,8 @@
 ![Qiskit](https://img.shields.io/badge/Qiskit-Shor's_Demo-6929C4?style=for-the-badge&logo=ibm&logoColor=white)
 ![PQC](https://img.shields.io/badge/Target-ML--KEM--768-00C853?style=for-the-badge&logo=letsencrypt&logoColor=white)
 ![Scanner](https://img.shields.io/badge/Scanner-v0.4.0-2196F3?style=for-the-badge)
-![Patterns](https://img.shields.io/badge/Patterns-46-9C27B0?style=for-the-badge)
-![Status](https://img.shields.io/badge/Week_1-Complete-4CAF50?style=for-the-badge)
+![Patterns](https://img.shields.io/badge/Patterns-47-9C27B0?style=for-the-badge)
+![Status](https://img.shields.io/badge/Week_4-Final_Polish-4CAF50?style=for-the-badge)
 ![Project](https://img.shields.io/badge/B.Tech-Final_Year-E91E63?style=for-the-badge)
 
 <br>
@@ -77,10 +77,10 @@ flowchart LR
 | # | Stage | What it does | Files | Status |
 |:-:|:---|:---|:---|:-:|
 | 1️⃣ | 🔍 **Detection** | Scans source code for crypto usage, extracts key sizes | `src/scanner.py`, `src/extra_patterns.py`, `src/key_size.py`, `src/run_all.py` | ✅ Done |
-| 1️⃣ | 🕵️ **Edge cases** | Missing padding, indirect usage, weak keys | `src/edge_cases.py` | 🔄 In progress |
-| 2️⃣ | ⚛️ **Quantum Mapping** | Maps each primitive to Shor's or Grover's | `src/quantum_mapper.py` | 🔄 In progress |
-| 3️⃣ | 📊 **Risk and Qubit Cost** | Qubit estimates (Shor: `q ≈ 2n + 3`), risk report, CBOM | `src/qubit_estimator.py` | 🔄 In progress |
-| 4️⃣ | 🎬 **Demo** | Shor's algorithm on the Qiskit simulator | `demo/` | ⏳ Planned |
+| 1️⃣ | 🕵️ **Edge cases** | Missing padding, indirect usage, weak keys | `src/edge_cases.py`, `src/key_strength_check.py` | ✅ Done |
+| 2️⃣ | ⚛️ **Quantum Mapping** | Maps each primitive to Shor's or Grover's | `src/quantum_mapper.py` | ✅ Done |
+| 3️⃣ | 📊 **Risk and Qubit Cost** | Qubit estimates (Shor: `q ≈ 2n + 3`), risk report, CBOM | `notebook/qubit_estimator.py`, `generate_risk_report.py` | ✅ Done |
+| 4️⃣ | 🎬 **Demo** | Shor's algorithm on the Qiskit simulator | `notebook/shors_demo.py` | ✅ Done |
 
 ---
 
@@ -91,13 +91,13 @@ flowchart LR
 | Week | Status | Focus |
 |:-:|:-:|:---|
 | **Week 1** | ✅ Done | Repo setup, general-purpose detection engine, `findings.json` v1. [Summary](docs/week1_summary.md) |
-| **Week 2** | 🔄 Next | Real-data validation, unit tests, Shor's demo (N = 15, 21), merge into `main` |
-| **Week 3** | ⏳ Planned | Risk scoring, qubit-cost numbers, CBOM, ML-KEM-768 recommendation |
-| **Week 4** | ⏳ Planned | Dashboard, final report, demo recordings, timed rehearsal |
+| **Week 2** | ✅ Done | Real-data validation, unit tests, Shor's demo (N = 15, 21), merge into `main` |
+| **Week 3** | ✅ Done | Risk scoring, qubit-cost numbers, CBOM, ML-KEM-768 recommendation. [Risk report](docs/risk_report.md) |
+| **Week 4** | 🔄 In progress | Dashboard, final report, demo recordings, timed rehearsal. [Final report](docs/final_report.md) |
 
 ## 🔍 Stage 1: Detection Engine
 
-A static scanner that walks a codebase line by line and matches **46 signature patterns** across six primitives.
+A static scanner that walks a codebase line by line and matches **47 signature patterns** across six primitives.
 
 **What it detects**
 
@@ -142,7 +142,7 @@ A static scanner that walks a codebase line by line and matches **46 signature p
 | Project | Findings | Primitives | Key observation |
 |:---|:-:|:---|:---|
 | 🎥 **Secure-Video-Steganography** | 9 | RSA 8, SHA 1 | RSA keys of 1024 / 2048 / 3072 bits chosen in the UI; SHA-256 used for frame selection |
-| 🖼️ **Final-Year-project-part1** | 15 | RSA 15 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
+| 🖼️ **Final-Year-project-part1** | 17 | RSA 17 | Textbook RSA with a **256-bit modulus** in real use, and `n < 256` in one module |
 
 > ⚠️ **Two kinds of risk are visible already.**
 > **Quantum risk:** all RSA here falls to Shor's algorithm.
@@ -199,7 +199,7 @@ git clone https://github.com/tarunsaxena2/Final-Year-project-part1 data/targets/
 python src/scanner.py tests/fixtures
 ```
 
-Expected: **46 findings in 4 files**.
+Expected: **46 findings in 4 files** (the fixtures happen to contain 46 matches, while the scanner has 47 patterns).
 
 ---
 
@@ -208,18 +208,25 @@ Expected: **46 findings in 4 files**.
 ```text
 PQC-Migration-System/
 ├── src/
-│   ├── scanner.py            # Stage 1: core scanner and CLI
-│   ├── extra_patterns.py     # ECC, DSA, DH, AES, SHA patterns
-│   ├── key_size.py           # key-size and modulus extraction
-│   └── run_all.py            # merges both scans into findings.json
-├── tests/
-│   └── fixtures/             # sample code the scanner is verified against
+│   ├── scanner.py              # Stage 1: core scanner and CLI
+│   ├── extra_patterns.py       # ECC, DSA, DH, AES, SHA patterns
+│   ├── key_size.py             # key-size and modulus extraction
+│   ├── edge_cases.py           # padding and indirect-usage checks
+│   ├── key_strength_check.py   # classical weak-key check (< 2048-bit RSA)
+│   ├── quantum_mapper.py       # Stage 2: primitive -> Shor / Grover
+│   ├── run_all.py              # merges both scans into findings.json
+│   └── dashboard_app.py        # Streamlit dashboard
+├── notebook/
+│   ├── qubit_estimator.py      # Stage 3: Shor q = 2n + 3, Grover halving
+│   └── shors_demo.py           # Stage 4: Shor's demo (N = 15, 21)
+├── tests/                      # unit tests and scanner fixtures
 ├── outputs/
-│   └── findings.json         # Stage 1 output, input for Stages 2 and 3
-├── docs/
-│   └── week1_summary.md      # weekly summaries
-├── demo/                     # Shor's algorithm demo (Week 2 onwards)
-├── data/targets/             # cloned target repos (git-ignored)
+│   └── findings.json           # Stage 1 output, input for Stages 2 and 3
+├── docs/                       # reports: risk, mapping, final, weekly summaries
+├── data/targets/               # target repos (git submodules)
+├── generate_risk_report.py     # builds docs/risk_report.md
+├── run_pipeline.py             # whole pipeline in one command
+├── run_tests.py                # all tests in one command
 ├── requirements.txt
 └── README.md
 ```
@@ -273,3 +280,18 @@ Each member works on a personal branch and merges into `main` after review.
 🎓 HCST Mathura · AKTU · Final-Year B.Tech CSE
 
 </div>
+
+## Pinned target repositories
+
+findings.json is only reproducible when everyone scans the same target commits.
+Clone the two targets into data/targets/ and check out these commits before running src/run_all.py:
+
+| Target (dashboard name) | Folder | Commit |
+|---|---|---|
+| Final-Year-project-part1 | data/targets/final-year-part1 | bb6d944 (22 Sep, "final touches") |
+| Secure-Video-Steganography | data/targets/steganography | 4514806 (25 Sep, "Initial commit") |
+
+    git -C data/targets/final-year-part1 checkout bb6d944
+    git -C data/targets/steganography checkout 4514806
+
+Expected result: 26 findings (steganography 9, part1 17), 4 padding flags, 10 indirect-usage links.

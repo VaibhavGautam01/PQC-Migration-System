@@ -1,4 +1,4 @@
-"""team_progress.py - detects each member's Week 1 deliverables from repo files.
+﻿"""team_progress.py - detects each member's Week 1 deliverables from repo files.
 
 Nothing is hard-coded: when a member pushes a file, refresh the dashboard
 and his tasks flip to Done. Score: 1 = done, 0.5 = partly, 0 = missing.
@@ -86,7 +86,7 @@ def evaluate(root, raw):
             ("Tue", "Unit tests for the mapper",
              d(find(root, pred=lambda n: n.startswith("test") and "mapper" in n)), ""),
             ("Wed", "AES / SHA routed to Grover's", d("Grover" in mt and "AES" in mt and "SHA" in mt), ""),
-            ("Thu", "mapping_report.md draft", d(F("mapping_report.md")), ""),
+            ("Thu", "mapping_report.md draft", d(find(root, pred=lambda n: n.startswith("mapping_report") and n.endswith(".md"))), ""),
             ("Fri", "Docstrings and polish", 1.0 if dr >= 0.9 else 0.5 if dr > 0 else 0.0, "")]),
         ("Yatharth Raghuvanshi", "Risk Scoring & ML", "#1DE9B6", [
             ("Mon", "Shor's qubit estimator (2n + 3)", d("shor_logical_qubits" in names(est)), ""),
@@ -97,3 +97,4 @@ def evaluate(root, raw):
     ]
     return [dict(name=n, role=r, color=c, tasks=t, pct=sum(x[2] for x in t) / len(t))
             for n, r, c, t in plan]
+

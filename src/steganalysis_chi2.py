@@ -19,6 +19,7 @@ from scipy.stats import chi2
 
 
 def chi_square_p(values):
+    """Return the chi-square p-value that pixel-value pairs (2k, 2k+1) are equalised."""
     hist = np.bincount(values, minlength=256).astype(float)
     obs = hist[0::2]
     exp = (hist[0::2] + hist[1::2]) / 2
@@ -28,6 +29,7 @@ def chi_square_p(values):
 
 
 def p_of(path, limit=None):
+    """Return the chi-square p-value for an image file, optionally on its first values only."""
     arr = np.array(Image.open(path).convert("RGB")).reshape(-1)
     if limit:
         arr = arr[:limit]
@@ -35,10 +37,12 @@ def p_of(path, limit=None):
 
 
 def verdict(p):
+    """Return EMBEDDED if p is above 0.5, otherwise clean."""
     return "EMBEDDED" if p > 0.5 else "clean"
 
 
 def main():
+    """Compare a clean photo with random-bit and project-embedded versions."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True)
     ap.add_argument("--cover", required=True)

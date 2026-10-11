@@ -13,6 +13,7 @@ from edge_cases import check_padding, find_indirect_usage
 
 
 def main():
+    """Merge padding and indirect-usage flags into a findings file."""
     ap = argparse.ArgumentParser()
     ap.add_argument("findings")
     ap.add_argument("--out", help="output file (default: overwrite input)")

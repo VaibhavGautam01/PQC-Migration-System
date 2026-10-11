@@ -1,3 +1,4 @@
+"""Print NO_PADDING flags for the RSA-MODEXP findings in a findings file."""
 import json
 import sys
 from pathlib import Path

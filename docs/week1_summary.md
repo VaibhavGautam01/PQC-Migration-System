@@ -26,6 +26,7 @@
 | Secure-Video-Steganography | 9 | RSA 8, SHA 1 |
 | Final-Year-project-part1 | 15 | RSA 15 |
 
+Note: part1 later went from 15 to 17 findings after the Week 2 cross-check added the `RSA-MANUAL-PRIME-ISPRIME` pattern.
 ## Manual notes (the scanner cannot determine these)
 
 1. part1 real use: `generate_keypair(bits=128)` gives a 256-bit modulus. The 256/512 in `rsa_utils.py` is only a default value.

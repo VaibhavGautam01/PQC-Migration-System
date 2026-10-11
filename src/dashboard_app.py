@@ -1,4 +1,4 @@
-"""
+﻿"""
 dashboard_app.py - Streamlit dashboard for the PQC Migration Advisor.
 
 Reads outputs/findings.json (made by src/run_all.py) and shows the results
@@ -16,7 +16,6 @@ import sys
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,16 +33,16 @@ GROVER = {"AES", "SHA"}                    # strength roughly halved by Grover's
 # Edit these as the project moves forward (status: done / wip / planned).
 STAGES = [
     ("🔍 Detection", "scanner, extra_patterns, key_size, run_all", "done"),
-    ("🕵️ Edge cases", "padding checks, indirect usage", "wip"),
-    ("⚛️ Quantum mapping", "primitive to Shor / Grover", "wip"),
-    ("📊 Risk and qubit cost", "estimator, risk report, CBOM", "wip"),
+    ("🕵️ Edge cases", "padding checks, indirect usage", "done"),
+    ("⚛️ Quantum mapping", "primitive to Shor / Grover", "done"),
+    ("📊 Risk and qubit cost", "estimator, risk report, CBOM", "done"),
     ("🎬 Shor's demo", "Qiskit, N = 15 and 21", "planned"),
 ]
 WEEKS = [
     ("Week 1", "Detection engine v0.4.0 and findings.json v1", "done"),
-    ("Week 2", "Validation, unit tests, Shor's demo, merge to main", "wip"),
-    ("Week 3", "Risk scoring, qubit cost, CBOM, ML-KEM-768", "planned"),
-    ("Week 4", "Final dashboard, report, rehearsal", "planned"),
+    ("Week 2", "Validation, unit tests, Shor's demo, merge to main", "done"),
+    ("Week 3", "Risk scoring, qubit cost, CBOM, ML-KEM-768", "done"),
+    ("Week 4", "Final dashboard, report, rehearsal", "wip"),
 ]
 STATUS_STYLE = {"done": ("✅ Done", "#00C853"), "wip": ("🔄 In progress", "#FFAB00"),
                 "planned": ("⏳ Planned", "#78909C")}
@@ -88,6 +87,8 @@ def load(path, mtime):
 
 def risk_label(row):
     """Classify one finding. Weak RSA-style keys are breakable WITHOUT quantum."""
+    if bool(row.get("is_default", False)):
+        return "Default value"
     if row["primitive"] in SHOR:
         m = row["modulus_bits"]
         if pd.notna(m) and m < 1024:
@@ -101,7 +102,7 @@ def risk_label(row):
 
 
 RISK_COLORS = {"Classically breakable": "#FF1744", "Weak key + Shor": "#FF9100",
-               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE"}
+               "Quantum: Shor": "#7C4DFF", "Quantum: Grover": "#00E5FF", "Other": "#90A4AE", "Default value": "#FFD740"}
 
 if not os.path.isfile(DATA_PATH):
     st.error("outputs/findings.json not found. Run: python src/run_all.py")
@@ -304,19 +305,40 @@ with tab0:
                          unsafe_allow_html=True)
 
 with tabE:
-    st.caption("Vaibhav Gautam · src/edge_cases.py · results from docs/edge_case_validation.md "
+    st.caption("Vaibhav Gautam ? src/edge_cases.py ? read live from outputs/findings.json "
                "(this tab ignores the sidebar filters)")
-    e = pd.DataFrame(EDGE_ROWS, columns=["Project", "Flag", "Location", "Result", "Evidence"])
-    kpi_row([("Padding flags confirmed", int((e["Flag"] == "NO_PADDING").sum()), "#FF5252"),
-             ("Indirect-usage groups", int((e["Flag"] == "INDIRECT_USAGE").sum()), "#B388FF"),
-             ("False positives fixed", int((e["Flag"] == "False positive").sum()), "#FFAB40"),
-             ("Merged into findings.json", "yes" if TEAM[1]["tasks"][4][2] == 1 else "not yet", "#00B0FF")])
-    st.dataframe(e, hide_index=True)
-    st.markdown("""<div class="note">🔓 <b>Reduced-key attacks.</b> A 31-bit modulus (image project) was factored in
-0.0002 s and a 95-bit modulus (video project) in 0.23 s; both recovered the message from public information only.
-Length + CRC32 framing is not real padding, and frame selection covers only indices 0-255.</div>""",
-                unsafe_allow_html=True)
+    ec = raw.get("edge_cases") or {}
+    if not ec:
+        st.warning("No edge_cases section in findings.json yet. Run src/run_all.py after the edge-case merge.")
+    else:
+        # The flagged finding for each padding site, so the table can show the actual code line
+        code_of = {(f.get("project"), f["file"], f["line"]): f.get("snippet", "")
+                   for f in raw["findings"] if "edge_flag" in f}
+        pad, ind = [], []
+        for proj, groups in ec.items():
+            for r in groups.get("padding", []):
+                pad.append({"Project": proj, "File": r["file"], "Line": r["line"], "Flag": r["flag"],
+                            "Code": code_of.get((proj, r["file"], r["line"]), ""),
+                            "Why it matters": r["detail"]})
+            for r in groups.get("indirect_usage", []):
+                ind.append({"Project": proj, "File": r["file"], "Line": r["line"], "Detail": r["detail"]})
+        for col, (label, val, color) in zip(st.columns(4), [
+                ("Padding flags", len(pad), "#FF5252"),
+                ("Indirect-usage links", len(ind), "#B388FF"),
+                ("Projects covered", len(ec), "#FFAB40"),
+                ("Findings carrying a flag", len(code_of), "#00B0FF")]):
+            col.markdown(f'<div class="kpi" style="--c:{color}"><b>{val}</b><span>{label}</span></div>',
+                         unsafe_allow_html=True)
+        st.subheader("Textbook RSA: no OAEP/PKCS1 padding")
+        st.dataframe(pd.DataFrame(pad), hide_index=True)
+        st.subheader("Crypto imported in one file, used in another")
+        st.dataframe(pd.DataFrame(ind), hide_index=True)
+        st.markdown('<div class="note">?? <b>Reduced-key attacks</b> (from docs/edge_case_validation.md): '
+                    'a 31-bit modulus (image project) was factored in 0.0002 s and a 95-bit modulus '
+                    '(video project) in 0.23 s; both recovered the message from public information only.</div>',
+                    unsafe_allow_html=True)
     st.caption("Functions in edge_cases.py: " + ", ".join(sorted(names(find(ROOT, "edge_cases.py")))))
+
 
 with tabM:
     st.caption("Uday Pratap Singh · src/quantum_mapper.py (this tab ignores the sidebar filters)")
@@ -333,7 +355,7 @@ with tabM:
     st.plotly_chart(style(px.pie(names=["Shor's", "Grover's"], values=[n_s, n_g], hole=0.55,
                                  title="Findings by quantum algorithm",
                                  color_discrete_sequence=["#7C4DFF", "#00E5FF"]), 300), key="algo")
-    rep = find(ROOT, "mapping_report.md")
+    rep = find(ROOT, pred=lambda n: n.startswith("mapping_report") and n.endswith(".md"))
     if rep:
         with st.expander("mapping_report.md"):
             st.markdown(text(rep))

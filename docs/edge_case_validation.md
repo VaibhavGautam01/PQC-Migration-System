@@ -12,7 +12,7 @@ Manual check of automated flags against both target projects.
 | INDIRECT_USAGE | app.py:25, main.py:12 | Confirmed | import from r_channel_stego.py, which has its own RSA setup (phi, modular inverse) |
 | False positive (fixed) | `import rsa` in app.py, main.py | Fixed | pattern matched `import rsa_utils`; corrected with `\b` |
 
-Key size: the scanner reported 16, but that is the prime size. The modulus is about 31 bits (generate_keypair default bits=16).
+Key size (depends on version and entry point): in my local copy, rsa_utils.py defaults to bits=16 per prime and app.py calls generate_keypair(bits=16), giving a modulus of about 31 bits; main.py calls generate_keypair(bits=128), about 256 bits. The copy scanned for findings.json resolves to 256-bit primes by default (512-bit modulus), and app.py and main.py use bits=128 (256-bit modulus). All of these are far below the 2048-bit minimum. src/stego_attack_image.py demonstrates the break on the 31-bit key.
 
 ## Video project (Secure-Video-Steganography)
 

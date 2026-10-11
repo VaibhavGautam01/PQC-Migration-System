@@ -78,6 +78,7 @@ These ratings are independent of the quantum risk score. A short RSA/DSA/DH key 
 
 Sizes are the modulus sizes resolved by the scanner's key-size extraction.
 Rows marked 'default only' take the size from a function default value; the size really used by callers or the UI may differ.
+
 ## Logical vs Physical Qubits: Why These Numbers Are Not Breakable Today
 
 The qubit counts in this report (for example 2,051 for a 1024-bit RSA key)

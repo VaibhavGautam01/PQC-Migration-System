@@ -1,8 +1,8 @@
 # Week 2 Day 1: scanner cross-check
 
-**Check A** (finding matches real source line): 24 of 24.
+**Check A** (finding matches real source line): 26 of 26.
 
-**Check B** (crypto-looking lines with no finding): 166, for manual review.
+**Check B** (crypto-looking lines with no finding): 164, for manual review.
 
 | Project | File:line | Code | Review |
 |---|---|---|---|
@@ -134,8 +134,6 @@
 | Final-Year-pro | r_channel_stego.py:21 | `from sympy import isprime` | |
 | Final-Year-pro | r_channel_stego.py:23 | `from rsa_utils import encrypt_int, decrypt_int` | |
 | Final-Year-pro | r_channel_stego.py:26 | `# Red channel after encryption. Below this, common text would randomly` | |
-| Final-Year-pro | r_channel_stego.py:42 | `primes = [p for p in range(2, 40) if isprime(p)]` | |
-| Final-Year-pro | r_channel_stego.py:54 | `e_candidates = [c for c in range(3, phi) if isprime(c) and phi % c != 0]` | |
 | Final-Year-pro | r_channel_stego.py:74 | `f"modulus n={n}. This is the small-key limitation of this "` | |
 | Final-Year-pro | r_channel_stego.py:87 | `cipher_vals = [encrypt_int(ord(ch), pub) for ch in secret_text]` | |
 | Final-Year-pro | r_channel_stego.py:88 | `flat[1:len(secret_text) + 1, 0] = cipher_vals` | |

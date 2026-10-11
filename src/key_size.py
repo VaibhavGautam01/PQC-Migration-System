@@ -39,11 +39,16 @@ def call_statement(lines, idx, start):
     are appended (max MAX_CALL_LINES). This replaces the old fixed 3-line
     look-ahead, which wandered into unrelated code.
     """
+    # Start at the match itself, so text before it on the line is ignored.
     text = lines[idx][start:]
+    # depth = number of "(" still open; 0 means the call ends on this line.
     depth = text.count("(") - text.count(")")
     j = idx
+    # Read on until the call closes. The two limits (end of file and
+    # MAX_CALL_LINES) stop a missing ")" from swallowing the whole file.
     while depth > 0 and j + 1 < len(lines) and j - idx < MAX_CALL_LINES:
         j += 1
+        # Join with a space so a split call reads like one line for the regexes.
         text += " " + lines[j]
         depth += lines[j].count("(") - lines[j].count(")")
     return text
@@ -58,22 +63,29 @@ def resolve_name(name, lines, depth=0):
       half = key_size // 2               (derived value, resolved recursively)
     Returns None when the value cannot be determined.
     """
+    # Depth limit: stops endless loops such as a = b // 2 and b = a // 2.
     if depth > 3:
         return None
+    # re.escape: the variable name is placed inside a regex as plain text.
     esc = re.escape(name)
     pat_const = re.compile(rf"^\s*{esc}\s*(?::\s*\w+)?\s*=\s*(\d+)\s*(?:#.*)?$")
     pat_default = re.compile(rf"\bdef\s+\w+\s*\(.*\b{esc}\s*(?::\s*\w+)?\s*=\s*(\d+)")
     pat_div = re.compile(rf"^\s*{esc}\s*=\s*(\w+)\s*//\s*(\d+)\s*(?:#.*)?$")
+    # Pass 1: a direct value, either a constant or a function default.
     for ln in lines:
         m = pat_const.match(ln) or pat_default.search(ln)
         if m:
             return int(m.group(1))
+    # Pass 2: a derived value like half = key_size // 2. It runs only when
+    # pass 1 found nothing, so a direct value always wins. The base value is
+    # resolved recursively (depth + 1).
     for ln in lines:
         m = pat_div.match(ln)
         if m:
             base = resolve_name(m.group(1), lines, depth + 1)
             if base is not None:
                 return base // int(m.group(2))
+    # None means "unknown": the scanner then reports no size instead of guessing.
     return None
 
 

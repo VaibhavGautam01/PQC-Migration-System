@@ -70,13 +70,16 @@ RSA_PATTERNS = [
     # --- Textbook / hand-rolled RSA ---
     {"id": "RSA-MANUAL-PRIME",
      "regex": r"\bgetPrime\s*\(\s*(?P<bits>\d+)?",
-     "desc": "Prime generation, possible hand-rolled RSA key", "confidence": "medium", "keygen": True},
+     "desc": "Prime generation, possible hand-rolled RSA key",
+     "confidence": "medium", "keygen": True},
     {"id": "RSA-MANUAL-PHI",
      "regex": r"\b(?:phi|totient)\w*\s*=\s*\(?\s*p\s*-\s*1\s*\)?\s*\*\s*\(?\s*q\s*-\s*1",
-     "desc": "Euler totient (p-1)(q-1), textbook RSA key setup", "confidence": "high", "keygen": False},
+     "desc": "Euler totient (p-1)(q-1), textbook RSA key setup",
+     "confidence": "high", "keygen": False},
     {"id": "RSA-MANUAL-MODINV",
      "regex": r"\bpow\s*\(\s*\w+\s*,\s*-1\s*,",
-     "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation", "confidence": "medium", "keygen": False},
+     "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation",
+     "confidence": "medium", "keygen": False},
     {"id": "RSA-MODEXP",
      "regex": r"\bpow\s*\((?!\s*\w+\s*,\s*-1\s*,).+,.+,.+\)",
      "desc": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
@@ -88,7 +91,8 @@ RSA_PATTERNS = [
     # Week 2 Day 2 fix (found by cross-check Check B): r_channel_stego.py picks its
     # RSA primes with sympy isprime(), e.g. primes = [p for p in range(2, 40) if isprime(p)].
     # The older prime patterns (getPrime / randprime / nextprime) never matched this
-    # style, so the prime-selection step went unflagged (phi and modular-inverse lines in that file were already caught). Confidence is "low" because
+    # style, so the prime-selection step went unflagged (phi and modular-inverse lines in that
+    # file were already caught). Confidence is "low" because
     # isprime() is a generic helper that can also appear in non-crypto code.
     {"id": "RSA-MANUAL-PRIME-ISPRIME",
      "regex": r"(?<!def )\bisprime\s*\(",
@@ -152,16 +156,21 @@ def extract_key_size(lines, idx, match):
 
 def scan_file(path, root):
     """Scan one file and return a list of finding dicts."""
+    # Skip oversized or unreadable files so one bad file cannot stop the scan.
     try:
         if os.path.getsize(path) > MAX_FILE_BYTES:
             return []
+        # errors="ignore": an odd encoding must not crash the scan.
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             lines = f.read().splitlines()
     except OSError:
         return []
 
+    # Forward slashes keep paths identical on Windows and Linux, so
+    # findings.json does not change between machines.
     rel_path = os.path.relpath(path, root).replace(os.sep, "/")
     findings = []
+    # Every pattern is tried on every line; one line can match several.
     for idx, line in enumerate(lines):
         for pat in ALL_PATTERNS:
             m = pat["compiled"].search(line)
@@ -174,7 +183,9 @@ def scan_file(path, root):
                 "pattern_id": pat["id"],
                 "description": pat["desc"],
                 "confidence": pat["confidence"],
+                # Adds key_size, modulus_bits, size_basis (None if no size found).
                 **extract_key_info(lines, idx, m, pat),
+                # Snippet is capped at 200 chars to keep findings.json small.
                 "snippet": line.strip()[:200],
             })
     return findings
@@ -195,6 +206,17 @@ def scan_path(root):
 
 
 def build_report(root, findings):
+    """Wrap a list of findings in the report dict that is saved as JSON.
+
+    Args:
+        root: Folder (or file) that was scanned; stored as an absolute path.
+        findings: List of finding dicts returned by scan_path().
+
+    Returns:
+        Dict with scanner_version, scan_root, a summary (total findings,
+        files with findings, counts by pattern and by primitive) and the
+        findings themselves.
+    """
     return {
         "scanner_version": SCANNER_VERSION,
         "scan_root": os.path.abspath(root),
@@ -209,15 +231,25 @@ def build_report(root, findings):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scan a codebase for quantum-vulnerable crypto (RSA).")
+    """Command-line entry point: scan a path, print a summary, optionally save.
+
+    Usage: python src/scanner.py <path> [--out findings.json]
+
+    Returns:
+        0 on success, 1 if the path does not exist (used as the exit code).
+    """
+    parser = argparse.ArgumentParser(
+        description="Scan a codebase for quantum-vulnerable crypto (RSA).")
     parser.add_argument("path", help="Directory or file to scan")
     parser.add_argument("--out", help="Write findings JSON to this path")
     args = parser.parse_args()
 
+    # Fail early with a clear message and a non-zero exit code.
     if not os.path.exists(args.path):
         print(f"error: path not found: {args.path}", file=sys.stderr)
         return 1
 
+    # Scan, then print a short human-readable summary.
     report = build_report(args.path, scan_path(args.path))
     s = report["summary"]
     print(f"Scanned: {report['scan_root']}")
@@ -226,6 +258,7 @@ def main():
     for pid, n in sorted(s["by_pattern"].items()):
         print(f"  {pid}: {n}")
 
+    # Optional: also save the full report as JSON (parent folders are created).
     if args.out:
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
         with open(args.out, "w", encoding="utf-8") as f:

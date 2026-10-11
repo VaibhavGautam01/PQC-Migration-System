@@ -13,15 +13,16 @@ Registers:
 
 import math
 import sys
+from fractions import Fraction
 
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import AerSimulator
 
 # Windows consoles often default to cp1252, which can't print Qiskit's
 # box-drawing characters. Force UTF-8 so circuit.draw() works everywhere.
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from qiskit import QuantumCircuit
 
 N = 15
 A = 7           # must be coprime to N; the period of 7^x mod 15 is 4
@@ -99,16 +100,39 @@ def build_shor_circuit(a: int = A, n_count: int = N_COUNT) -> QuantumCircuit:
     qc.measure(range(n_count), range(n_count))
     return qc
 
+def run_shor_circuit(shots: int = 1024, a: int = A) -> dict:
+    """Run the order-finding circuit on the Aer simulator.
+
+    Returns:
+        Dict mapping measured bitstrings to counts, e.g. {'0100': 261, ...}.
+    """
+    circuit = build_shor_circuit(a)
+    simulator = AerSimulator()
+    compiled = transpile(circuit, simulator)
+    result = simulator.run(compiled, shots=shots).result()
+    return result.get_counts()
 
 if __name__ == "__main__":
-    circuit = build_shor_circuit()
-    print(f"Shor's circuit skeleton: N={N}, a={A}")
-    print(f"Qubits: {circuit.num_qubits}  |  Classical bits: {circuit.num_clbits}")
-    print(f"Gate counts: {dict(circuit.count_ops())}")
-    print()
-    print(circuit.draw("text"))
+    SHOTS = 1024
 
-    # Structural checks only: nothing is executed
-    assert circuit.num_qubits == N_COUNT + N_WORK
-    assert circuit.num_clbits == N_COUNT
-    print("\n[PASS] Circuit built successfully (not executed yet).")
+    circuit = build_shor_circuit()
+    print(f"Shor's circuit: N={N}, a={A}")
+    print(f"Qubits: {circuit.num_qubits}  |  Classical bits: {circuit.num_clbits}")
+
+    print(f"\nRunning on AerSimulator ({SHOTS} shots)...")
+    counts = run_shor_circuit(SHOTS)
+
+    print(f"\n{'Bitstring':<10}{'Decimal':>8}{'Count':>8}{'Phase':>8}  Guessed period r")
+    print("-" * 56)
+    for bitstring, count in sorted(counts.items()):
+        decimal = int(bitstring, 2)
+        phase = decimal / 2 ** N_COUNT
+        guess_r = Fraction(phase).limit_denominator(N).denominator
+        print(f"{bitstring:<10}{decimal:>8}{count:>8}{phase:>8.2f}  {guess_r}")
+
+    # Checks
+    assert sum(counts.values()) == SHOTS, "Shot count mismatch"
+    # The true period is 4, which divides 2^4 = 16, so an ideal simulation
+    # can only produce phases 0, 1/4, 1/2 and 3/4 (decimals 0, 4, 8, 12).
+    assert {int(b, 2) for b in counts} <= {0, 4, 8, 12}, "Unexpected outcomes"
+    print("\n[PASS] Circuit executed on the simulator; phases match period r = 4.")

@@ -424,16 +424,79 @@ def _parse(args, value_flags, bool_flags=()):
             paths.append(arg)
     return paths, values, bools
 
+# ---------------------------------------------------------------------------
+# Markdown rendering
+# ---------------------------------------------------------------------------
+def _md(value):
+    """Format a value for a Markdown table cell ('-' for empty, '|' escaped)."""
+    if value is None or value == "":
+        return "-"
+    return str(value).replace("|", "\\|").replace("\n", " ")
 
-USAGE = "usage: cbom.py FINDINGS.json [--facts FILE] [--json OUT.json]"
+
+def render_markdown(cbom):
+    """Render the CBOM as a human-readable Markdown document (deterministic)."""
+    lines = [
+        "# Cryptographic Bill of Materials (CBOM)", "",
+        f"Entries: {cbom['entry_count']} | Projects: {cbom['project_count']} | "
+        f"Findings covered: {cbom['finding_count']} | Unmapped: {len(cbom['unmapped'])}", "",
+        "Quantum risk, classical risk and padding risk are shown separately on "
+        "purpose: textbook RSA is dangerous because it is deterministic, not "
+        "because of Shor's algorithm.", "",
+        "| ID | Project | Primitive | Size (bits) | Size status | Quantum threat | "
+        "Logical qubits (est.) | Classical risk | Padding | Recommended PQC |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for e in cbom["entries"]:
+        q = e["quantum_risk"]
+        lines.append(
+            f"| {_md(e['id'])} | {_md(e['project'])} | {_md(e['primitive'])} | "
+            f"{_md(e['key_size_bits'])} | {_md(e['size_status'])} | "
+            f"{_md(q['algorithm'] + ' (' + q['impact'] + ')')} | "
+            f"{_md(q['logical_qubits_estimate'])} | {_md(e['classical_risk']['status'])} | "
+            f"{_md(e['padding_risk']['status'])} | {_md(e['recommended_pqc']['algorithm'])} |")
+    lines.append("")
+
+    lines += ["## Evidence", ""]
+    for e in cbom["entries"]:
+        lines.append(f"- {e['id']}: {', '.join(e['files'])}")
+    lines.append("")
+
+    open_items = [e for e in cbom["entries"] if e["size_status"] in ("unverified", "unknown")]
+    if open_items:
+        lines += ["## Open data questions", "",
+                  "These sizes are not verified. Qubit estimates and classical "
+                  "assessments for them may change.", ""]
+        lines += [f"- {e['id']} ({e['project']}, {e['primitive']}): size "
+                  f"{_md(e['key_size_bits'])} is {e['size_status']}." for e in open_items]
+        lines.append("")
+
+    if cbom["unmapped"]:
+        lines += ["## Unmapped findings", ""]
+        lines += [f"- {u['project']} {u['file']}:{u['line']}: {u['primitive']}"
+                  for u in cbom["unmapped"]]
+        lines.append("")
+
+    lines += ["## Notes", ""] + [f"- {n}" for n in cbom["notes"]] + [""]
+    lines += ["## References", ""] + [f"- {r}" for r in cbom["references"]] + [""]
+    return "\n".join(lines)
+
+
+def write_cbom_markdown(cbom, path):
+    """Write the Markdown rendering of the CBOM to a file."""
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(render_markdown(cbom))
+
+
+USAGE = "usage: cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] [--md OUT.md]"
 
 
 def main(argv=None):
     """CLI entry point.
 
-    python cbom.py FINDINGS.json [--facts data/manual_facts.json] [--json docs/cbom.json]
+    python cbom.py FINDINGS.json [--facts FILE] [--json OUT.json] [--md OUT.md]
     """
-    parsed = _parse(list(sys.argv[1:] if argv is None else argv), ("--facts", "--json"))
+    parsed = _parse(list(sys.argv[1:] if argv is None else argv), ("--facts", "--json", "--md"))
     if parsed is None or len(parsed[0]) != 1:
         print(USAGE)
         return 2
@@ -447,6 +510,9 @@ def main(argv=None):
     if values["--json"]:
         write_cbom_json(cbom, values["--json"])
         print(f"JSON written to {values['--json']}")
+    if values["--md"]:
+        write_cbom_markdown(cbom, values["--md"])
+        print(f"Markdown written to {values['--md']}")
     return 1 if problems else 0
 
 

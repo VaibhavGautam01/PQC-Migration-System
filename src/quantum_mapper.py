@@ -1,7 +1,7 @@
 """quantum_mapper.py - Stage 2 of the PQC Migration Advisor pipeline.
 
 Pipeline position:
-    scanner (findings.json) -> quantum_mapper -> qubit_estimator -> risk report
+    scanner (findings.json) -> quantum_mapper -> qubit_estimator -> CBOM / risk report
 
 Takes the classical-crypto findings from the Stage 1 scanner and attaches, to
 each one, the quantum algorithm that threatens it, the post-quantum security
@@ -11,25 +11,35 @@ level, and a recommended PQC replacement.
     Symmetric / hash (AES, SHA)     -> Grover's algorithm -> security roughly halved
 
 Input
-    A list of dicts with at least "primitive". Optional: "modulus_bits" and
-    "key_size". For RSA/DSA/DH, modulus_bits is preferred, because the
-    scanner's key_size can be the PRIME size rather than the modulus size.
+    A list of dicts (or {"findings": [...]}) with at least project, file,
+    line and primitive. Optional: "modulus_bits" and "key_size". For
+    RSA/DSA/DH, modulus_bits is preferred, because the scanner's key_size can
+    be the PRIME size rather than the modulus size.
+
+Manual overrides
+    Some facts cannot be read from source code (for example the key size a
+    function is actually called with). data/manual_facts.json lists them as
+    "size_overrides". An override is applied only if "confirmed" is true, so
+    facts the team has not agreed on never change results silently. Applied
+    overrides are recorded in each finding's "override_ids".
 
 Output
     The same dicts plus: canonical_primitive, family, quantum_algorithm,
     hard_problem, impact, pqc_replacement, post_quantum_security_bits,
     size_used_bits, size_warning, grover_assessment, mapper_note.
 
-Usage
+Command line
     python src/quantum_mapper.py                          demo with dummy data
-    python src/quantum_mapper.py IN.json OUT.json         map a findings file
-    python src/quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+    python src/quantum_mapper.py IN.json OUT.json [REPORT.md]
+        --overrides FILE   apply confirmed manual overrides
+        --draft            label the report as built from sample data
+        --strict           exit 1 if the findings fail validation
 
 Limits
     This is a theory-level mapping: it says which quantum attack applies, not
     that the attack is practical today. Padding weaknesses (e.g. textbook RSA)
     and classical key-strength problems are separate findings, reported
-    elsewhere. Standard library only.
+    elsewhere. Standard library only. See docs/quantum_mapper.md.
 """
 
 import json
@@ -42,6 +52,8 @@ __all__ = [
     "canonical_primitive", "map_primitive", "route_algorithm", "grover_assessment",
     "map_finding", "map_findings", "load_findings", "map_findings_file",
     "summarise", "generate_mapping_report", "main",
+    "REQUIRED_FIELDS", "validate_findings", "load_overrides", "apply_overrides",
+    "prepare_findings", "write_json", "collect_caveats",
 ]
 
 # Quantum algorithm labels used throughout the pipeline.
@@ -308,14 +320,113 @@ def load_findings(path):
     return data["findings"] if isinstance(data, dict) else data
 
 
-def map_findings_file(in_path, out_path):
+REQUIRED_FIELDS = ("project", "file", "line", "primitive")
+
+
+def validate_findings(findings):
+    """Check a findings list for structural problems.
+
+    Returns a list of human-readable problem strings (empty list = clean).
+    Checks: list shape, required fields present, and duplicate findings.
+    """
+    if not isinstance(findings, list):
+        return ["findings is not a list"]
+    problems, seen = [], set()
+    for i, item in enumerate(findings):
+        if not isinstance(item, dict):
+            problems.append(f"#{i}: not an object")
+            continue
+        missing = [k for k in REQUIRED_FIELDS if item.get(k) in (None, "")]
+        if missing:
+            problems.append(f"#{i} ({item.get('file', '?')}): missing {', '.join(missing)}")
+        key = (item.get("project"), item.get("file"), item.get("line"), item.get("primitive"))
+        if key in seen:
+            problems.append(f"#{i}: duplicate finding {key}")
+        seen.add(key)
+    return problems
+
+
+def load_overrides(path):
+    """Load manual size overrides from a JSON file.
+
+    Accepts a bare list or an object with a "size_overrides" list (the
+    layout of data/manual_facts.json).
+    """
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    return data.get("size_overrides", []) if isinstance(data, dict) else data
+
+
+def _override_matches(finding, match):
+    """True if a finding satisfies every condition in an override's 'match'."""
+    if "project" in match and finding.get("project") != match["project"]:
+        return False
+    if "file_contains" in match and match["file_contains"] not in str(finding.get("file", "")):
+        return False
+    if "line" in match and finding.get("line") != match["line"]:
+        return False
+    if "primitive" in match:
+        wanted = canonical_primitive(match["primitive"])
+        if wanted is None or canonical_primitive(finding.get("primitive", "")) != wanted:
+            return False
+    return True
+
+
+def apply_overrides(findings, overrides):
+    """Apply CONFIRMED manual overrides to findings (e.g. real modulus sizes).
+
+    An override is applied only when it has "confirmed": true, so facts the
+    team has not yet agreed on can sit in the file without changing results.
+
+    Returns (new_findings, report). The input list is not modified. The
+    report has one dict per override: id, confirmed, matched, source.
+    """
+    result = [dict(f) for f in findings]
+    report = []
+    for ov in overrides:
+        confirmed = bool(ov.get("confirmed"))
+        match = ov.get("match", {})
+        matched = 0
+        for item in result:
+            if _override_matches(item, match):
+                matched += 1
+                if confirmed:
+                    item.update(ov.get("set", {}))
+                    item["override_ids"] = list(item.get("override_ids", [])) + [ov.get("id", "?")]
+        report.append({"id": ov.get("id", "?"), "confirmed": confirmed,
+                       "matched": matched, "source": ov.get("source")})
+    return result, report
+
+
+def prepare_findings(in_path, overrides_path=None):
+    """Load findings, validate them, and apply confirmed overrides.
+
+    Returns (findings, problems, override_report).
+    """
+    findings = load_findings(in_path)
+    problems = validate_findings(findings)
+    report = []
+    if overrides_path:
+        findings, report = apply_overrides(findings, load_overrides(overrides_path))
+    return findings, problems, report
+
+
+def write_json(path, data):
+    """Write data as indented UTF-8 JSON with a trailing newline."""
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+
+
+def map_findings_file(in_path, out_path, overrides_path=None):
     """Read a findings file, map every finding, write the enriched JSON.
 
+    Confirmed overrides (if a path is given) are applied before mapping.
     Returns the mapped list so callers can chain into report generation.
     """
-    mapped = map_findings(load_findings(in_path))
-    with open(out_path, "w", encoding="utf-8") as fh:
-        json.dump(mapped, fh, indent=2)
+    findings, _problems, _report = prepare_findings(in_path, overrides_path)
+    mapped = map_findings(findings)
+    write_json(out_path, mapped)
     return mapped
 
 
@@ -339,10 +450,36 @@ def _cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def generate_mapping_report(mapped, out_path, draft=False):
+def collect_caveats(mapped, override_report=None):
+    """List the data-quality caveats a reader of the report must know about.
+
+    Covers: size warnings (a size that may be a prime size), findings with no
+    size at all for sized primitives, unrecognised primitives, and manual
+    overrides that are unconfirmed or matched nothing.
+    """
+    caveats = []
+    for item in mapped:
+        where = f"{item.get('project')} {item.get('file')}:{item.get('line')}"
+        if item.get("size_warning"):
+            caveats.append(f"{where}: {item['size_warning']} (size used: {item.get('size_used_bits')}).")
+        elif item.get("size_used_bits") is None and item.get("canonical_primitive") in ("RSA", "DSA", "DH", "ECC", "AES"):
+            caveats.append(f"{where}: {item['primitive']} has no size information.")
+        if item.get("canonical_primitive") is None:
+            caveats.append(f"{where}: unrecognised primitive {item.get('primitive')!r}; needs manual review.")
+    for ov in override_report or []:
+        if not ov["confirmed"]:
+            caveats.append(f"Override '{ov['id']}' is unconfirmed and was NOT applied "
+                           f"(would change {ov['matched']} finding(s)); source: {ov.get('source') or 'n/a'}.")
+        elif ov["matched"] == 0:
+            caveats.append(f"Override '{ov['id']}' is confirmed but matched no findings; check its 'match' rule.")
+    return caveats
+
+
+def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
     """Write mapping_report.md: per-project summary, detail table, caveats.
 
     With draft=True a banner marks the report as built from sample data.
+    `caveats` (see collect_caveats) is rendered as a "Data caveats" section.
     """
     projects = {}
     for item in mapped:
@@ -385,6 +522,12 @@ def generate_mapping_report(mapped, out_path, draft=False):
                 f"| {_cell(loc)} | {_cell(it.get('primitive'))} | "
                 f"{_cell(it.get('size_used_bits'))} | {_cell(it.get('size_basis'))} | "
                 f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} |")
+        lines.append("")
+
+    if caveats:
+        lines += ["## Data caveats", "",
+                  "Resolve these before treating the sizes above as final.", ""]
+        lines += [f"- {c}" for c in caveats]
         lines.append("")
 
     warned = sum(1 for m in mapped if m.get("size_warning"))
@@ -430,24 +573,52 @@ def main(argv=None):
     """CLI entry point.
 
     python quantum_mapper.py                              demo with dummy data
-    python quantum_mapper.py IN.json OUT.json             map a findings file
-    python quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+    python quantum_mapper.py IN.json OUT.json [REPORT.md] [options]
+
+    Options:
+        --overrides FILE   apply confirmed manual size overrides (manual_facts.json)
+        --draft            mark the report as built from sample data
+        --strict           exit with status 1 if the findings fail validation
     """
     args = list(sys.argv[1:] if argv is None else argv)
-    draft = "--draft" in args
-    paths = [a for a in args if a != "--draft"]
+    draft = strict = False
+    overrides_path = None
+    paths = []
+    it = iter(args)
+    for arg in it:
+        if arg == "--draft":
+            draft = True
+        elif arg == "--strict":
+            strict = True
+        elif arg == "--overrides":
+            overrides_path = next(it, None)
+            if not overrides_path:
+                print("--overrides needs a file path")
+                return 2
+        else:
+            paths.append(arg)
     if not paths:
         _demo()
         return 0
     if len(paths) not in (2, 3):
-        print("usage: quantum_mapper.py IN.json OUT.json [REPORT.md] [--draft]")
+        print("usage: quantum_mapper.py IN.json OUT.json [REPORT.md] "
+              "[--overrides FILE] [--draft] [--strict]")
         return 2
-    mapped = map_findings_file(paths[0], paths[1])
+
+    findings, problems, ov_report = prepare_findings(paths[0], overrides_path)
+    for problem in problems:
+        print(f"VALIDATION: {problem}")
+    for ov in ov_report:
+        state = "applied" if ov["confirmed"] else "NOT applied (unconfirmed)"
+        print(f"OVERRIDE {ov['id']}: matched {ov['matched']} finding(s), {state}")
+    mapped = map_findings(findings)
+    write_json(paths[1], mapped)
     summarise(mapped)
     if len(paths) == 3:
-        generate_mapping_report(mapped, paths[2], draft=draft)
+        generate_mapping_report(mapped, paths[2], draft=draft,
+                                caveats=collect_caveats(mapped, ov_report))
         print(f"Report written to {paths[2]}")
-    return 0
+    return 1 if (strict and problems) else 0
 
 
 if __name__ == "__main__":

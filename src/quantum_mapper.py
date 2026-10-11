@@ -42,6 +42,8 @@ __all__ = [
     "canonical_primitive", "map_primitive", "route_algorithm", "grover_assessment",
     "map_finding", "map_findings", "load_findings", "map_findings_file",
     "summarise", "generate_mapping_report", "main",
+    "REQUIRED_FIELDS", "validate_findings", "load_overrides", "apply_overrides",
+    "prepare_findings", "write_json",
 ]
 
 # Quantum algorithm labels used throughout the pipeline.
@@ -308,14 +310,113 @@ def load_findings(path):
     return data["findings"] if isinstance(data, dict) else data
 
 
-def map_findings_file(in_path, out_path):
+REQUIRED_FIELDS = ("project", "file", "line", "primitive")
+
+
+def validate_findings(findings):
+    """Check a findings list for structural problems.
+
+    Returns a list of human-readable problem strings (empty list = clean).
+    Checks: list shape, required fields present, and duplicate findings.
+    """
+    if not isinstance(findings, list):
+        return ["findings is not a list"]
+    problems, seen = [], set()
+    for i, item in enumerate(findings):
+        if not isinstance(item, dict):
+            problems.append(f"#{i}: not an object")
+            continue
+        missing = [k for k in REQUIRED_FIELDS if item.get(k) in (None, "")]
+        if missing:
+            problems.append(f"#{i} ({item.get('file', '?')}): missing {', '.join(missing)}")
+        key = (item.get("project"), item.get("file"), item.get("line"), item.get("primitive"))
+        if key in seen:
+            problems.append(f"#{i}: duplicate finding {key}")
+        seen.add(key)
+    return problems
+
+
+def load_overrides(path):
+    """Load manual size overrides from a JSON file.
+
+    Accepts a bare list or an object with a "size_overrides" list (the
+    layout of data/manual_facts.json).
+    """
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    return data.get("size_overrides", []) if isinstance(data, dict) else data
+
+
+def _override_matches(finding, match):
+    """True if a finding satisfies every condition in an override's 'match'."""
+    if "project" in match and finding.get("project") != match["project"]:
+        return False
+    if "file_contains" in match and match["file_contains"] not in str(finding.get("file", "")):
+        return False
+    if "line" in match and finding.get("line") != match["line"]:
+        return False
+    if "primitive" in match:
+        wanted = canonical_primitive(match["primitive"])
+        if wanted is None or canonical_primitive(finding.get("primitive", "")) != wanted:
+            return False
+    return True
+
+
+def apply_overrides(findings, overrides):
+    """Apply CONFIRMED manual overrides to findings (e.g. real modulus sizes).
+
+    An override is applied only when it has "confirmed": true, so facts the
+    team has not yet agreed on can sit in the file without changing results.
+
+    Returns (new_findings, report). The input list is not modified. The
+    report has one dict per override: id, confirmed, matched, source.
+    """
+    result = [dict(f) for f in findings]
+    report = []
+    for ov in overrides:
+        confirmed = bool(ov.get("confirmed"))
+        match = ov.get("match", {})
+        matched = 0
+        for item in result:
+            if _override_matches(item, match):
+                matched += 1
+                if confirmed:
+                    item.update(ov.get("set", {}))
+                    item["override_ids"] = list(item.get("override_ids", [])) + [ov.get("id", "?")]
+        report.append({"id": ov.get("id", "?"), "confirmed": confirmed,
+                       "matched": matched, "source": ov.get("source")})
+    return result, report
+
+
+def prepare_findings(in_path, overrides_path=None):
+    """Load findings, validate them, and apply confirmed overrides.
+
+    Returns (findings, problems, override_report).
+    """
+    findings = load_findings(in_path)
+    problems = validate_findings(findings)
+    report = []
+    if overrides_path:
+        findings, report = apply_overrides(findings, load_overrides(overrides_path))
+    return findings, problems, report
+
+
+def write_json(path, data):
+    """Write data as indented UTF-8 JSON with a trailing newline."""
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+
+
+def map_findings_file(in_path, out_path, overrides_path=None):
     """Read a findings file, map every finding, write the enriched JSON.
 
+    Confirmed overrides (if a path is given) are applied before mapping.
     Returns the mapped list so callers can chain into report generation.
     """
-    mapped = map_findings(load_findings(in_path))
-    with open(out_path, "w", encoding="utf-8") as fh:
-        json.dump(mapped, fh, indent=2)
+    findings, _problems, _report = prepare_findings(in_path, overrides_path)
+    mapped = map_findings(findings)
+    write_json(out_path, mapped)
     return mapped
 
 
@@ -430,24 +531,51 @@ def main(argv=None):
     """CLI entry point.
 
     python quantum_mapper.py                              demo with dummy data
-    python quantum_mapper.py IN.json OUT.json             map a findings file
-    python quantum_mapper.py IN.json OUT.json REPORT.md [--draft]
+    python quantum_mapper.py IN.json OUT.json [REPORT.md] [options]
+
+    Options:
+        --overrides FILE   apply confirmed manual size overrides (manual_facts.json)
+        --draft            mark the report as built from sample data
+        --strict           exit with status 1 if the findings fail validation
     """
     args = list(sys.argv[1:] if argv is None else argv)
-    draft = "--draft" in args
-    paths = [a for a in args if a != "--draft"]
+    draft = strict = False
+    overrides_path = None
+    paths = []
+    it = iter(args)
+    for arg in it:
+        if arg == "--draft":
+            draft = True
+        elif arg == "--strict":
+            strict = True
+        elif arg == "--overrides":
+            overrides_path = next(it, None)
+            if not overrides_path:
+                print("--overrides needs a file path")
+                return 2
+        else:
+            paths.append(arg)
     if not paths:
         _demo()
         return 0
     if len(paths) not in (2, 3):
-        print("usage: quantum_mapper.py IN.json OUT.json [REPORT.md] [--draft]")
+        print("usage: quantum_mapper.py IN.json OUT.json [REPORT.md] "
+              "[--overrides FILE] [--draft] [--strict]")
         return 2
-    mapped = map_findings_file(paths[0], paths[1])
+
+    findings, problems, ov_report = prepare_findings(paths[0], overrides_path)
+    for problem in problems:
+        print(f"VALIDATION: {problem}")
+    for ov in ov_report:
+        state = "applied" if ov["confirmed"] else "NOT applied (unconfirmed)"
+        print(f"OVERRIDE {ov['id']}: matched {ov['matched']} finding(s), {state}")
+    mapped = map_findings(findings)
+    write_json(paths[1], mapped)
     summarise(mapped)
     if len(paths) == 3:
         generate_mapping_report(mapped, paths[2], draft=draft)
         print(f"Report written to {paths[2]}")
-    return 0
+    return 1 if (strict and problems) else 0
 
 
 if __name__ == "__main__":

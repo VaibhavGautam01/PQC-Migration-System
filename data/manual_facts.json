@@ -1,0 +1,37 @@
+{
+  "_readme": "Facts the scanner cannot see. size_overrides change the modulus size ONLY when 'confirmed' is true. Set confirmed to true only after the team agrees (see the open questions in docs/week2_summary.md). 'projects' holds per-project facts used by the CBOM.",
+  "size_overrides": [
+    {
+      "id": "part1-keygen-256",
+      "confirmed": false,
+      "match": {"project": "Final-Year-project-part1", "file_contains": "rsa_utils", "primitive": "RSA"},
+      "set": {"modulus_bits": 256, "size_basis": "manual: actual use is generate_keypair(bits=128), i.e. a 256-bit modulus"},
+      "source": "Tarun, manual note 1 on findings.json v1"
+    },
+    {
+      "id": "part1-rchannel-8bit",
+      "confirmed": false,
+      "match": {"project": "Final-Year-project-part1", "file_contains": "r_channel_stego", "primitive": "RSA"},
+      "set": {"modulus_bits": 8, "size_basis": "manual: modulus n < 256, so at most 8 bits"},
+      "source": "Tarun, manual note 2 on findings.json v1"
+    }
+  ],
+  "projects": {
+    "Final-Year-project-part1": {
+      "padding": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "attack_evidence": []
+    },
+    "Secure-Video-Steganography": {
+      "padding": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code"
+      },
+      "attack_evidence": []
+    }
+  }
+}

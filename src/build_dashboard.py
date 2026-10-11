@@ -14,6 +14,7 @@ import os
 import sys
 
 import quantum_mapper as qm
+import cbom as cb
 
 TITLE = "# Final Dashboard: AI-Powered PQC Migration Advisor"
 SECTIONS = ("Summary", "Detection", "Mapping", "Risk", "Demo", "Conclusion")
@@ -22,12 +23,42 @@ PENDING = "_Not generated yet._"
 # ---------------------------------------------------------------------------
 # Context: everything the sections need, computed once
 # ---------------------------------------------------------------------------
-def build_context(findings_path, facts_path=None):
-    """Load findings, apply confirmed overrides, map them. Returns a context dict."""
+def load_demo(path):
+    """Load the demo results JSON written from the real simulator runs.
+
+    Returns None if no path is given or the file does not exist. Raises
+    ValueError if the file is present but malformed.
+    """
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, "r", encoding="utf-8") as fh:
+        demo = json.load(fh)
+    cases = demo.get("cases", [])
+    if not isinstance(cases, list):
+        raise ValueError("demo results: 'cases' must be a list")
+    for case in cases:
+        _demo_rate(case)
+    return demo
+
+
+def _demo_rate(case):
+    """Success rate (0-100) of one demo case; raises ValueError on bad counts."""
+    runs, ok = case.get("runs"), case.get("successes")
+    if (not isinstance(runs, int) or not isinstance(ok, int) or isinstance(runs, bool)
+            or isinstance(ok, bool) or runs <= 0 or not 0 <= ok <= runs):
+        raise ValueError(f"demo results: bad runs/successes for N={case.get('N')}: {runs}/{ok}")
+    return 100.0 * ok / runs
+
+
+def build_context(findings_path, facts_path=None, demo_path=None):
+    """Load findings, apply confirmed overrides, map them, build the CBOM and demo data."""
     findings, _problems, ov_report = qm.prepare_findings(findings_path, facts_path)
     mapped = qm.map_findings(findings)
     ctx = {"mapped": mapped, "overrides": ov_report,
            "caveats": qm.collect_caveats(mapped, ov_report)}
+    facts = cb.load_facts(facts_path) if facts_path else None
+    ctx["cbom"] = cb.build_cbom(mapped, facts)
+    ctx["demo"] = load_demo(demo_path)
     return ctx
 
 # ---------------------------------------------------------------------------
@@ -65,6 +96,14 @@ def render_summary(ctx):
         "This is a quadratic speed-up, not a full break.",
         f"- **Unrecognised primitives:** {unknown}.",
         f"- **Open data caveats:** {len(ctx['caveats'])} (listed under Mapping).",
+    ]
+    entries = ctx["cbom"]["entries"]
+    weak = [e for e in entries if e["classical_risk"]["status"] in ("practically-breakable", "below-minimum")]
+    unverified = [e for e in entries if e["size_status"] in ("unverified", "unknown")]
+    lines += [
+        f"- **CBOM entries:** {len(entries)}; {len(weak)} with a classical key-strength problem "
+        "(independent of any quantum computer).",
+        f"- **Entries with an unverified key size:** {len(unverified)}.",
     ]
     return "\n".join(lines)
 
@@ -112,6 +151,51 @@ def cb_md(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
+def render_risk(ctx):
+    """CBOM-based risk table. Quantum, classical and padding risk stay separate."""
+    entries = ctx["cbom"]["entries"]
+    lines = ["| ID | Project | Primitive | Size (bits) | Size status | Logical qubits (est.) | "
+             "Classical risk | Padding | Recommended PQC |", "|---|---|---|---|---|---|---|---|---|"]
+    for e in entries:
+        lines.append(
+            f"| {cb_md(e['id'])} | {cb_md(e['project'])} | {cb_md(e['primitive'])} | "
+            f"{cb_md(e['key_size_bits'])} | {cb_md(e['size_status'])} | "
+            f"{cb_md(e['quantum_risk']['logical_qubits_estimate'])} | "
+            f"{cb_md(e['classical_risk']['status'])} | {cb_md(e['padding_risk']['status'])} | "
+            f"{cb_md(e['recommended_pqc']['algorithm'])} |")
+    lines += [
+        "",
+        "- Padding is reported separately from the quantum score. Textbook RSA is dangerous "
+        "because it is deterministic, not because of Shor's algorithm.",
+        "- Qubit figures are **logical-qubit estimates** (2n+3 circuit) and exclude "
+        "error-correction overhead; physical qubit counts are far larger.",
+        "- Full details: `docs/cbom.md` and `docs/cbom.json`.",
+    ]
+    return "\n".join(lines)
+
+
+def render_demo(ctx):
+    """Shor's-algorithm demo results, read from the real simulator runs."""
+    demo = ctx.get("demo")
+    if not demo or not demo.get("cases"):
+        return ("_No demo results provided yet._ Add `data/demo_results.json` "
+                "(see `data/demo_results.template.json`) from the real simulator runs.")
+    lines = []
+    if demo.get("environment"):
+        lines += [f"**Environment:** {demo['environment']}", ""]
+    lines += ["| N | Expected factors | Runs | Successes | Success rate | Backend | Notes |",
+              "|---|---|---|---|---|---|---|"]
+    for case in demo["cases"]:
+        factors = " x ".join(str(x) for x in case.get("expected_factors", [])) or "-"
+        lines.append(f"| {cb_md(case.get('N'))} | {factors} | {case['runs']} | {case['successes']} | "
+                     f"{_demo_rate(case):.0f}% | {cb_md(case.get('backend'))} | {cb_md(case.get('notes'))} |")
+    for rec in demo.get("recordings", []):
+        lines.append(f"\nBackup recording (not stored in git): {rec}")
+    lines += ["", "The demo runs on a simulator at toy sizes. It shows that the algorithm works; "
+              "it is not evidence that RSA-1024 or RSA-2048 can be broken today."]
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Assembly and CLI
 # ---------------------------------------------------------------------------
@@ -119,6 +203,8 @@ RENDERERS = {
     "Summary": render_summary,
     "Detection": render_detection,
     "Mapping": render_mapping,
+    "Risk": render_risk,
+    "Demo": render_demo,
 }
 
 
@@ -134,7 +220,8 @@ def build_dashboard(ctx):
 
 
 VALUE_FLAGS = ["--facts", "--out"]
-USAGE = "usage: build_dashboard.py FINDINGS.json [--facts FILE] [--out FILE]"
+VALUE_FLAGS.append("--demo")
+USAGE = "usage: build_dashboard.py FINDINGS.json [--facts FILE] [--demo FILE] [--out FILE]"
 
 
 def main(argv=None):
@@ -145,7 +232,7 @@ def main(argv=None):
         return 2
     paths, values, _ = parsed
     out = values["--out"] or os.path.join("docs", "final_dashboard.md")
-    ctx = build_context(paths[0], values["--facts"])
+    ctx = build_context(paths[0], values["--facts"], values["--demo"])
     text = build_dashboard(ctx)
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(text)

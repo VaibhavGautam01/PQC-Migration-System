@@ -54,3 +54,13 @@ Version reviewed: origin/tarun/detection-engine as of 11 Oct 2026 (auto-generate
 
 \- Resource estimates for RSA-1024/2048: none in the report, so nothing to verify.
 
+## Team review
+
+
+
+\- Yatharth (ML-KEM-768 section): \[his answer, or pending]
+
+\- Tarun (classical key-strength section): \[his answer, or pending]
+
+\- Uday (mapping consistency): \[his answer, or pending]
+

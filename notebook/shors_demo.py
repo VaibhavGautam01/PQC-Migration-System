@@ -112,6 +112,39 @@ def run_shor_circuit(shots: int = 1024, a: int = A) -> dict:
     result = simulator.run(compiled, shots=shots).result()
     return result.get_counts()
 
+def factors_from_period(r: int, a: int = A, n: int = N):
+    """Classical post-processing: turn a guessed period r into factors of n.
+
+    Returns a sorted tuple of the two factors, or None if r is unusable.
+    A guessed r is only valid if a^r mod n == 1 (this rejects the
+    wrong guesses r = 1 and r = 2 that the unlucky phases produce).
+    """
+    if r <= 0 or r % 2 != 0 or pow(a, r, n) != 1:
+        return None
+    x = pow(a, r // 2, n)
+    if x == n - 1:                      # a^(r/2) = -1 mod n gives only trivial factors
+        return None
+    for f in (math.gcd(x - 1, n), math.gcd(x + 1, n)):
+        if f not in (1, n):
+            return tuple(sorted((f, n // f)))
+    return None
+
+
+def factors_from_bitstring(bitstring: str, a: int = A, n: int = N, n_count: int = N_COUNT):
+    """Measured counting-register bitstring -> factors of n (or None)."""
+    phase = int(bitstring, 2) / 2 ** n_count
+    r = Fraction(phase).limit_denominator(n).denominator
+    return factors_from_period(r, a, n)
+
+
+def run_shor_attempts(n_attempts: int, a: int = A) -> list:
+    """Run the circuit n_attempts times; return one bitstring per attempt."""
+    circuit = build_shor_circuit(a)
+    simulator = AerSimulator()
+    compiled = transpile(circuit, simulator)
+    result = simulator.run(compiled, shots=n_attempts, memory=True).result()
+    return result.get_memory()
+
 if __name__ == "__main__":
     SHOTS = 1024
 
@@ -136,3 +169,8 @@ if __name__ == "__main__":
     # can only produce phases 0, 1/4, 1/2 and 3/4 (decimals 0, 4, 8, 12).
     assert {int(b, 2) for b in counts} <= {0, 4, 8, 12}, "Unexpected outcomes"
     print("\n[PASS] Circuit executed on the simulator; phases match period r = 4.")
+
+        # Day 2: classical post-processing
+    print("\nFactor extraction from each measured outcome:")
+    for bitstring in sorted(counts):
+        print(f"  {bitstring} -> {factors_from_bitstring(bitstring)}")

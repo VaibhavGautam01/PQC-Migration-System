@@ -23,8 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scanner  # our Stage 1 scanner (uses scan_path and build_report)
 from edge_merge import add_edge_flags
 
-# Display name -> local folder. data/targets/ is gitignored, so the target
-# repos are never pushed; they must be cloned there first.
+# Display name -> local folder. These are git submodules (see
+# .gitmodules). After cloning, run: git submodule update --init
 TARGETS = {
     "Secure-Video-Steganography": "data/targets/steganography",
     "Final-Year-project-part1": "data/targets/final-year-part1",
@@ -88,18 +88,23 @@ def comes_from_default(name, lines, depth=0):
         half = key_size // 2               # name == "half"; key_size has a default
     A default is not proof of real use: callers may pass a different value.
     """
+    # Depth limit: stops endless loops between derived names.
     if depth > 3:
         return False
+    # re.escape: the name is placed inside a regex as plain text.
     esc = re.escape(name)
     def_rx = re.compile(r"\bdef\s+\w+\s*\(.*\b" + esc + r"\s*(?::\s*\w+)?\s*=\s*\d+")
     div_rx = re.compile(r"^\s*" + esc + r"\s*=\s*(\w+)\s*//\s*\d+")
+    # Pass 1: is the name a parameter with a default, like def f(bits=256)?
     for ln in lines:
         if def_rx.search(ln):
             return True
+    # Pass 2: a derived name (half = key_size // 2) is a default if its source is.
     for ln in lines:
         m = div_rx.match(ln)
         if m and comes_from_default(m.group(1), lines, depth + 1):
             return True
+    # No default found: the value was passed in by a caller, or is unknown.
     return False
 
 
@@ -109,20 +114,35 @@ def mark_defaults(root, findings):
     Fixes the dashboard overcount: rsa_utils.py defaults (bits=256) are not
     the sizes really used (callers pass bits=128).
     """
+    # cache: file path -> its lines, so every source file is read only once.
     cache = {}
     for f in findings:
         f["is_default"] = False
+        # size_basis reads like: resolved from 'half' (...). Only a size that
+        # came from a variable can be a default; a literal such as bits=128 is
+        # a real value chosen by the caller, so it stays False.
         m = re.match(r"resolved from '(\w+)'", f.get("size_basis") or "")
         if not m:
             continue
         path = os.path.join(root, f["file"])
         if path not in cache:
+            # errors="ignore": an odd byte in a target file must not crash this.
             with open(path, encoding="utf-8", errors="ignore") as fh:
                 cache[path] = fh.read().splitlines()
+        # m.group(1) is the variable name the size was resolved from.
         f["is_default"] = comes_from_default(m.group(1), cache[path])
 
 
 def main():
+    """Scan both target repos and write the single outputs/findings.json.
+
+    Every finding is tagged with its project and the is_default flag, the
+    edge-case flags (padding, indirect usage) are attached, and the schema
+    is checked before the file is considered valid.
+
+    Returns:
+        0 on success, 1 if a target folder is missing.
+    """
     projects = {}      # per-project summary (counts), copied from scanner
     all_findings = []  # merged list of every finding from both repos
 

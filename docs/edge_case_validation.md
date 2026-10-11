@@ -1,3 +1,5 @@
+> **Version note:** the key sizes and line numbers below, and the 31-bit and 95-bit break results, refer to my local small-key copies (image project: rsa_utils.py with bits=16; video project: video_stego_project_updated). The project of record is the pinned GitHub commits (final-year-part1 at bb6d944, steganography at 4514806), where the padding sites are rsa_utils.py:45 and :50 and rsa_crypto.py:142 and :170. Results for the pinned versions are being re-checked.
+
 # Edge-Case Flag Validation
 
 Manual check of automated flags against both target projects.
@@ -12,7 +14,7 @@ Manual check of automated flags against both target projects.
 | INDIRECT_USAGE | app.py:25, main.py:12 | Confirmed | import from r_channel_stego.py, which has its own RSA setup (phi, modular inverse) |
 | False positive (fixed) | `import rsa` in app.py, main.py | Fixed | pattern matched `import rsa_utils`; corrected with `\b` |
 
-Key size: the scanner reported 16, but that is the prime size. The modulus is about 31 bits (generate_keypair default bits=16).
+Key size (depends on version and entry point): in my local copy, rsa_utils.py defaults to bits=16 per prime and app.py calls generate_keypair(bits=16), giving a modulus of about 31 bits; main.py calls generate_keypair(bits=128), about 256 bits. The copy scanned for findings.json resolves to 256-bit primes by default (512-bit modulus), and app.py and main.py use bits=128 (256-bit modulus). All of these are far below the 2048-bit minimum. src/stego_attack_image.py demonstrates the break on the 31-bit key.
 
 ## Video project (Secure-Video-Steganography)
 
@@ -43,3 +45,18 @@ Checked the 4 edge_flag findings against the copies in data/targets.
 | Secure-Video-Steganography | rsa_crypto.py:170 | Confirmed | `m = pow(c, d, n)`; the code after it only checks length and CRC32 (integrity check, not padding) |
 
 Note: line numbers are for the local copies in data/targets. They may shift if the team pins a different commit of the target projects. No false positives in this set.
+
+## Re-check on the pinned target commits
+
+Target projects cloned at the project-of-record commits: final-year-part1 at bb6d944, steganography at 4514806. `rsa_utils.py` (78 lines, sha256 9c8d1e4c17d7c041) and `rsa_crypto.py` (186 lines, sha256 4bcb717fd4f13c65) match the team's reference copies. Re-running `python src/run_all.py` reproduced the committed `outputs/findings.json` exactly (26 findings: 17 image, 9 video).
+
+| Project | File:line | Result | What the pinned code shows |
+|---|---|---|---|
+| Final-Year-project-part1 | rsa_utils.py:45 | Confirmed | `return pow(m, e, n)` in encrypt_int: raw modular exponentiation, no padding |
+| Final-Year-project-part1 | rsa_utils.py:50 | Confirmed | `return pow(c, d, n)` in decrypt_int |
+| Secure-Video-Steganography | rsa_crypto.py:142 | Confirmed | `c = pow(m, e, n)`; m is [length][CRC32][data][zeros], a fixed layout, so encryption is deterministic |
+| Secure-Video-Steganography | rsa_crypto.py:170 | Confirmed | `m = pow(c, d, n)`; the code after it only checks length and CRC32 |
+
+Indirect usage: 6 flags in the image project and 4 in the video project, 10 in total (edge_case_totals: padding 4, indirect_usage 10). No false positives among the padding flags.
+
+The line numbers 54 and 59 for rsa_utils.py in the sections above refer to my older small-key copy. On the pinned version they are 45 and 50.

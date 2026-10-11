@@ -1,45 +1,49 @@
-﻿"""
-run_tests.py - Stage 1 ka unified test runner (Issue #2)
+"""
+run_tests.py - run all Stage 1 tests with one command (Issue #2).
 
-Kaam: scanner.py aur edge_cases.py ke saare tests ek hi command se chalana.
-Usage: python run_tests.py
-Exit code: 0 = saare tests pass, 1 = koi test fail (CI/pre-commit mein kaam aata hai)
+Usage:  python run_tests.py
+Exit code: 0 if every test passes, 1 if a test fails or none are found,
+so the script can be used from other scripts and pre-commit checks.
 """
 import sys
 import unittest
 from pathlib import Path
 
-# Is file ke saath wale "tests" folder ka absolute path.
-# Path(__file__) use karne se script kisi bhi folder se chalao, path sahi rahega.
+# Absolute path of the "tests" folder next to this file. Using __file__
+# makes the script work no matter which folder it is started from.
 TESTS_DIR = Path(__file__).parent / "tests"
 
 
 def main() -> int:
-    # Project root ko sys.path mein daalo taaki tests mein
-    # "from scanner import ..." jaise imports bina error ke chalein.
+    """Discover and run every tests/test_*.py file.
+
+    Returns:
+        0 if all tests passed, otherwise 1.
+    """
+    # Put the project root on sys.path so tests can import project modules.
     sys.path.insert(0, str(Path(__file__).parent))
 
-    # Discovery: tests/ ke andar "test_*.py" naam ki saari files apne aap dhundh lega.
-    # Naya test file add karne par is script ko badalna nahi padega.
+    # Discovery picks up every "test_*.py" file in tests/, so adding a new
+    # test file never requires editing this script.
     suite = unittest.defaultTestLoader.discover(
         start_dir=str(TESTS_DIR),
         pattern="test_*.py",
     )
 
-    # verbosity=2 -> har test ka naam aur PASS/FAIL line-by-line dikhega,
-    # debugging aur demo dono ke liye useful.
+    # verbosity=2 prints each test name with ok/FAIL, useful for debugging
+    # and for demos.
     result = unittest.TextTestRunner(verbosity=2).run(suite)
 
-    # Guard: agar 0 tests mile to ise fail maano.
-    # Warna galat folder/naming ki wajah se "0 tests passed" jhoothi success dikhayega.
+    # Guard: treat "no tests found" as a failure. Otherwise a wrong folder
+    # or file name would report a false "0 tests passed" success.
     if result.testsRun == 0:
-        print("ERROR: koi test nahi mila. tests/ folder aur test_*.py naming check karo.")
+        print("ERROR: no tests found. Check tests/ and the test_*.py names.")
         return 1
 
-    # wasSuccessful() sirf tab True hota hai jab koi failure ya error na ho.
+    # wasSuccessful() is True only when there are no failures or errors.
     return 0 if result.wasSuccessful() else 1
 
 
-# Sirf direct run karne par chale, import karne par nahi.
+# Run only when executed directly, not when imported.
 if __name__ == "__main__":
     sys.exit(main())

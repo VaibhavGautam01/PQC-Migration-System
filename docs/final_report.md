@@ -50,7 +50,7 @@ The key size decides the qubit cost, so it is extracted carefully:
 | Miss hunt | 166 crypto-looking lines without a finding triaged by hand | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
-| Tests | `run_tests.py` and the files in `tests/` | RESULT_OF_RUN_TESTS |
+| Tests | `run_tests.py` and the files in `tests/` | 92 tests, all pass |
 
 ## 3. Stage 1 results on the target projects
 
@@ -92,7 +92,7 @@ Scanner output (`findings.json`): **26 findings**, RSA 25 and SHA 1.
 
 **Applied to our findings:** RSA (25 findings) maps to Shor's and is broken. SHA-256 (1 finding) maps to Grover's and keeps about 128 bits of security.
 
-**Status:** `mapping_report_draft.md` is still generated from dummy sample data (10 sample findings). The final mapping report from the real `findings.json` is pending.
+**Status:** the final mapping report is built from the real `findings.json` (26 findings, 2 projects) and saved as `mapping_report.md`. `mapping_report_draft.md` is kept only as the early dummy-data draft.
 
 ## 5. Stage 3 summary (details in `risk_report.md`)
 
@@ -117,6 +117,5 @@ Padding and indirect usage (edge-case module): 2 no-padding flags in each projec
 
 ## 7. Pending
 
-- Final mapping report built from the real findings.
 - Risk report: mark default-value sizes separately.
-- CBOM and the classical key-strength check (not found in the repository at the time of writing).
+- CBOM (JSON and Markdown): to be merged from Uday's branch.

@@ -29,7 +29,6 @@ SCAN_EXTENSIONS = {
 }
 SKIP_DIRS = {".git", "node_modules", "venv", ".venv", "__pycache__", "build", "dist"}
 MAX_FILE_BYTES = 1_000_000
-KEY_SIZE_LOOKAHEAD = 3  # lines to look ahead for key_size= / bits= arguments
 
 # Each pattern: id, regex, description, confidence, keygen (does it create a key?)
 RSA_PATTERNS = [
@@ -117,12 +116,6 @@ RSA_PATTERNS = [
      "desc": "PEM-encoded RSA key material", "confidence": "high", "keygen": False},
 ]
 
-KEY_SIZE_REGEXES = [
-    re.compile(r"key_size\s*=\s*(\d+)"),
-    re.compile(r"\bbits\s*=\s*(\d+)"),
-    re.compile(r"\binitialize\s*\(\s*(\d+)"),
-]
-
 # Day 3: the remaining primitives (ECC/DSA/DH/AES/SHA) come from a separate file
 try:
     from extra_patterns import EXTRA_PATTERNS
@@ -139,19 +132,6 @@ ALL_PATTERNS = RSA_PATTERNS + EXTRA_PATTERNS
 # Compile each regex once (recompiling on every line is slow)
 for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
-
-
-def extract_key_size(lines, idx, match):
-    """Return the key size (int) for a key-generation match, or None."""
-    bits = match.groupdict().get("bits")
-    if bits:
-        return int(bits)
-    window = " ".join(lines[idx: idx + 1 + KEY_SIZE_LOOKAHEAD])
-    for rx in KEY_SIZE_REGEXES:
-        m = rx.search(window)
-        if m:
-            return int(m.group(1))
-    return None
 
 
 def scan_file(path, root):

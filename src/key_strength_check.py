@@ -3,9 +3,14 @@ key_strength_check.py - Classical key-strength check for the PQC Migration
 Advisor. Independent of the quantum risk score: a short RSA/DSA/DH key is
 breakable by ordinary computers, with no quantum computer involved.
 
+For the risk report generator:
+    from key_strength_check import check_findings, render_markdown
+    section = render_markdown(check_findings(findings))
+
 Usage:
-  python src/key_strength_check.py outputs/findings.json [--out flags.json]
+  python src/key_strength_check.py outputs/findings.json [--out flags.json] [--md section.md]
 """
+import argparse
 import json
 import sys
 
@@ -47,11 +52,38 @@ def check_findings(findings):
     return [x for x in (check_finding(f) for f in findings) if x]
 
 
+def render_markdown(flags):
+    """Return a 'Classical key strength' Markdown section for the risk report."""
+    sized = [x for x in flags if x["modulus_bits"] is not None]
+    unsized = len(flags) - len(sized)
+    lines = [
+        "## Classical key strength", "",
+        "These ratings are independent of the quantum risk score. A short "
+        "RSA/DSA/DH key can be broken by ordinary computers today, with no "
+        "quantum computer involved.", "",
+        "| Project | File:line | Modulus (bits) | Rating | Reason |",
+        "|---|---|---|---|---|",
+    ]
+    for x in sorted(sized, key=lambda x: (x["project"] or "", x["file"] or "", x["line"] or 0)):
+        lines.append(f"| {x['project']} | {x['file']}:{x['line']} | "
+                     f"{x['modulus_bits']} | {x['level']} | {x['reason']} |")
+    lines += [
+        "",
+        f"{unsized} further RSA/DSA/DH findings carry no modulus size and are not rated.",
+        "",
+        "Sizes are the modulus sizes resolved by the scanner's key-size extraction.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("usage: key_strength_check.py findings.json [--out flags.json]")
-        return 2
-    data = json.load(open(sys.argv[1], encoding="utf-8"))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("findings")
+    ap.add_argument("--out", help="write the flags as JSON")
+    ap.add_argument("--md", help="write the Markdown section")
+    args = ap.parse_args()
+
+    data = json.load(open(args.findings, encoding="utf-8"))
     flags = check_findings(data["findings"] if isinstance(data, dict) else data)
 
     sized = [x for x in flags if x["modulus_bits"] is not None]
@@ -63,10 +95,12 @@ def main():
     if unknown:
         print(f"  {unknown} findings have no modulus size, so they are not rated")
 
-    if "--out" in sys.argv:
-        out = sys.argv[sys.argv.index("--out") + 1]
-        json.dump(flags, open(out, "w", encoding="utf-8"), indent=2)
-        print("saved ->", out)
+    if args.out:
+        json.dump(flags, open(args.out, "w", encoding="utf-8"), indent=2)
+        print("saved ->", args.out)
+    if args.md:
+        open(args.md, "w", encoding="utf-8").write(render_markdown(flags))
+        print("saved ->", args.md)
     return 0
 
 

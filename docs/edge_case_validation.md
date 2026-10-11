@@ -45,3 +45,18 @@ Checked the 4 edge_flag findings against the copies in data/targets.
 | Secure-Video-Steganography | rsa_crypto.py:170 | Confirmed | `m = pow(c, d, n)`; the code after it only checks length and CRC32 (integrity check, not padding) |
 
 Note: line numbers are for the local copies in data/targets. They may shift if the team pins a different commit of the target projects. No false positives in this set.
+
+## Re-check on the pinned target commits
+
+Target projects cloned at the project-of-record commits: final-year-part1 at bb6d944, steganography at 4514806. `rsa_utils.py` (78 lines, sha256 9c8d1e4c17d7c041) and `rsa_crypto.py` (186 lines, sha256 4bcb717fd4f13c65) match the team's reference copies. Re-running `python src/run_all.py` reproduced the committed `outputs/findings.json` exactly (26 findings: 17 image, 9 video).
+
+| Project | File:line | Result | What the pinned code shows |
+|---|---|---|---|
+| Final-Year-project-part1 | rsa_utils.py:45 | Confirmed | `return pow(m, e, n)` in encrypt_int: raw modular exponentiation, no padding |
+| Final-Year-project-part1 | rsa_utils.py:50 | Confirmed | `return pow(c, d, n)` in decrypt_int |
+| Secure-Video-Steganography | rsa_crypto.py:142 | Confirmed | `c = pow(m, e, n)`; m is [length][CRC32][data][zeros], a fixed layout, so encryption is deterministic |
+| Secure-Video-Steganography | rsa_crypto.py:170 | Confirmed | `m = pow(c, d, n)`; the code after it only checks length and CRC32 |
+
+Indirect usage: 6 flags in the image project and 4 in the video project, 10 in total (edge_case_totals: padding 4, indirect_usage 10). No false positives among the padding flags.
+
+The line numbers 54 and 59 for rsa_utils.py in the sections above refer to my older small-key copy. On the pinned version they are 45 and 50.

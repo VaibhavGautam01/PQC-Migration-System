@@ -15,6 +15,9 @@ import math
 import sys
 from fractions import Fraction
 
+import numpy as np
+from qiskit.circuit.library import UnitaryGate
+
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 
@@ -145,6 +148,64 @@ def run_shor_attempts(n_attempts: int, a: int = A) -> list:
     result = simulator.run(compiled, shots=n_attempts, memory=True).result()
     return result.get_memory()
 
+
+# ---------------------------------------------------------------------
+# Second case: N = 21  (Week 2, Day 3)
+# ---------------------------------------------------------------------
+N21 = 21
+A21 = 2            # coprime to 21; the period of 2^x mod 21 is 6
+N_COUNT21 = 8      # more counting qubits: the period 6 does not divide 2^n
+N_WORK21 = 5       # 5 qubits can hold values 0..31, enough for 0..20
+
+
+def controlled_modmul_gate(multiplier: int, n: int, n_work: int):
+    """Return a gate: if the control qubit is 1, work register x -> (multiplier * x) mod n.
+
+    Built as an exact permutation matrix. Values x >= n are left unchanged,
+    so the matrix stays unitary. multiplier must be coprime to n.
+    Gate qubit order: [control, work_0 (LSB), ..., work_{n_work-1}].
+    """
+    if math.gcd(multiplier, n) != 1:
+        raise ValueError(f"multiplier {multiplier} must be coprime to {n}")
+    dim_w = 2 ** n_work
+    size = 2 * dim_w
+    matrix = np.zeros((size, size))
+    for x in range(dim_w):
+        y = (multiplier * x) % n if x < n else x
+        matrix[2 * x, 2 * x] = 1             # control = 0: identity
+        matrix[1 + 2 * y, 1 + 2 * x] = 1     # control = 1: multiply
+    return UnitaryGate(matrix, label=f"x{multiplier} mod {n}")
+
+
+def build_shor_circuit_n21(a: int = A21, n_count: int = N_COUNT21) -> QuantumCircuit:
+    """Build the Shor's order-finding circuit for N = 21."""
+    if math.gcd(a, N21) != 1:
+        raise ValueError(f"a={a} shares a factor with N={N21}")
+
+    qc = QuantumCircuit(n_count + N_WORK21, n_count)
+    work_qubits = list(range(n_count, n_count + N_WORK21))
+
+    for q in range(n_count):
+        qc.h(q)
+    qc.x(work_qubits[0])                     # work register starts as |1>
+
+    for q in range(n_count):                 # qubit q controls a^(2^q) mod N
+        multiplier = pow(a, 2 ** q, N21)
+        qc.append(controlled_modmul_gate(multiplier, N21, N_WORK21), [q] + work_qubits)
+
+    qc.append(qft_dagger(n_count), range(n_count))
+    qc.measure(range(n_count), range(n_count))
+    return qc
+
+
+def run_shor_attempts_n21(n_attempts: int, a: int = A21) -> list:
+    """Run the N = 21 circuit; return one measured bitstring per attempt."""
+    circuit = build_shor_circuit_n21(a)
+    simulator = AerSimulator()
+    compiled = transpile(circuit, simulator)
+    result = simulator.run(compiled, shots=n_attempts, memory=True).result()
+    return result.get_memory()
+
 if __name__ == "__main__":
     SHOTS = 1024
 
@@ -174,3 +235,33 @@ if __name__ == "__main__":
     print("\nFactor extraction from each measured outcome:")
     for bitstring in sorted(counts):
         print(f"  {bitstring} -> {factors_from_bitstring(bitstring)}")
+
+
+            # ---- Day 3: second case, N = 21 ----
+    print("\n" + "=" * 56)
+    print(f"Shor's circuit: N={N21}, a={A21}")
+    circuit21 = build_shor_circuit_n21()
+    print(f"Qubits: {circuit21.num_qubits}  |  Classical bits: {circuit21.num_clbits}")
+
+    SHOTS21 = 1024
+    print(f"Running on AerSimulator ({SHOTS21} shots)...")
+    attempts = run_shor_attempts_n21(SHOTS21)
+
+    tally = {}
+    for b in attempts:
+        tally[b] = tally.get(b, 0) + 1
+
+    print(f"\n{'Bitstring':<10}{'Decimal':>8}{'Count':>8}  Factors")
+    print("-" * 40)
+    for b, c in sorted(tally.items(), key=lambda kv: -kv[1])[:8]:
+        print(f"{b:<10}{int(b, 2):>8}{c:>8}  "
+              f"{factors_from_bitstring(b, A21, N21, N_COUNT21)}")
+
+    results = [factors_from_bitstring(b, A21, N21, N_COUNT21) for b in attempts]
+    successes = sum(r == (3, 7) for r in results)
+    print(f"\nSuccess rate: {successes}/{SHOTS21} = {successes / SHOTS21:.0%}")
+
+    assert pow(A21, 6, N21) == 1                       # true period is 6
+    assert set(results) <= {None, (3, 7)}, "Unexpected factors"
+    assert successes > 0, "Never found the factors"
+    print("[PASS] N=21 demo executed; factors 3 x 7 found.")

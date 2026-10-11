@@ -13,6 +13,7 @@ Registers:
 
 import math
 import sys
+import argparse
 from fractions import Fraction
 
 import numpy as np
@@ -206,62 +207,132 @@ def run_shor_attempts_n21(n_attempts: int, a: int = A21) -> list:
     result = simulator.run(compiled, shots=n_attempts, memory=True).result()
     return result.get_memory()
 
-if __name__ == "__main__":
-    SHOTS = 1024
-
-    circuit = build_shor_circuit()
-    print(f"Shor's circuit: N={N}, a={A}")
-    print(f"Qubits: {circuit.num_qubits}  |  Classical bits: {circuit.num_clbits}")
-
-    print(f"\nRunning on AerSimulator ({SHOTS} shots)...")
-    counts = run_shor_circuit(SHOTS)
-
-    print(f"\n{'Bitstring':<10}{'Decimal':>8}{'Count':>8}{'Phase':>8}  Guessed period r")
-    print("-" * 56)
-    for bitstring, count in sorted(counts.items()):
-        decimal = int(bitstring, 2)
-        phase = decimal / 2 ** N_COUNT
-        guess_r = Fraction(phase).limit_denominator(N).denominator
-        print(f"{bitstring:<10}{decimal:>8}{count:>8}{phase:>8.2f}  {guess_r}")
-
-    # Checks
-    assert sum(counts.values()) == SHOTS, "Shot count mismatch"
-    # The true period is 4, which divides 2^4 = 16, so an ideal simulation
-    # can only produce phases 0, 1/4, 1/2 and 3/4 (decimals 0, 4, 8, 12).
-    assert {int(b, 2) for b in counts} <= {0, 4, 8, 12}, "Unexpected outcomes"
-    print("\n[PASS] Circuit executed on the simulator; phases match period r = 4.")
-
-        # Day 2: classical post-processing
-    print("\nFactor extraction from each measured outcome:")
-    for bitstring in sorted(counts):
-        print(f"  {bitstring} -> {factors_from_bitstring(bitstring)}")
+# ---------------------------------------------------------------------
+# Live presentation runner (Week 4, Day 1)
+# ---------------------------------------------------------------------
+def _banner(text: str) -> None:
+    print("\n" + "=" * 64)
+    print(text)
+    print("=" * 64)
 
 
-            # ---- Day 3: second case, N = 21 ----
-    print("\n" + "=" * 56)
-    print(f"Shor's circuit: N={N21}, a={A21}")
-    circuit21 = build_shor_circuit_n21()
-    print(f"Qubits: {circuit21.num_qubits}  |  Classical bits: {circuit21.num_clbits}")
+def _pause(enabled: bool) -> None:
+    if enabled:
+        input("\n   [Press Enter to continue]")
 
-    SHOTS21 = 1024
-    print(f"Running on AerSimulator ({SHOTS21} shots)...")
-    attempts = run_shor_attempts_n21(SHOTS21)
 
+def classical_period(a: int, n: int):
+    """Brute-force the period of a^x mod n. Returns (r, sequence)."""
+    seq, x = [1], 1
+    for r in range(1, n + 1):
+        x = (x * a) % n
+        seq.append(x)
+        if x == 1:
+            return r, seq
+    return None, seq
+
+
+def demo_case(n, a, n_count, n_work, runner, expected, shots, pause):
+    """Run one narrated Shor's demo. Returns True if the factors were found."""
+    _banner(f"SHOR'S ALGORITHM DEMO: factor N = {n}")
+
+    # Step 1
+    print(f"\nSTEP 1: choose a number a that shares no factor with N")
+    print(f"   N = {n}, a = {a}, gcd(a, N) = {math.gcd(a, n)}  (1 means they are coprime)")
+    _pause(pause)
+
+    # Step 2
+    r_true, seq = classical_period(a, n)
+    print(f"\nSTEP 2: the secret is the PERIOD r of  a^x mod N")
+    print(f"   {a}^x mod {n} for x = 0, 1, 2, ...  ->  {', '.join(map(str, seq))}")
+    print(f"   The sequence repeats after r = {r_true} steps.")
+    print("   A classical computer must search for r; Shor's finds it quickly.")
+    _pause(pause)
+
+    # Step 3
+    print(f"\nSTEP 3: build the quantum circuit")
+    print(f"   Counting register : {n_count} qubits (measured at the end)")
+    print(f"   Work register     : {n_work} qubits (holds a^x mod N)")
+    print(f"   Total qubits      : {n_count + n_work}")
+    _pause(pause)
+
+    # Step 4
+    print(f"\nSTEP 4: run on the Aer simulator ({shots} shots)...")
+    attempts = runner(shots)
     tally = {}
     for b in attempts:
         tally[b] = tally.get(b, 0) + 1
+    print("   Done.")
+    _pause(pause)
 
-    print(f"\n{'Bitstring':<10}{'Decimal':>8}{'Count':>8}  Factors")
-    print("-" * 40)
-    for b, c in sorted(tally.items(), key=lambda kv: -kv[1])[:8]:
-        print(f"{b:<10}{int(b, 2):>8}{c:>8}  "
-              f"{factors_from_bitstring(b, A21, N21, N_COUNT21)}")
+    # Step 5
+    print(f"\nSTEP 5: read the measured phases (top outcomes)")
+    print(f"   {'Bitstring':<{n_count + 2}}{'Count':>7}{'Phase':>8}{'r guess':>9}   Factors")
+    print("   " + "-" * (n_count + 36))
+    for b, c in sorted(tally.items(), key=lambda kv: -kv[1])[:6]:
+        phase = int(b, 2) / 2 ** n_count
+        r_guess = Fraction(phase).limit_denominator(n).denominator
+        f = factors_from_bitstring(b, a, n, n_count)
+        print(f"   {b:<{n_count + 2}}{c:>7}{phase:>8.3f}{r_guess:>9}   {f if f else 'none (unlucky)'}")
+    print("   Some outcomes give a wrong period. That is normal: Shor's is probabilistic.")
+    _pause(pause)
 
-    results = [factors_from_bitstring(b, A21, N21, N_COUNT21) for b in attempts]
-    successes = sum(r == (3, 7) for r in results)
-    print(f"\nSuccess rate: {successes}/{SHOTS21} = {successes / SHOTS21:.0%}")
+    # Step 6
+    winners = [b for b, _ in sorted(tally.items(), key=lambda kv: -kv[1])
+               if factors_from_bitstring(b, a, n, n_count) == expected]
+    results = [factors_from_bitstring(b, a, n, n_count) for b in attempts]
+    successes = sum(r == expected for r in results)
 
-    assert pow(A21, 6, N21) == 1                       # true period is 6
-    assert set(results) <= {None, (3, 7)}, "Unexpected factors"
-    assert successes > 0, "Never found the factors"
-    print("[PASS] N=21 demo executed; factors 3 x 7 found.")
+    print(f"\nSTEP 6: turn one good measurement into the factors")
+    if winners:
+        b = winners[0]
+        phase = int(b, 2) / 2 ** n_count
+        r = Fraction(phase).limit_denominator(n).denominator
+        x = pow(a, r // 2, n)
+        print(f"   Measured {b} -> phase {phase:.3f} -> period r = {r}")
+        print(f"   x = {a}^({r}/2) mod {n} = {x}")
+        print(f"   gcd(x - 1, N) = gcd({x - 1}, {n}) = {math.gcd(x - 1, n)}")
+        print(f"   gcd(x + 1, N) = gcd({x + 1}, {n}) = {math.gcd(x + 1, n)}")
+    else:
+        print("   No successful outcome this time. Run again (it is random).")
+    _pause(pause)
+
+    # Result
+    _banner("RESULT")
+    print(f"   Success rate: {successes}/{shots} = {successes / shots:.0%} of shots found the factors")
+    ok = bool(winners) and set(results) <= {None, expected}
+    if ok:
+        p, q = expected
+        print(f"   {n} = {p} x {q}   (check: {p} * {q} = {p * q})")
+        print("   [PASS]")
+    else:
+        print("   [FAIL] Unexpected result. Do not present; investigate.")
+    return ok
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Narrated Shor's algorithm demo")
+    parser.add_argument("--case", choices=["15", "21", "both"], default="both")
+    parser.add_argument("--shots", type=int, default=1024)
+    parser.add_argument("--pause", action="store_true",
+                        help="wait for Enter between steps (for live presentation)")
+    args = parser.parse_args()
+
+    _banner("PQC MIGRATION ADVISOR: Shor's algorithm on a quantum simulator")
+    print("Shor's algorithm factors the number inside an RSA key.")
+    print("Here we use tiny numbers so a laptop can simulate it.")
+    print("Real RSA-2048 needs thousands of logical qubits (see risk report).")
+    _pause(args.pause)
+
+    ok = True
+    if args.case in ("15", "both"):
+        ok &= demo_case(N, A, N_COUNT, N_WORK,
+                        lambda s: run_shor_attempts(s), (3, 5), args.shots, args.pause)
+    if args.case in ("21", "both"):
+        ok &= demo_case(N21, A21, N_COUNT21, N_WORK21,
+                        lambda s: run_shor_attempts_n21(s), (3, 7), args.shots, args.pause)
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

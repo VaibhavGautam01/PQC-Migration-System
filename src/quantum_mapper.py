@@ -9,13 +9,11 @@ level, and a recommended PQC replacement.
 
     Asymmetric (RSA, ECC, DSA, DH)  -> Shor's algorithm   -> broken
     Symmetric / hash (AES, SHA)     -> Grover's algorithm -> security roughly halved
-    Legacy ciphers (DES, 3DES, ...) -> Grover's algorithm -> classically weak anyway
 
 Input
     A list of dicts with at least "primitive". Optional: "modulus_bits" and
     "key_size". For RSA/DSA/DH, modulus_bits is preferred, because the
     scanner's key_size can be the PRIME size rather than the modulus size.
-    Optional "edge_flag" (padding status) is passed through for display only.
 
 Output
     The same dicts plus: canonical_primitive, family, quantum_algorithm,
@@ -30,9 +28,8 @@ Usage
 Limits
     This is a theory-level mapping: it says which quantum attack applies, not
     that the attack is practical today. Padding weaknesses (e.g. textbook RSA)
-    and classical key-strength problems are separate findings. The padding
-    flag is shown in the report for context only and never affects the
-    quantum fields. Standard library only.
+    and classical key-strength problems are separate findings, reported
+    elsewhere. Standard library only.
 """
 
 import json
@@ -95,8 +92,7 @@ PRIMITIVE_TABLE = {
         "quantum_algorithm": GROVER,
         "hard_problem": "Exhaustive key search",
         "impact": "WEAKENED",
-        "pqc_replacement": "Keep AES; AES-256 gives the most long-term headroom "
-                           "(no new algorithm needed)",
+        "pqc_replacement": "Keep AES, use 256-bit keys (no new algorithm needed)",
         "note": "Grover's gives a quadratic speed-up: effective security is "
                 "about half the key bits (AES-128 -> ~64, AES-256 -> ~128).",
     },
@@ -108,16 +104,6 @@ PRIMITIVE_TABLE = {
         "pqc_replacement": "Keep SHA-2/SHA-3 with 256-bit or larger output",
         "note": "Grover's halves preimage resistance (SHA-256 -> ~128 bits). "
                 "Collision resistance is largely unaffected in practice.",
-    },
-    "LEGACY_SYMMETRIC": {
-        "family": "symmetric",
-        "quantum_algorithm": GROVER,
-        "hard_problem": "Exhaustive key search",
-        "impact": "WEAKENED",
-        "pqc_replacement": "Replace with AES-256 (weak or deprecated regardless of quantum)",
-        "note": "Grover's applies, but these ciphers are already weak classically: "
-                "DES has a 56-bit key, RC4 has known biases, and 3DES/Blowfish "
-                "have 64-bit blocks (Sweet32). Replace now; quantum is secondary.",
     },
 }
 
@@ -131,16 +117,6 @@ ALIASES = {
     "AES": "AES",
     "SHA": "SHA",
 }
-
-# Patterns below are written against the NORMALISED name (upper case, no
-# punctuation): "P-256" -> "P256", "DES-EDE3-CBC" -> "DESEDE3CBC".
-_ECC_PATTERN = re.compile(
-    r"^(ECC|ECDSA|ECDH|ECDHE|EDDSA|ED25519|ED448|X25519|X448|"
-    r"P(256|384|521)$|SECP\d+[RK]1|PRIME256V1|NISTP\d+)")
-_DH_PATTERN = re.compile(r"^(DH|DHE|FFDHE?|DIFFIEHELLMAN)\d*$")
-_LEGACY_PATTERN = re.compile(
-    r"^(3DES|TDES|TRIPLEDES|DESEDE3?|DES|BLOWFISH|RC4|ARCFOUR|RC2)"
-    r"(CBC|ECB|CFB|OFB|CTR)?$")
 
 _SIZE_PATTERN = re.compile(r"(128|192|224|256|384|512)")
 
@@ -174,28 +150,12 @@ def _normalise(name):
 def canonical_primitive(name):
     """Return the canonical primitive ('RSA', 'ECC', ...) or None if unknown.
 
-    Handles aliases (ECDSA -> ECC), case and punctuation, curve names
-    (P-256, secp256r1, Ed448 -> ECC), legacy ciphers (3DES, RC4, Blowfish ->
-    LEGACY_SYMMETRIC), and families named by prefix (RSA-2048 -> RSA,
-    AES-256-GCM -> AES, HMAC-SHA256 -> SHA).
+    Handles aliases (ECDSA -> ECC), case and punctuation, and families named
+    by prefix (AES-256-GCM -> AES, HMAC-SHA256 -> SHA).
     """
-    if name is None:
-        return None
     norm = _normalise(name)
-    if not norm:
-        return None
     if norm in ALIASES:
         return ALIASES[norm]
-    if _LEGACY_PATTERN.match(norm):
-        return "LEGACY_SYMMETRIC"
-    if _ECC_PATTERN.match(norm):
-        return "ECC"
-    if _DH_PATTERN.match(norm):
-        return "DH"
-    if norm.startswith("RSA"):
-        return "RSA"
-    if norm.startswith("DSA"):
-        return "DSA"
     if norm.startswith("AES"):
         return "AES"
     if norm.startswith(("SHA", "HMACSHA")):
@@ -242,13 +202,10 @@ def route_algorithm(name):
 
 
 def grover_assessment(canonical, bits):
-    """Plain-English reading of Grover's impact for symmetric/hash findings.
+    """Plain-English reading of Grover's impact for AES/SHA findings.
 
     Returns None for primitives that Grover's does not target.
     """
-    if canonical == "LEGACY_SYMMETRIC":
-        return ("Grover's applies, but this cipher is already classically "
-                "weak; replace it regardless of quantum risk.")
     if canonical not in ("AES", "SHA"):
         return None
     if not bits:
@@ -257,12 +214,8 @@ def grover_assessment(canonical, bits):
     if half >= 128:
         text = f"About {half}-bit post-quantum security: comfortable margin."
     else:
-        # TODO(NIST): confirm against the NIST PQC security-category
-        # definitions (categories are defined relative to AES key search)
-        # before adding any "adequate" claim here.
-        text = (f"About {half}-bit by naive Grover halving: a reduced margin, "
-                "not a break. A larger size (AES-256, SHA-384 or longer) adds "
-                "long-term headroom.")
+        text = (f"About {half}-bit by naive Grover halving: reduced margin, not a "
+                "break. A larger size (AES-256, SHA-384 or longer) adds headroom.")
     if canonical == "SHA" and bits == 160:
         text += " SHA-1 is also classically weak (practical collisions exist)."
     return text
@@ -277,11 +230,9 @@ def map_finding(finding):
 
     Returns:
         A new dict (the input is not modified) holding every original field
-        (including any 'edge_flag', which is passed through untouched and
-        never affects the quantum fields) plus the quantum-threat fields
-        listed in the module docstring. post_quantum_security_bits is 0 for
-        Shor-broken primitives, half the size for Grover-weakened ones, and
-        None when the size is unknown or the cipher is a legacy one.
+        plus the quantum-threat fields listed in the module docstring.
+        post_quantum_security_bits is 0 for Shor-broken primitives, half the
+        size for Grover-weakened ones, and None when the size is unknown.
         size_warning is set when an RSA/DSA/DH size may be a prime size.
     """
     result = dict(finding)
@@ -317,8 +268,6 @@ def map_finding(finding):
 
     if entry["family"] == "asymmetric":
         post_quantum_bits = 0  # fully broken once Shor's is practical
-    elif canonical == "LEGACY_SYMMETRIC":
-        post_quantum_bits = None  # halving a nominal size would mislead
     elif bits:
         post_quantum_bits = bits // 2  # Grover's quadratic speed-up
     else:
@@ -384,14 +333,9 @@ def summarise(mapped):
 
 
 def _cell(value):
-    """Format a value for a Markdown table cell ('-' for empty, '|' escaped).
-
-    Lists and dicts are flattened to compact JSON so they stay readable.
-    """
+    """Format a value for a Markdown table cell ('-' for empty, '|' escaped)."""
     if value is None or value == "":
         return "-"
-    if isinstance(value, (list, dict)):
-        value = json.dumps(value, ensure_ascii=False)
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
@@ -399,7 +343,6 @@ def generate_mapping_report(mapped, out_path, draft=False):
     """Write mapping_report.md: per-project summary, detail table, caveats.
 
     With draft=True a banner marks the report as built from sample data.
-    The 'Padding flag' column is display-only and does not feed any score.
     """
     projects = {}
     for item in mapped:
@@ -434,15 +377,14 @@ def generate_mapping_report(mapped, out_path, draft=False):
             lines.append(f"| {_cell(prim)} | {n} | {_cell(algo)} | {_cell(impact)} | {_cell(pqc)} |")
 
         lines += ["", "### Findings", "",
-                  "| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Padding flag | Warning |",
-                  "|---|---|---|---|---|---|---|"]
+                  "| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning |",
+                  "|---|---|---|---|---|---|"]
         for it in items:
             loc = f"{it.get('file', '?')}:{it.get('line', '?')}"
             lines.append(
                 f"| {_cell(loc)} | {_cell(it.get('primitive'))} | "
                 f"{_cell(it.get('size_used_bits'))} | {_cell(it.get('size_basis'))} | "
-                f"{_cell(it.get('post_quantum_security_bits'))} | "
-                f"{_cell(it.get('edge_flag'))} | {_cell(it.get('size_warning'))} |")
+                f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} |")
         lines.append("")
 
     warned = sum(1 for m in mapped if m.get("size_warning"))
@@ -455,13 +397,9 @@ def generate_mapping_report(mapped, out_path, draft=False):
         "- Symmetric and hash primitives are only weakened by Grover's "
         "algorithm (a quadratic speed-up, not a full break); PQ-security is "
         "about half the classical bits.",
-        "- Legacy ciphers (DES, 3DES, Blowfish, RC4) are also classically "
-        "weak; no PQ-security figure is given and they should be replaced "
-        "regardless of quantum risk.",
-        "- The Padding flag column is shown for context only. Padding "
-        "weaknesses (e.g. textbook RSA) and classical key-strength problems "
-        "are separate from the quantum threat and do not affect the "
-        "quantum result.",
+        "- Padding weaknesses (e.g. textbook RSA) and classical key-strength "
+        "problems are separate from the quantum threat and are reported "
+        "separately.",
         f"- Size warnings: {warned}. Unrecognised primitives: {unknown}.",
         "",
     ]
@@ -482,7 +420,6 @@ def _demo():
         {"primitive": "AES-128"},
         {"primitive": "SHA-256"},
         {"primitive": "Blowfish"},
-        {"primitive": "FOO"},  # deliberately unknown
     ]
     for item in map_findings(dummy_findings):
         print(f"{item['primitive']:<16} -> {item['quantum_algorithm']:<18} "

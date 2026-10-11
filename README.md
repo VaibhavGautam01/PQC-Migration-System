@@ -235,7 +235,7 @@ Shor's algorithm is probabilistic. Not every shot finds the factors, and that is
 <br>
 
 ```bash
-streamlit run src/dashboard_app.py
+ streamlit run src/live_dashboard.py
 ```
 
 </details>

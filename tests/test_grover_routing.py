@@ -42,7 +42,7 @@ class TestGroverRouting(unittest.TestCase):
                 self.assertEqual(qm.route_algorithm(name), qm.SHOR)
 
     def test_unknown_primitive_has_no_route(self):
-        self.assertIsNone(qm.route_algorithm("Blowfish"))
+        self.assertIsNone(qm.route_algorithm("ROT13"))
         self.assertIsNone(qm.route_algorithm("HMAC-MD5"))
 
     def test_table_is_consistent_with_routing_rule(self):
@@ -76,10 +76,12 @@ class TestGroverAssessment(unittest.TestCase):
         self.assertIn("128-bit", text)
         self.assertIn("comfortable", text)
 
-    def test_aes128_is_reduced_margin_not_a_break(self):
+    def test_aes128_is_not_a_break_and_cites_nist(self):
         text = qm.map_finding({"primitive": "AES-128"})["grover_assessment"]
         self.assertIn("64-bit", text)
         self.assertIn("not a break", text)
+        self.assertIn("NIST", text)
+        self.assertNotIn("reduced margin", text)
 
     def test_sha1_mentions_classical_weakness(self):
         text = qm.map_finding({"primitive": "SHA-1"})["grover_assessment"]
@@ -91,7 +93,7 @@ class TestGroverAssessment(unittest.TestCase):
         self.assertIn("Size unknown", text)
 
     def test_unknown_primitive_has_key_but_no_assessment(self):
-        r = qm.map_finding({"primitive": "Blowfish"})
+        r = qm.map_finding({"primitive": "ROT13"})
         self.assertIn("grover_assessment", r)
         self.assertIsNone(r["grover_assessment"])
 

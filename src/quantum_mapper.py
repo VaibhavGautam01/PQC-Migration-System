@@ -26,7 +26,9 @@ Manual overrides
 Output
     The same dicts plus: canonical_primitive, family, quantum_algorithm,
     hard_problem, impact, pqc_replacement, post_quantum_security_bits,
-    size_used_bits, size_warning, grover_assessment, mapper_note.
+    size_used_bits, size_warning, grover_assessment, classically_weak,
+    mapper_note. Legacy ciphers (3DES, DES, RC4, Blowfish) are recognised: they
+    route to Grover's and are marked classically_weak.
 
 Command line
     python src/quantum_mapper.py                          demo with dummy data
@@ -117,7 +119,54 @@ PRIMITIVE_TABLE = {
         "note": "Grover's halves preimage resistance (SHA-256 -> ~128 bits). "
                 "Collision resistance is largely unaffected in practice.",
     },
+    # Legacy ciphers: Grover's applies, but they are already weak classically,
+    # so the right advice is "replace", not "wait for quantum".
+    "3DES": {
+        "family": "symmetric",
+        "quantum_algorithm": GROVER,
+        "hard_problem": "Exhaustive key search",
+        "impact": "WEAKENED",
+        "pqc_replacement": "Replace with AES-256 (3DES is deprecated)",
+        "note": "About 112-bit effective strength and a 64-bit block size "
+                "(Sweet32 birthday attacks); deprecated by NIST. Replace it "
+                "with AES-256.",
+        "effective_bits": 112,
+        "classically_weak": True,
+    },
+    "DES": {
+        "family": "symmetric",
+        "quantum_algorithm": GROVER,
+        "hard_problem": "Exhaustive key search",
+        "impact": "WEAKENED",
+        "pqc_replacement": "Replace with AES-256",
+        "note": "A 56-bit key can be brute-forced on ordinary hardware; DES "
+                "is classically broken.",
+        "effective_bits": 56,
+        "classically_weak": True,
+    },
+    "RC4": {
+        "family": "symmetric",
+        "quantum_algorithm": GROVER,
+        "hard_problem": "Exhaustive key search",
+        "impact": "WEAKENED",
+        "pqc_replacement": "Replace with AES-256-GCM",
+        "note": "Stream cipher with known keystream biases; prohibited in "
+                "TLS (RFC 7465). Classically weak.",
+        "classically_weak": True,
+    },
+    "BLOWFISH": {
+        "family": "symmetric",
+        "quantum_algorithm": GROVER,
+        "hard_problem": "Exhaustive key search",
+        "impact": "WEAKENED",
+        "pqc_replacement": "Replace with AES-256",
+        "note": "A 64-bit block size makes long sessions vulnerable to "
+                "birthday-bound (Sweet32) attacks. Treat as a legacy cipher.",
+        "classically_weak": True,
+    },
 }
+
+LEGACY_CIPHERS = ("3DES", "DES", "RC4", "BLOWFISH")
 
 # Names the scanner might emit -> canonical key in PRIMITIVE_TABLE.
 ALIASES = {
@@ -128,9 +177,33 @@ ALIASES = {
     "DH": "DH", "DIFFIEHELLMAN": "DH",
     "AES": "AES",
     "SHA": "SHA",
+    "3DES": "3DES", "TRIPLEDES": "3DES", "TDES": "3DES", "DES3": "3DES",
+    "DESEDE": "3DES",
+    "DES": "DES",
+    "RC4": "RC4", "ARCFOUR": "RC4",
+    "BLOWFISH": "BLOWFISH",
 }
 
-_SIZE_PATTERN = re.compile(r"(128|192|224|256|384|512)")
+_SIZE_PATTERN = re.compile(r"(128|192|224|256|384|448|512|521)")
+_MODULUS_PATTERN = re.compile(r"(1024|2048|3072|4096|7680|8192|15360)")
+_SHA_PATTERN = re.compile(r"^(SHA(\d|KE|$)|HMACSHA)")
+
+# Named curves -> curve size in bits (used for size inference and as ECC names).
+_CURVE_BITS = {
+    "P224": 224, "P256": 256, "P384": 384, "P521": 521,
+    "ED25519": 256, "X25519": 256, "CURVE25519": 256,
+    "ED448": 448, "X448": 448, "CURVE448": 448,
+}
+_CURVE_PREFIXES = ("SECP", "PRIME", "BRAINPOOL", "ECDSA", "ECDH", "ECIES", "EDDSA")
+
+# Legacy-cipher name prefixes (checked after the exact aliases above).
+_LEGACY_PREFIXES = (
+    ("3DES", "3DES"), ("TRIPLEDES", "3DES"), ("TDES", "3DES"), ("DES3", "3DES"),
+    ("DESEDE", "3DES"),
+    ("DESCBC", "DES"), ("DESECB", "DES"), ("DESCFB", "DES"), ("DESOFB", "DES"),
+    ("DESCTR", "DES"),
+    ("RC4", "RC4"), ("ARCFOUR", "RC4"), ("BLOWFISH", "BLOWFISH"),
+)
 
 # Routing rule: which quantum algorithm attacks which primitive family.
 FAMILY_TO_ALGORITHM = {
@@ -162,28 +235,49 @@ def _normalise(name):
 def canonical_primitive(name):
     """Return the canonical primitive ('RSA', 'ECC', ...) or None if unknown.
 
-    Handles aliases (ECDSA -> ECC), case and punctuation, and families named
-    by prefix (AES-256-GCM -> AES, HMAC-SHA256 -> SHA).
+    Handles aliases (ECDSA -> ECC), case and punctuation, key sizes in the
+    name (RSA-2048), named curves (P-256, secp256r1, ED448), and families
+    named by prefix (AES-256-GCM -> AES, HMAC-SHA256 -> SHA, FFDHE2048 -> DH,
+    3DES-CBC -> 3DES).
     """
     norm = _normalise(name)
     if norm in ALIASES:
         return ALIASES[norm]
     if norm.startswith("AES"):
         return "AES"
-    if norm.startswith(("SHA", "HMACSHA")):
+    if _SHA_PATTERN.match(norm):
         return "SHA"
+    if norm in _CURVE_BITS or norm.startswith(_CURVE_PREFIXES):
+        return "ECC"
+    if norm.startswith("RSA"):
+        return "RSA"
+    if norm.startswith(("FFDHE", "DHE")):
+        return "DH"
+    if norm.startswith("DSA"):
+        return "DSA"
+    for prefix, canonical in _LEGACY_PREFIXES:
+        if norm.startswith(prefix):
+            return canonical
     return None
 
 
 def _infer_bits(name, canonical):
-    """Pull a size (bits) out of names like 'AES-256' or 'SHA256'.
+    """Pull a size (bits) out of a primitive name.
 
-    SHA-1 is special-cased to its 160-bit output. Returns None if no size is
-    present in the name.
+    Examples: 'AES-256' -> 256, 'SHA256' -> 256, 'RSA-2048' -> 2048,
+    'P-256' -> 256, 'ED448' -> 448. SHA-1 is special-cased to its 160-bit
+    output. Returns None if the name carries no size.
     """
     norm = _normalise(name)
     if canonical == "SHA" and norm in ("SHA1", "SHA"):
         return 160 if norm == "SHA1" else None
+    if canonical == "ECC" and norm in _CURVE_BITS:
+        return _CURVE_BITS[norm]
+    if canonical in ("RSA", "DSA", "DH"):
+        match = _MODULUS_PATTERN.search(norm)
+        return int(match.group(1)) if match else None
+    if canonical in ("3DES", "DES", "RC4"):
+        return None
     match = _SIZE_PATTERN.search(norm)
     return int(match.group(1)) if match else None
 
@@ -214,10 +308,18 @@ def route_algorithm(name):
 
 
 def grover_assessment(canonical, bits):
-    """Plain-English reading of Grover's impact for AES/SHA findings.
+    """Plain-English reading of Grover's impact for AES, SHA and legacy ciphers.
 
     Returns None for primitives that Grover's does not target.
+
+    AES-128 wording follows NIST: post-quantum security category 1 is defined
+    relative to AES-128 key search, and NIST's call for proposals (2016,
+    section 4.A.5) puts the quantum cost of that search at about 2^170 gates
+    divided by a depth limit (MAXDEPTH), far above the naive 2^64.
     """
+    if canonical in LEGACY_CIPHERS:
+        return ("Grover's applies, but this cipher is already weak classically; "
+                "replace it. The quantum speed-up is not the main problem.")
     if canonical not in ("AES", "SHA"):
         return None
     if not bits:
@@ -225,6 +327,12 @@ def grover_assessment(canonical, bits):
     half = bits // 2
     if half >= 128:
         text = f"About {half}-bit post-quantum security: comfortable margin."
+    elif canonical == "AES" and bits == 128:
+        text = ("About 64-bit by naive Grover halving, but this is not a break. "
+                "NIST defines post-quantum security category 1 relative to AES-128 "
+                "key search, and estimates the real quantum cost at about "
+                "2^170/MAXDEPTH gates because Grover's parallelises poorly. "
+                "AES-256 adds margin for long-lived data.")
     else:
         text = (f"About {half}-bit by naive Grover halving: reduced margin, not a "
                 "break. A larger size (AES-256, SHA-384 or longer) adds headroom.")
@@ -263,6 +371,7 @@ def map_finding(finding):
             "size_used_bits": finding.get("modulus_bits") or finding.get("key_size"),
             "size_warning": None,
             "grover_assessment": None,
+            "classically_weak": None,
             "mapper_note": f"Unrecognised primitive: {name!r}",
         })
         return result
@@ -280,10 +389,11 @@ def map_finding(finding):
 
     if entry["family"] == "asymmetric":
         post_quantum_bits = 0  # fully broken once Shor's is practical
-    elif bits:
-        post_quantum_bits = bits // 2  # Grover's quadratic speed-up
     else:
-        post_quantum_bits = None  # size unknown
+        # Grover's quadratic speed-up. Some legacy ciphers have a fixed
+        # effective strength (e.g. 3DES = 112 bits) that overrides the key size.
+        basis = entry.get("effective_bits") or bits
+        post_quantum_bits = basis // 2 if basis else None  # None = size unknown
 
     result.update({
         "canonical_primitive": canonical,
@@ -296,6 +406,7 @@ def map_finding(finding):
         "size_used_bits": bits,
         "size_warning": size_warning,
         "grover_assessment": grover_assessment(canonical, bits),
+        "classically_weak": entry.get("classically_weak", False),
         "mapper_note": entry["note"],
     })
     return result
@@ -450,6 +561,13 @@ def _cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
+def _flag_text(value):
+    """Text of an edge-case padding flag (string or structure); None if absent."""
+    if value in (None, "", [], {}):
+        return None
+    return value if isinstance(value, str) else json.dumps(value, sort_keys=True)
+
+
 def collect_caveats(mapped, override_report=None):
     """List the data-quality caveats a reader of the report must know about.
 
@@ -514,14 +632,21 @@ def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
             lines.append(f"| {_cell(prim)} | {n} | {_cell(algo)} | {_cell(impact)} | {_cell(pqc)} |")
 
         lines += ["", "### Findings", "",
-                  "| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning |",
-                  "|---|---|---|---|---|---|"]
+                  "| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning | Padding flag |",
+                  "|---|---|---|---|---|---|---|"]
         for it in items:
             loc = f"{it.get('file', '?')}:{it.get('line', '?')}"
             lines.append(
                 f"| {_cell(loc)} | {_cell(it.get('primitive'))} | "
                 f"{_cell(it.get('size_used_bits'))} | {_cell(it.get('size_basis'))} | "
-                f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} |")
+                f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} | "
+                f"{_cell(_flag_text(it.get('edge_flag')))} |")
+        lines.append("")
+
+    if caveats:
+        lines += ["## Data caveats", "",
+                  "Resolve these before treating the sizes above as final.", ""]
+        lines += [f"- {c}" for c in caveats]
         lines.append("")
 
     if caveats:
@@ -542,7 +667,10 @@ def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
         "about half the classical bits.",
         "- Padding weaknesses (e.g. textbook RSA) and classical key-strength "
         "problems are separate from the quantum threat and are reported "
-        "separately.",
+        "separately. The 'Padding flag' column comes from the edge-case module "
+        "(edge_flag in findings.json) and is not part of the quantum result.",
+        "- Legacy ciphers (3DES, DES, RC4, Blowfish) are weakened by Grover's "
+        "but already weak classically: replace them.",
         f"- Size warnings: {warned}. Unrecognised primitives: {unknown}.",
         "",
     ]
@@ -562,7 +690,8 @@ def _demo():
         {"primitive": "Diffie-Hellman", "key_size": 2048},
         {"primitive": "AES-128"},
         {"primitive": "SHA-256"},
-        {"primitive": "Blowfish"},
+        {"primitive": "3DES"},
+        {"primitive": "ROT13"},
     ]
     for item in map_findings(dummy_findings):
         print(f"{item['primitive']:<16} -> {item['quantum_algorithm']:<18} "

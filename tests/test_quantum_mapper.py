@@ -140,7 +140,7 @@ class TestCanonicalPrimitive(unittest.TestCase):
         self.assertEqual(qm.canonical_primitive("DSA"), "DSA")
 
     def test_unknown_names_return_none(self):
-        for name in ("Blowfish", "", "ROT13"):
+        for name in ("Twofish", "", "ROT13"):
             with self.subTest(name=name):
                 self.assertIsNone(qm.canonical_primitive(name))
 
@@ -162,7 +162,7 @@ class TestMapPrimitive(unittest.TestCase):
                 self.assertEqual(entry["impact"], "WEAKENED")
 
     def test_unknown_primitive_returns_none(self):
-        self.assertIsNone(qm.map_primitive("Blowfish"))
+        self.assertIsNone(qm.map_primitive("ROT13"))
 
     def test_returned_entry_is_a_copy(self):
         entry = qm.map_primitive("RSA")
@@ -214,7 +214,7 @@ class TestMapFinding(unittest.TestCase):
         self.assertEqual(r["post_quantum_security_bits"], 80)
 
     def test_unknown_primitive_is_flagged_not_crashed(self):
-        r = qm.map_finding({"primitive": "Blowfish"})
+        r = qm.map_finding({"primitive": "ROT13"})
         self.assertEqual(r["quantum_algorithm"], "UNKNOWN")
         self.assertEqual(r["impact"], "UNKNOWN")
         self.assertIn("Manual review", r["pqc_replacement"])
@@ -241,9 +241,9 @@ class TestMapFinding(unittest.TestCase):
         self.assertEqual(r["line"], 7)
 
     def test_map_findings_preserves_length_and_order(self):
-        items = [{"primitive": p} for p in ("RSA", "AES-128", "Blowfish", "DH")]
+        items = [{"primitive": p} for p in ("RSA", "AES-128", "ROT13", "DH")]
         out = qm.map_findings(items)
-        self.assertEqual([o["primitive"] for o in out], ["RSA", "AES-128", "Blowfish", "DH"])
+        self.assertEqual([o["primitive"] for o in out], ["RSA", "AES-128", "ROT13", "DH"])
 
 
 class TestFileHelpers(unittest.TestCase):

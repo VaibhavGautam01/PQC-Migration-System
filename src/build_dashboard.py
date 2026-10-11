@@ -19,6 +19,7 @@ import cbom as cb
 TITLE = "# Final Dashboard: AI-Powered PQC Migration Advisor"
 SECTIONS = ("Summary", "Detection", "Mapping", "Risk", "Demo", "Conclusion")
 PENDING = "_Not generated yet._"
+DEFAULT_CONCLUSION = os.path.join("docs", "conclusion.md")
 
 # ---------------------------------------------------------------------------
 # Context: everything the sections need, computed once
@@ -50,8 +51,8 @@ def _demo_rate(case):
     return 100.0 * ok / runs
 
 
-def build_context(findings_path, facts_path=None, demo_path=None):
-    """Load findings, apply confirmed overrides, map them, build the CBOM and demo data."""
+def build_context(findings_path, facts_path=None, demo_path=None, conclusion_path=None):
+    """Load findings, apply confirmed overrides, map them, build the CBOM, demo and conclusion."""
     findings, _problems, ov_report = qm.prepare_findings(findings_path, facts_path)
     mapped = qm.map_findings(findings)
     ctx = {"mapped": mapped, "overrides": ov_report,
@@ -59,6 +60,7 @@ def build_context(findings_path, facts_path=None, demo_path=None):
     facts = cb.load_facts(facts_path) if facts_path else None
     ctx["cbom"] = cb.build_cbom(mapped, facts)
     ctx["demo"] = load_demo(demo_path)
+    ctx["conclusion_path"] = conclusion_path or DEFAULT_CONCLUSION
     return ctx
 
 # ---------------------------------------------------------------------------
@@ -196,6 +198,15 @@ def render_demo(ctx):
     return "\n".join(lines)
 
 
+def render_conclusion(ctx):
+    """Conclusion text (impact, limitations, future work) from docs/conclusion.md."""
+    path = ctx.get("conclusion_path")
+    if not path or not os.path.exists(path):
+        return f"_Conclusion file not found ({path}). Write impact, limitations and future work there._"
+    with open(path, "r", encoding="utf-8") as fh:
+        return fh.read().strip()
+
+
 # ---------------------------------------------------------------------------
 # Assembly and CLI
 # ---------------------------------------------------------------------------
@@ -205,6 +216,7 @@ RENDERERS = {
     "Mapping": render_mapping,
     "Risk": render_risk,
     "Demo": render_demo,
+    "Conclusion": render_conclusion,
 }
 
 
@@ -221,7 +233,9 @@ def build_dashboard(ctx):
 
 VALUE_FLAGS = ["--facts", "--out"]
 VALUE_FLAGS.append("--demo")
-USAGE = "usage: build_dashboard.py FINDINGS.json [--facts FILE] [--demo FILE] [--out FILE]"
+VALUE_FLAGS.append("--conclusion")
+USAGE = ("usage: build_dashboard.py FINDINGS.json [--facts FILE] [--demo FILE] "
+         "[--conclusion FILE] [--out FILE]")
 
 
 def main(argv=None):
@@ -232,7 +246,7 @@ def main(argv=None):
         return 2
     paths, values, _ = parsed
     out = values["--out"] or os.path.join("docs", "final_dashboard.md")
-    ctx = build_context(paths[0], values["--facts"], values["--demo"])
+    ctx = build_context(paths[0], values["--facts"], values["--demo"], values["--conclusion"])
     text = build_dashboard(ctx)
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(text)

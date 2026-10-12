@@ -46,11 +46,11 @@ The key size decides the qubit cost, so it is extracted carefully:
 
 | Check | Method | Result |
 |---|---|---|
-| Line check | Every finding compared with the real source line (`crosscheck.py`) | All findings match |
+| Line check | Every finding compared with the real source line (`crosscheck.py`) | 26 of 26 findings match |
 | Miss hunt | 166 crypto-looking lines without a finding triaged by hand | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
-| Tests | `run_tests.py` and the files in `tests/` | 92 tests, all pass |
+| Tests | `run_tests.py` and the files in `tests/` | 282 tests, all pass |
 
 ## 3. Stage 1 results on the target projects
 
@@ -70,7 +70,7 @@ Scanner output (`findings.json`): **26 findings**, RSA 25 and SHA 1.
 | Steganography | `rsa_crypto.py:48, 49` | 1024 | **Default value only**; the UI default is 2048 |
 | Part1 | `r_channel_stego.py` | n < 256 (about 8 bits) | Manual note, the scanner cannot read it |
 
-**Caveat:** `risk_report.md` lists the 512-bit and 1024-bit rows as real sizes. They are defaults, so the figures for these rows (1027 and 2051 qubits) describe unused defaults, not the sizes in actual use.
+**Note:** `risk_report.md` marks these rows in a Basis column (`default only` or `in use`). The 512-bit and 1024-bit rows are defaults, so their figures (1027 and 2051 qubits) describe unused defaults, not the sizes in actual use.
 
 ### Two kinds of risk
 
@@ -112,10 +112,62 @@ Padding and indirect usage (edge-case module): 2 no-padding flags in each projec
 
 - Detection is static and regex-based: it can miss dynamically built code and can over-match comments and strings (low-confidence findings are labelled).
 - Key sizes chosen at runtime (UI input, config files) are reported as unknown.
-- `bits=N` is assumed to be the per-prime size, based on the docstring in `rsa_utils.py`.
+- `bits=N` is the per-prime size: `generate_prime(bits)` in `rsa_utils.py` returns a prime of exactly that many bits, so `bits=128` gives a modulus of 255 to 256 bits.
 - ECC, DSA, DH and AES patterns were verified on test fixtures only, because the target projects contain just RSA and SHA.
 
-## 7. Pending
+## 7. Status of remaining items
 
-- Risk report: mark default-value sizes separately.
-- CBOM (JSON and Markdown): to be merged from Uday's branch.
+Done since the first draft of this report:
+
+- Risk report marks default-value sizes in a Basis column.
+- CBOM merged (`docs/cbom.json`, `docs/cbom.md`, `src/cbom.py`).
+- Classical key-strength check merged (`src/key_strength_check.py`).
+- Final mapping report built from the real findings (`docs/mapping_report.md`, 26 findings).
+
+Still open:
+
+- Two manual size overrides in `data/manual_facts.json` are marked `confirmed: false` and are not applied to the mapping report until the team confirms them.
+
+## Appendix A: Edge-case findings (Vaibhav)
+
+Both target projects, pinned at final-year-part1 bb6d944 and steganography 4514806, encrypt with textbook RSA.
+
+#### Padding (confirmed by hand)
+
+Four flagged sites, each read in the pinned code: rsa_utils.py:45 and :50 (image project) and rsa_crypto.py:142 and :170 (video project). All four are raw `pow()` calls with no OAEP or PKCS1. The video project wraps the message as \[length]\[CRC32]\[data]\[zeros] before encrypting. That layout is fixed, so encryption is still deterministic.
+
+#### Indirect usage
+
+Ten flags: 6 in the image project and 4 in the video project. The crypto is defined in `rsa_utils.py`, `r_channel_stego.py`, `rsa_crypto.py` and `frame_selector.py` and used through imports elsewhere. A scan of a single file would miss it.
+
+#### Weaknesses that follow from the missing padding
+
+- **Deterministic encryption:** the same plaintext always gives the same ciphertext. The image project encrypts one character at a time, so a message can be recovered by frequency analysis without factoring.
+
+- **Malleability:** textbook RSA lets an attacker modify ciphertext in predictable ways.
+
+- **Key-check oracle (video project):** the CRC32 inside the plaintext lets an attacker test a candidate private key, because a wrong key fails the checksum.
+
+- **Frame-selection key:** embedded frames can be found by scanning for a plausible 16-bit length header, without the secret key.
+
+#### Classical key strength
+
+Rated independently of the quantum score by `key_strength_check.py`:
+
+- Image project, in real use: 256-bit modulus (`app.py` and `main.py` with `bits=128`). Rating CRITICAL: breakable on ordinary hardware today.
+
+- Image project, `rsa_utils.py` default only: 512-bit modulus, also CRITICAL, but callers pass `bits=128`.
+
+- Video project: the function default is 1024 bits (MEDIUM, below the 2048-bit minimum). The UI offers 1024, 2048 and 3072, with 2048 as the default, which meets the minimum. A user who picks 1024 gets the MEDIUM rating.
+
+#### Attack demonstrations (local small-key snapshots)
+
+These ran on local copies with reduced keys, not on the pinned commits:
+
+- Image pipeline, 31-bit modulus (`bits=16`): ciphertext extracted from the stego image, n factored in 0.0002 s, message recovered.
+
+- Video pipeline, 95-bit modulus (reduced key): message recovered in 0.23 s without the secret frame key.
+
+- Toy N = 15 and N = 21 versions of the image pipeline exist as targets for Shor's circuit.
+
+No time in this section was measured on the pinned code. The break needs only public information, but factoring a 256-bit or larger modulus needs a sieve method. All quantum results in this project are simulator, toy size.

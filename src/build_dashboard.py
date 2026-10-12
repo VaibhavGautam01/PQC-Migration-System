@@ -57,6 +57,9 @@ def build_context(findings_path, facts_path=None, demo_path=None, conclusion_pat
     mapped = qm.map_findings(findings)
     ctx = {"mapped": mapped, "overrides": ov_report,
            "caveats": qm.collect_caveats(mapped, ov_report)}
+    with open(findings_path, "r", encoding="utf-8") as fh:
+        raw = json.load(fh)
+    ctx["edge_totals"] = raw.get("edge_case_totals") if isinstance(raw, dict) else None
     facts = cb.load_facts(facts_path) if facts_path else None
     ctx["cbom"] = cb.build_cbom(mapped, facts)
     ctx["demo"] = load_demo(demo_path)
@@ -120,6 +123,10 @@ def render_detection(ctx):
                      f"{_count_text(m.get('confidence') for m in items)} |")
     lines += ["", "The scanner is pattern-based. Facts it cannot see, such as the key size a "
               "function is called with, come from manual review (`data/manual_facts.json`)."]
+    totals = ctx.get("edge_totals")
+    if totals:
+        shown = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in sorted(totals.items()))
+        lines.append(f"Edge-case module totals: {shown} (the padding findings were confirmed by hand).")
     confirmed = sum(1 for o in ctx["overrides"] if o["confirmed"])
     pending = sum(1 for o in ctx["overrides"] if not o["confirmed"])
     if ctx["overrides"]:
@@ -173,6 +180,10 @@ def render_risk(ctx):
         "error-correction overhead; physical qubit counts are far larger.",
         "- Full details: `docs/cbom.md` and `docs/cbom.json`.",
     ]
+    experiments = ctx["cbom"].get("experiments", [])
+    if experiments:
+        lines += ["", "**Supporting experiments** (local small-key snapshots, not the projects of record):", ""]
+        lines += [f"- {e['description']} Result: {e['result']}. Target: {e['target']}." for e in experiments]
     return "\n".join(lines)
 
 

@@ -35,7 +35,8 @@ def good_entry():
 
 def good_cbom():
     return {"cbom_version": "1.0", "project_count": 1, "entry_count": 1, "finding_count": 1,
-            "entries": [good_entry()], "unmapped": [], "references": [], "notes": []}
+            "entries": [good_entry()], "unmapped": [], "experiments": [],
+            "references": [], "notes": []}
 
 
 class TestShorQubits(unittest.TestCase):

@@ -51,6 +51,11 @@ is deterministic, not because of Shor's algorithm.
 - `quantum_risk` must never contain padding fields (checked by `validate_entry`).
 - `primitive` is one of RSA, ECC, DSA, DH, AES, SHA or a legacy cipher (3DES, DES, RC4, BLOWFISH). Legacy ciphers route to Grover's and are marked classically weak.
 - `automated_flag` is the edge-case module's flag (`edge_flag`). It sits beside the manually confirmed status and never feeds the quantum score.
+- `experiments` (top level) lists results from **local small-key copies**, which are not
+  the projects of record. Each target must say "not the project of record". They are never
+  attached to an entry and are not evidence about the real key sizes.
+- RSA entries can carry `size_notes` from `data/manual_facts.json` in `notes` (for example
+  "user-selectable, UI default 2048").
 - The CBOM has no timestamp, so re-running the generator on the same input gives
   byte-identical output.
 

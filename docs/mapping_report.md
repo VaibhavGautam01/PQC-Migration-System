@@ -15,25 +15,25 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 
 ### Findings
 
-| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning |
-|---|---|---|---|---|---|
-| app.py:239 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - |
-| app.py:385 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - |
-| main.py:101 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - |
-| r_channel_stego.py:42 | RSA | - | - | 0 | - |
-| r_channel_stego.py:52 | RSA | - | - | 0 | - |
-| r_channel_stego.py:54 | RSA | - | - | 0 | - |
-| r_channel_stego.py:59 | RSA | - | - | 0 | - |
-| rsa_utils.py:22 | RSA | - | - | 0 | - |
-| rsa_utils.py:27 | RSA | 512 | resolved from 'bits' (per-prime, modulus = 2 x) | 0 | - |
-| rsa_utils.py:28 | RSA | 512 | resolved from 'bits' (per-prime, modulus = 2 x) | 0 | - |
-| rsa_utils.py:30 | RSA | 512 | resolved from 'bits' (per-prime, modulus = 2 x) | 0 | - |
-| rsa_utils.py:33 | RSA | - | - | 0 | - |
-| rsa_utils.py:35 | RSA | - | - | 0 | - |
-| rsa_utils.py:37 | RSA | - | - | 0 | - |
-| rsa_utils.py:39 | RSA | - | - | 0 | - |
-| rsa_utils.py:45 | RSA | - | - | 0 | - |
-| rsa_utils.py:50 | RSA | - | - | 0 | - |
+| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning | Padding flag |
+|---|---|---|---|---|---|---|
+| app.py:239 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
+| app.py:385 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
+| main.py:101 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
+| r_channel_stego.py:42 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
+| r_channel_stego.py:52 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
+| r_channel_stego.py:54 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
+| r_channel_stego.py:59 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
+| rsa_utils.py:22 | RSA | - | - | 0 | - | - |
+| rsa_utils.py:27 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
+| rsa_utils.py:28 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
+| rsa_utils.py:30 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
+| rsa_utils.py:33 | RSA | - | - | 0 | - | - |
+| rsa_utils.py:35 | RSA | - | - | 0 | - | - |
+| rsa_utils.py:37 | RSA | - | - | 0 | - | - |
+| rsa_utils.py:39 | RSA | - | - | 0 | - | - |
+| rsa_utils.py:45 | RSA | - | - | 0 | - | NO_PADDING |
+| rsa_utils.py:50 | RSA | - | - | 0 | - | NO_PADDING |
 
 ## Secure-Video-Steganography
 
@@ -46,17 +46,17 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 
 ### Findings
 
-| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning |
-|---|---|---|---|---|---|
-| app.py:263 | RSA | - | - | 0 | - |
-| frame_selector.py:32 | SHA | 256 | literal in call | 128 | - |
-| rsa_crypto.py:45 | RSA | - | - | 0 | - |
-| rsa_crypto.py:48 | RSA | 1024 | resolved from 'half' (per-prime, modulus = 2 x) | 0 | - |
-| rsa_crypto.py:49 | RSA | 1024 | resolved from 'half' (per-prime, modulus = 2 x) | 0 | - |
-| rsa_crypto.py:53 | RSA | - | - | 0 | - |
-| rsa_crypto.py:56 | RSA | - | - | 0 | - |
-| rsa_crypto.py:142 | RSA | - | - | 0 | - |
-| rsa_crypto.py:170 | RSA | - | - | 0 | - |
+| File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning | Padding flag |
+|---|---|---|---|---|---|---|
+| app.py:263 | RSA | - | - | 0 | - | - |
+| frame_selector.py:32 | SHA | 256 | literal in call | 128 | - | - |
+| rsa_crypto.py:45 | RSA | - | - | 0 | - | - |
+| rsa_crypto.py:48 | RSA | 2048 | user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024 | 0 | - | - |
+| rsa_crypto.py:49 | RSA | 2048 | user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024 | 0 | - | - |
+| rsa_crypto.py:53 | RSA | - | - | 0 | - | - |
+| rsa_crypto.py:56 | RSA | - | - | 0 | - | - |
+| rsa_crypto.py:142 | RSA | - | - | 0 | - | NO_PADDING |
+| rsa_crypto.py:170 | RSA | - | - | 0 | - | NO_PADDING |
 
 ## Data caveats
 
@@ -68,10 +68,6 @@ Resolve these before treating the sizes above as final.
 - Secure-Video-Steganography rsa_crypto.py:56: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:142: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:170: RSA has no size information.
-- Final-Year-project-part1 r_channel_stego.py:42: RSA has no size information.
-- Final-Year-project-part1 r_channel_stego.py:52: RSA has no size information.
-- Final-Year-project-part1 r_channel_stego.py:54: RSA has no size information.
-- Final-Year-project-part1 r_channel_stego.py:59: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:22: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:33: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:35: RSA has no size information.
@@ -79,12 +75,11 @@ Resolve these before treating the sizes above as final.
 - Final-Year-project-part1 rsa_utils.py:39: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:45: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:50: RSA has no size information.
-- Override 'part1-keygen-256' is unconfirmed and was NOT applied (would change 10 finding(s)); source: Tarun, manual note 1 on findings.json v1.
-- Override 'part1-rchannel-8bit' is unconfirmed and was NOT applied (would change 4 finding(s)); source: Tarun, manual note 2 on findings.json v1.
 
 ## Notes and limitations
 
 - Asymmetric primitives (RSA, ECC, DSA, DH) are broken by Shor's algorithm once a large enough fault-tolerant quantum computer exists. PQ-security is shown as 0 for these.
 - Symmetric and hash primitives are only weakened by Grover's algorithm (a quadratic speed-up, not a full break); PQ-security is about half the classical bits.
-- Padding weaknesses (e.g. textbook RSA) and classical key-strength problems are separate from the quantum threat and are reported separately.
+- Padding weaknesses (e.g. textbook RSA) and classical key-strength problems are separate from the quantum threat and are reported separately. The 'Padding flag' column comes from the edge-case module (edge_flag in findings.json) and is not part of the quantum result.
+- Legacy ciphers (3DES, DES, RC4, Blowfish) are weakened by Grover's but already weak classically: replace them.
 - Size warnings: 0. Unrecognised primitives: 0.

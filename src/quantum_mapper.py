@@ -469,12 +469,21 @@ def load_overrides(path):
 
 
 def _override_matches(finding, match):
-    """True if a finding satisfies every condition in an override's 'match'."""
+    """True if a finding satisfies every condition in an override's 'match'.
+
+    Conditions: project, file_contains, line, lines (a list of line numbers),
+    primitive, and has_size (true = only findings that already carry a size
+    from the scanner, so lines without any size are left alone).
+    """
     if "project" in match and finding.get("project") != match["project"]:
         return False
     if "file_contains" in match and match["file_contains"] not in str(finding.get("file", "")):
         return False
     if "line" in match and finding.get("line") != match["line"]:
+        return False
+    if "lines" in match and finding.get("line") not in match["lines"]:
+        return False
+    if match.get("has_size") and not (finding.get("modulus_bits") or finding.get("key_size")):
         return False
     if "primitive" in match:
         wanted = canonical_primitive(match["primitive"])
@@ -641,12 +650,6 @@ def generate_mapping_report(mapped, out_path, draft=False, caveats=None):
                 f"{_cell(it.get('size_used_bits'))} | {_cell(it.get('size_basis'))} | "
                 f"{_cell(it.get('post_quantum_security_bits'))} | {_cell(it.get('size_warning'))} | "
                 f"{_cell(_flag_text(it.get('edge_flag')))} |")
-        lines.append("")
-
-    if caveats:
-        lines += ["## Data caveats", "",
-                  "Resolve these before treating the sizes above as final.", ""]
-        lines += [f"- {c}" for c in caveats]
         lines.append("")
 
     if caveats:

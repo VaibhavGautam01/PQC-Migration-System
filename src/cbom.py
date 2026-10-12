@@ -40,7 +40,11 @@ BLOCK_FIELDS = {
 }
 
 CBOM_FIELDS = ("cbom_version", "project_count", "entry_count", "finding_count",
-               "entries", "unmapped", "references", "notes")
+               "entries", "unmapped", "experiments", "references", "notes")
+
+# Supporting experiments run on local small-key copies, NOT on the projects of
+# record. They are listed separately and never attached to an entry.
+EXPERIMENT_FIELDS = ("id", "target", "key_bits", "description", "result", "source")
 
 SIZE_STATUSES = ("override-confirmed", "scanner-reported", "unverified", "unknown")
 CLASSICAL_STATUSES = ("practically-breakable", "below-minimum", "meets-minimum",
@@ -141,6 +145,17 @@ def validate_cbom(cbom):
     problems = [f"missing top-level field '{f}'" for f in CBOM_FIELDS if f not in cbom]
     if problems:
         return problems
+    experiments = cbom["experiments"]
+    if not isinstance(experiments, list):
+        problems.append("experiments must be a list")
+    else:
+        for i, exp in enumerate(experiments):
+            if not isinstance(exp, dict):
+                problems.append(f"experiment #{i} is not an object")
+                continue
+            problems += [f"experiment #{i}: missing '{f}'" for f in EXPERIMENT_FIELDS if f not in exp]
+            if "target" in exp and "not the project of record" not in str(exp["target"]):
+                problems.append(f"experiment #{i}: target must say it is not the project of record")
     entries = cbom["entries"]
     if cbom["entry_count"] != len(entries):
         problems.append(f"entry_count {cbom['entry_count']} != {len(entries)} entries")
@@ -371,6 +386,8 @@ def _build_entry(entry_id, key, group, project_facts):
     if status in ("unverified", "unknown"):
         notes.append("Key size is not verified; the qubit estimate and classical "
                      "assessment depend on it.")
+    if canonical == "RSA":
+        notes += list((project_facts or {}).get("size_notes", []))
     return {
         "id": entry_id,
         "project": project,
@@ -418,6 +435,7 @@ def build_cbom(mapped, facts=None):
         "finding_count": len(mapped),
         "entries": entries,
         "unmapped": unmapped,
+        "experiments": [dict(e) for e in (facts or {}).get("experiments", [])],
         "references": list(REFERENCES),
         "notes": list(NOTES),
     }
@@ -495,6 +513,17 @@ def render_markdown(cbom):
     for e in cbom["entries"]:
         lines.append(f"- {e['id']}: {', '.join(e['files'])}")
     lines.append("")
+
+    experiments = cbom.get("experiments", [])
+    if experiments:
+        lines += ["## Supporting experiments (local small-key snapshots)", "",
+                  "These ran on local small-key copies of the projects, not on the "
+                  "projects of record. They show what a small modulus costs an "
+                  "attacker; they are not evidence about the key sizes in the table "
+                  "above.", ""]
+        lines += [f"- {e['id']}: {e['description']} Target: {e['target']}. "
+                  f"Result: {e['result']}. Source: {e['source']}." for e in experiments]
+        lines.append("")
 
     open_items = [e for e in cbom["entries"] if e["size_status"] in ("unverified", "unknown")]
     if open_items:

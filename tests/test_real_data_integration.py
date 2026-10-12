@@ -91,7 +91,6 @@ class TestOverrides(unittest.TestCase):
 
     def test_unrecognised_match_primitive_never_matches(self):
         ov = self.ov(match={"primitive": "ROT13"})
-        ov = self.ov(match={"primitive": "Blowfish"})
         _, report = qm.apply_overrides([rsa()], [ov])
         self.assertEqual(report[0]["matched"], 0)
 
@@ -147,7 +146,7 @@ class TestFilesAndCli(unittest.TestCase):
         code, _ = self.run_main(self.findings, self.out, "--overrides")
         self.assertEqual(code, 2)
 
-    def test_manual_facts_file_in_repo_is_valid_and_all_unconfirmed_by_default(self):
+    def test_manual_facts_file_in_repo_is_valid(self):
         path = os.path.join(ROOT, "data", "manual_facts.json")
         if not os.path.exists(path):
             self.skipTest("data/manual_facts.json not present")

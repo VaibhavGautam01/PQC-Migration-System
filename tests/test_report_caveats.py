@@ -41,6 +41,8 @@ class TestCollectCaveats(unittest.TestCase):
     def test_unknown_primitive_is_a_caveat(self):
         caveats = qm.collect_caveats(qm.map_findings([finding(primitive="ROT13")]))
         self.assertTrue(any("ROT13" in c for c in caveats))
+        caveats = qm.collect_caveats(qm.map_findings([finding(primitive="ROT13")]))
+        self.assertTrue(any("ROT13" in c for c in caveats))
         # Blowfish is a recognised legacy cipher in quantum_mapper.py (not unknown),
         # so it produces no caveat. ROT13 above still covers the unknown case.
         caveats = qm.collect_caveats(qm.map_findings([finding(primitive="Blowfish")]))

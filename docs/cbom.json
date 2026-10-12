@@ -12,10 +12,6 @@
       "size_basis": "scanner field or primitive name",
       "size_status": "unknown",
       "files": [
-        "r_channel_stego.py:42",
-        "r_channel_stego.py:52",
-        "r_channel_stego.py:54",
-        "r_channel_stego.py:59",
         "rsa_utils.py:22",
         "rsa_utils.py:33",
         "rsa_utils.py:35",
@@ -39,7 +35,11 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+<<<<<<< HEAD
         "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
+=======
+        "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
+>>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": "NO_PADDING"
       },
       "recommended_pqc": {
@@ -48,20 +48,64 @@
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
       "notes": [
-        "Key size is not verified; the qubit estimate and classical assessment depend on it."
+        "Key size is not verified; the qubit estimate and classical assessment depend on it.",
+        "Two real key paths: generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101), and generate_small_keypair() in the R-channel module gives n < 256 (at most 8 bits). The 512-bit default in rsa_utils.py is not used."
       ]
     },
     {
       "id": "CBOM-002",
       "project": "Final-Year-project-part1",
       "primitive": "RSA",
+      "key_size_bits": 8,
+      "size_basis": "generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256)",
+      "size_status": "override-confirmed",
+      "files": [
+        "r_channel_stego.py:42",
+        "r_channel_stego.py:52",
+        "r_channel_stego.py:54",
+        "r_channel_stego.py:59"
+      ],
+      "quantum_risk": {
+        "algorithm": "Shor's algorithm",
+        "impact": "BROKEN",
+        "logical_qubits_estimate": 19,
+        "estimate_basis": "Logical qubits to factor a 8-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
+        "post_quantum_security_bits": 0
+      },
+      "classical_risk": {
+        "status": "practically-breakable",
+        "basis": "A 8-bit modulus can be attacked with ordinary hardware or rented cloud time. No quantum computer is needed.",
+        "evidence": []
+      },
+      "padding_risk": {
+        "status": "none (textbook RSA)",
+        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+        "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
+        "automated_flag": null
+      },
+      "recommended_pqc": {
+        "algorithm": "ML-KEM-768",
+        "standard": "NIST FIPS 203",
+        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
+      },
+      "notes": [
+        "Two real key paths: generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101), and generate_small_keypair() in the R-channel module gives n < 256 (at most 8 bits). The 512-bit default in rsa_utils.py is not used."
+      ]
+    },
+    {
+      "id": "CBOM-003",
+      "project": "Final-Year-project-part1",
+      "primitive": "RSA",
       "key_size_bits": 256,
-      "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
-      "size_status": "scanner-reported",
+      "size_basis": "generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used.; keyword argument (per-prime assumed, modulus = 2 x)",
+      "size_status": "override-confirmed",
       "files": [
         "app.py:239",
         "app.py:385",
-        "main.py:101"
+        "main.py:101",
+        "rsa_utils.py:27",
+        "rsa_utils.py:28",
+        "rsa_utils.py:30"
       ],
       "quantum_risk": {
         "algorithm": "Shor's algorithm",
@@ -78,7 +122,11 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+<<<<<<< HEAD
         "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
+=======
+        "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
+>>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": null
       },
       "recommended_pqc": {
@@ -86,6 +134,7 @@
         "standard": "NIST FIPS 203",
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
+<<<<<<< HEAD
       "notes": []
     },
     {
@@ -124,6 +173,11 @@
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
       "notes": []
+=======
+      "notes": [
+        "Two real key paths: generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101), and generate_small_keypair() in the R-channel module gives n < 256 (at most 8 bits). The 512-bit default in rsa_utils.py is not used."
+      ]
+>>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
     },
     {
       "id": "CBOM-004",
@@ -155,7 +209,11 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+<<<<<<< HEAD
         "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
+=======
+        "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
+>>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": "NO_PADDING"
       },
       "recommended_pqc": {
@@ -164,16 +222,17 @@
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
       "notes": [
-        "Key size is not verified; the qubit estimate and classical assessment depend on it."
+        "Key size is not verified; the qubit estimate and classical assessment depend on it.",
+        "Key size is user-selectable: the UI offers 1024, 2048 and 3072 bits with 2048 as the UI default; the function default is 1024. A user who picks 1024 gets a key below the 2048-bit minimum."
       ]
     },
     {
       "id": "CBOM-005",
       "project": "Secure-Video-Steganography",
       "primitive": "RSA",
-      "key_size_bits": 1024,
-      "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
-      "size_status": "scanner-reported",
+      "key_size_bits": 2048,
+      "size_basis": "user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024",
+      "size_status": "override-confirmed",
       "files": [
         "rsa_crypto.py:48",
         "rsa_crypto.py:49"
@@ -181,19 +240,23 @@
       "quantum_risk": {
         "algorithm": "Shor's algorithm",
         "impact": "BROKEN",
-        "logical_qubits_estimate": 2051,
-        "estimate_basis": "Logical qubits to factor a 1024-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
+        "logical_qubits_estimate": 4099,
+        "estimate_basis": "Logical qubits to factor a 2048-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
         "post_quantum_security_bits": 0
       },
       "classical_risk": {
-        "status": "below-minimum",
-        "basis": "A 1024-bit modulus is below the 2048-bit minimum (this project flags RSA under 2048 bits; NIST guidance agrees). This is a classical finding, separate from the quantum threat.",
+        "status": "meets-minimum",
+        "basis": "A 2048-bit modulus meets the 2048-bit minimum against classical attacks.",
         "evidence": []
       },
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
+<<<<<<< HEAD
         "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
+=======
+        "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
+>>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": null
       },
       "recommended_pqc": {
@@ -201,7 +264,9 @@
         "standard": "NIST FIPS 203",
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
-      "notes": []
+      "notes": [
+        "Key size is user-selectable: the UI offers 1024, 2048 and 3072 bits with 2048 as the UI default; the function default is 1024. A user who picks 1024 gets a key below the 2048-bit minimum."
+      ]
     },
     {
       "id": "CBOM-006",
@@ -240,6 +305,24 @@
     }
   ],
   "unmapped": [],
+  "experiments": [
+    {
+      "id": "EXP-IMAGE-31",
+      "target": "local small-key snapshot (Vaibhav's ZIP copy of the image project, whose generate_keypair defaults to bits=16); not the project of record",
+      "key_bits": 31,
+      "description": "Image steganography attack end to end: extract the ciphertext, factor n, decrypt.",
+      "result": "31-bit modulus factored in 0.0002 s",
+      "source": "Vaibhav"
+    },
+    {
+      "id": "EXP-VIDEO-95",
+      "target": "local small-key snapshot (video_stego_project_updated, reduced key made with generate_keypair(key_size=96)); not the project of record",
+      "key_bits": 95,
+      "description": "Video steganography attack at a reduced key. It does not need the secret frame key: it scans for the 16-bit length header.",
+      "result": "95-bit modulus factored in 0.23 s",
+      "source": "Vaibhav"
+    }
+  ],
   "references": [
     "Shor, P. W. (1997). Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer. SIAM J. Comput. 26(5), 1484-1509.",
     "Grover, L. K. (1996). A fast quantum mechanical algorithm for database search. Proc. 28th ACM STOC, 212-219.",

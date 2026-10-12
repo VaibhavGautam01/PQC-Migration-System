@@ -1,0 +1,23 @@
+{
+  "_readme": "Copy to data/demo_results.json and fill in from the REAL simulator runs (Yatharth's demo logs). Do not invent numbers. Leave 'cases' empty until real runs exist.",
+  "environment": "e.g. Qiskit Aer simulator, version used",
+  "cases": [
+    {
+      "N": 15,
+      "expected_factors": [3, 5],
+      "runs": null,
+      "successes": null,
+      "backend": "simulator",
+      "notes": ""
+    },
+    {
+      "N": 21,
+      "expected_factors": [3, 7],
+      "runs": null,
+      "successes": null,
+      "backend": "simulator",
+      "notes": ""
+    }
+  ],
+  "recordings": []
+}

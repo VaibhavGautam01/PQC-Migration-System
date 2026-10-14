@@ -5,21 +5,21 @@
       "id": "part1-keygen-256",
       "confirmed": true,
       "match": {"project": "Final-Year-project-part1", "file_contains": "rsa_utils", "lines": [27, 28, 30], "primitive": "RSA"},
-      "set": {"modulus_bits": 256, "size_basis": "generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used."},
+      "set": {"is_default": false, "modulus_bits": 256, "size_basis": "generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used."},
       "source": "Tarun (confirmed in code); Vaibhav (final_report.md)"
     },
     {
       "id": "part1-rchannel-8bit",
       "confirmed": true,
       "match": {"project": "Final-Year-project-part1", "file_contains": "r_channel_stego", "primitive": "RSA"},
-      "set": {"modulus_bits": 8, "size_basis": "generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256)"},
+      "set": {"is_default": false, "modulus_bits": 8, "size_basis": "generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256)"},
       "source": "Tarun (confirmed in code); Vaibhav (final_report.md)"
     },
     {
       "id": "video-ui-default-2048",
       "confirmed": true,
       "match": {"project": "Secure-Video-Steganography", "primitive": "RSA", "has_size": true},
-      "set": {"modulus_bits": 2048, "size_basis": "user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024"},
+      "set": {"is_default": false, "modulus_bits": 2048, "size_basis": "user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024"},
       "source": "Tarun and Vaibhav (UI selectbox in the video project)"
     }
   ],

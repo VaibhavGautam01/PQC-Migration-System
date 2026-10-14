@@ -24,6 +24,8 @@ DEFAULT_FINDINGS = ROOT / "outputs" / "findings.json"
 DEFAULT_OUT = ROOT / "docs" / "risk_report.md"
 # Teammates yahan alag .md files daalein, script unhe end mein jodegi.
 EXTRAS_DIR = ROOT / "docs" / "risk_report_extra"
+# Confirmed manual size overrides (same file the CBOM uses -> same numbers).
+DEFAULT_FACTS = ROOT / "data" / "manual_facts.json"
 
 
 def load_qubit_fn():
@@ -48,6 +50,20 @@ def load_data(path):
     if "findings" not in raw:
         raise ValueError("'findings' key nahi mili")
     return raw
+
+
+def apply_facts(data, facts_path):
+    """Apply CONFIRMED size overrides, exactly as the CBOM does.
+
+    Without this, risk_report.md and cbom.md can show different key sizes
+    for the same project. Returns (data, number_of_confirmed_overrides).
+    """
+    if not facts_path or not Path(facts_path).is_file():
+        return data, 0
+    overrides = qm.load_overrides(facts_path)
+    findings, _report = qm.apply_overrides(data["findings"], overrides)
+    data = dict(data, findings=findings)
+    return data, sum(1 for o in overrides if o.get("confirmed"))
 
 
 def load_extras():
@@ -229,6 +245,10 @@ def main():
     ap.add_argument("findings", nargs="?", default=str(DEFAULT_FINDINGS))
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--facts", default=str(DEFAULT_FACTS),
+                    help="manual_facts.json with confirmed size overrides")
+    ap.add_argument("--no-facts", action="store_true",
+                    help="ignore manual overrides (scanner sizes only)")
     args = ap.parse_args()
 
     try:
@@ -237,6 +257,8 @@ def main():
         print(f"ERROR: findings padh nahi paye ({args.findings}): {err}")
         return 1
 
+    facts = None if args.no_facts else args.facts
+    data, n_over = apply_facts(data, facts)
     qubits, source = load_qubit_fn()
     out_path = Path(args.out)
 
@@ -253,6 +275,7 @@ def main():
     out_path.write_text(text, encoding="utf-8", newline="\n")
     print(f"Written: {out_path}")
     print(f"Qubit source: {source}")
+    print(f"Confirmed size overrides applied: {n_over}")
     return 0
 
 

@@ -8,16 +8,16 @@ All qubit counts are LOGICAL qubits.
 
 | Project | Findings | By primitive | RSA findings | RSA findings without a size | No-padding flags | Indirect usage |
 |---|---|---|---|---|---|---|
-| Final-Year-project-part1 | 17 | RSA: 17 | 17 | 11 | 2 | 6 |
+| Final-Year-project-part1 | 17 | RSA: 17 | 17 | 7 | 2 | 6 |
 | Secure-Video-Steganography | 9 | RSA: 8, SHA: 1 | 8 | 6 | 2 | 4 |
 
 ## 2. RSA key sizes and Shor qubit cost
 
 | Project | Modulus bits (n) | Findings | Logical qubits (Shor, 2n+3) | Impact | Post-quantum security bits | Locations |
 |---|---|---|---|---|---|---|
-| Final-Year-project-part1 | 256 | 3 | 515 | BROKEN | 0 | app.py:239, app.py:385, main.py:101 |
-| Final-Year-project-part1 | 512 | 3 | 1027 | BROKEN | 0 | rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30 |
-| Secure-Video-Steganography | 1024 | 2 | 2051 | BROKEN | 0 | rsa_crypto.py:48, rsa_crypto.py:49 |
+| Final-Year-project-part1 | 8 | 4 | 19 | BROKEN | 0 | r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59 |
+| Final-Year-project-part1 | 256 | 6 | 515 | BROKEN | 0 | app.py:239, app.py:385, main.py:101, rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30 |
+| Secure-Video-Steganography | 2048 | 2 | 4099 | BROKEN | 0 | rsa_crypto.py:48, rsa_crypto.py:49 |
 
 Qubit cost is computed for RSA only. A project listed with several sizes has call sites that use different key sizes; see the Locations column.
 
@@ -68,20 +68,24 @@ These ratings are independent of the quantum risk score. A short RSA/DSA/DH key 
 | Final-Year-project-part1 | app.py:239 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | app.py:385 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | main.py:101 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
-| Final-Year-project-part1 | rsa_utils.py:27 | 512 | default only | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
-| Final-Year-project-part1 | rsa_utils.py:28 | 512 | default only | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
-| Final-Year-project-part1 | rsa_utils.py:30 | 512 | default only | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
-| Secure-Video-Steganography | rsa_crypto.py:48 | 1024 | default only | MEDIUM | below the 2048-bit NIST minimum; weak classical margin |
-| Secure-Video-Steganography | rsa_crypto.py:49 | 1024 | default only | MEDIUM | below the 2048-bit NIST minimum; weak classical margin |
+| Final-Year-project-part1 | r_channel_stego.py:42 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | r_channel_stego.py:52 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | r_channel_stego.py:54 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | r_channel_stego.py:59 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | rsa_utils.py:27 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | rsa_utils.py:28 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | rsa_utils.py:30 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Secure-Video-Steganography | rsa_crypto.py:48 | 2048 | in use | OK | meets the classical minimum |
+| Secure-Video-Steganography | rsa_crypto.py:49 | 2048 | in use | OK | meets the classical minimum |
 
-17 further RSA/DSA/DH findings carry no modulus size and are not rated.
+13 further RSA/DSA/DH findings carry no modulus size and are not rated.
 
 Sizes are the modulus sizes resolved by the scanner's key-size extraction.
 Rows marked 'default only' take the size from a function default value; the size really used by callers or the UI may differ.
 
 ## Logical vs Physical Qubits: Why These Numbers Are Not Breakable Today
 
-The qubit counts in this report (for example 2,051 for a 1024-bit RSA key)
+The qubit counts in this report (for example 4,099 for a 2048-bit RSA key)
 are **logical qubits**. A logical qubit is an ideal, error-free qubit. Real
 quantum hardware is built from **physical qubits**, which are noisy: every
 gate and every moment of idle time has a chance of flipping a value. Shor's
@@ -100,9 +104,9 @@ each logical qubit.
 
 | Project | RSA modulus | Logical qubits (2n+3) | Physical qubits at 1,000:1 (illustrative) |
 |---|---|---|---|
-| Secure-Video-Steganography | 1024 bits | 2,051 | about 2.05 million |
+| Secure-Video-Steganography | 2048 bits | 4,099 | about 4.10 million |
 | Final-Year-project-part1 | 256 bits | 515 | about 515 thousand |
-| Final-Year-project-part1 | 32 bits | 67 | about 67 thousand |
+| Final-Year-project-part1 | 8 bits | 19 | about 19 thousand |
 
 The 1,000:1 ratio is an **assumption chosen for illustration**, not a
 measured value. The real ratio depends on future hardware quality.
@@ -127,6 +131,6 @@ recommendation in this report does not wait for the hardware.
 
 ### Important exception: toy key sizes
 
-The 32-bit and 256-bit RSA moduli in Final-Year-project-part1 are breakable
+The 8-bit and 256-bit RSA moduli in Final-Year-project-part1 are breakable
 on an ordinary computer today. They are a **classical** weakness, covered
 by the key-strength check, not a quantum one.

@@ -2,7 +2,7 @@
 
 ### Summary
 
-Replace RSA key exchange and key encryption in both audited projects with
+ML-KEM only establishes a shared secret; the data itself is then encrypted with AES-256-GCM (it is not a drop-in replacement for RSA encryption). Replace RSA key exchange and key encryption in both audited projects with
 **ML-KEM-768**, the lattice-based key-encapsulation mechanism standardized in
 NIST FIPS 203 (2024). Where RSA is used for digital signatures, replace it
 with **ML-DSA** (FIPS 204) instead, since ML-KEM does not sign.
@@ -27,8 +27,8 @@ polynomial time. Only a different mathematical problem helps.
 
 | Project | Finding | Action |
 |---|---|---|
-| Secure-Video-Steganography | RSA, 1024-bit modulus | Replace with ML-KEM-768 for key protection. Also weak classically by current standards |
-| Final-Year-project-part1 | RSA, 32-bit and 256-bit moduli | Replace with ML-KEM-768. Breakable today on a normal computer, so migrate as a priority |
+| Secure-Video-Steganography | RSA, 2048-bit modulus (UI default; user can also pick 1024 or 3072) | Replace with ML-KEM-768 plus AES-256-GCM. Textbook RSA (no padding) is a separate classical weakness |
+| Final-Year-project-part1 | RSA, 256-bit and 8-bit moduli | Replace with ML-KEM-768 plus AES-256-GCM. Breakable today on a normal computer, so migrate as a priority |
 | Secure-Video-Steganography | SHA-256 | No change needed. About 128-bit effective security under Grover's |
 
 ### Migration notes

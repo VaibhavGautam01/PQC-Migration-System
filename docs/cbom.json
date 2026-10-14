@@ -35,11 +35,7 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
-<<<<<<< HEAD
-        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
-=======
         "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
->>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": "NO_PADDING"
       },
       "recommended_pqc": {
@@ -122,11 +118,7 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
-<<<<<<< HEAD
-        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
-=======
         "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
->>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": null
       },
       "recommended_pqc": {
@@ -134,50 +126,9 @@
         "standard": "NIST FIPS 203",
         "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
       },
-<<<<<<< HEAD
-      "notes": []
-    },
-    {
-      "id": "CBOM-003",
-      "project": "Final-Year-project-part1",
-      "primitive": "RSA",
-      "key_size_bits": 512,
-      "size_basis": "resolved from 'bits' (per-prime, modulus = 2 x)",
-      "size_status": "scanner-reported",
-      "files": [
-        "rsa_utils.py:27",
-        "rsa_utils.py:28",
-        "rsa_utils.py:30"
-      ],
-      "quantum_risk": {
-        "algorithm": "Shor's algorithm",
-        "impact": "BROKEN",
-        "logical_qubits_estimate": 1027,
-        "estimate_basis": "Logical qubits to factor a 512-bit modulus with the 2n+3 circuit (Beauregard 2003). Logical qubits only: error-correction overhead is excluded, so physical qubit counts are far higher.",
-        "post_quantum_security_bits": 0
-      },
-      "classical_risk": {
-        "status": "practically-breakable",
-        "basis": "A 512-bit modulus can be attacked with ordinary hardware or rented cloud time. No quantum computer is needed.",
-        "evidence": []
-      },
-      "padding_risk": {
-        "status": "none (textbook RSA)",
-        "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
-        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
-        "automated_flag": null
-      },
-      "recommended_pqc": {
-        "algorithm": "ML-KEM-768",
-        "standard": "NIST FIPS 203",
-        "rationale": "ML-KEM is a key-encapsulation mechanism: use it to establish a shared secret, then encrypt the data with AES-256-GCM (do not use bare RSA-style encryption). Parameter set 768 targets NIST security category 3. If this RSA is used for signatures instead, use ML-DSA-65 (FIPS 204)."
-      },
-      "notes": []
-=======
       "notes": [
         "Two real key paths: generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101), and generate_small_keypair() in the R-channel module gives n < 256 (at most 8 bits). The 512-bit default in rsa_utils.py is not used."
       ]
->>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
     },
     {
       "id": "CBOM-004",
@@ -209,11 +160,7 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
-<<<<<<< HEAD
-        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
-=======
         "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
->>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": "NO_PADDING"
       },
       "recommended_pqc": {
@@ -252,11 +199,7 @@
       "padding_risk": {
         "status": "none (textbook RSA)",
         "weakness": "Deterministic encryption: the same plaintext always gives the same ciphertext, so there is no semantic security. This is a classical weakness, independent of Shor's algorithm.",
-<<<<<<< HEAD
-        "source": "Vaibhav: textbook RSA with no padding, confirmed in the code",
-=======
         "source": "Vaibhav: textbook RSA with no padding, confirmed by hand (edge_flag NO_PADDING)",
->>>>>>> 193e525e2503d3f1d9a2b0686e35c8c1028b775d
         "automated_flag": null
       },
       "recommended_pqc": {

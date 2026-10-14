@@ -6,16 +6,16 @@ Owner: Yatharth Raghuvanshi
 
 - [ ] Laptop plugged in; power mode set to best performance
 - [ ] Notifications off; unrelated windows closed
-- [ ] Terminal font enlarged; `(.venv)` visible in the prompt
-- [ ] Dry run: `python shors_demo.py --case 15` prints `[PASS]`
+- [ ] Terminal font enlarged; `(venv)` visible in the prompt
+- [ ] Dry run: `python notebook/shors_demo.py --case 15` prints `[PASS]`
 - [ ] Trimmed videos open and play from the local `recordings\` folder
 - [ ] Same videos open from the second backup location
 - [ ] Slides or the demo window ready on the projector or screen share
 
 ## Live command
 
-    .venv\Scripts\activate
-    python shors_demo.py --pause
+    venv\Scripts\activate
+    python notebook/shors_demo.py --pause
 
 Press Enter between steps. Explain each step while the screen waits.
 
@@ -23,7 +23,7 @@ Press Enter between steps. Explain each step while the screen waits.
 
 | Problem | What to do |
 |---|---|
-| Run is too slow (N = 21) | Stop with Ctrl+C, then run `python shors_demo.py --case 21 --shots 256`, or play the N = 21 video |
+| Run is too slow (N = 21) | Stop with Ctrl+C, then run `python notebook/shors_demo.py --case 21 --shots 256`, or play the N = 21 video |
 | `[FAIL]` or an error appears | Do not debug live. Say "let me show the recorded run", then play the trimmed video |
 | Environment or import error | Same: play the trimmed video |
 | Laptop or projector fails | Use the copy on the second backup device, or a teammate's laptop |
@@ -50,4 +50,4 @@ If Yatharth's laptop fails, Tarun or Uday can run the demo from `main`:
     git checkout main
     git pull origin main
     pip install qiskit qiskit-aer numpy
-    python shors_demo.py --pause
+    python notebook/shors_demo.py --pause

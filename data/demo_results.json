@@ -1,22 +1,28 @@
 {
   "_readme": "Copy to data/demo_results.json and fill in from the REAL simulator runs (Yatharth's demo logs). Do not invent numbers. Leave 'cases' empty until real runs exist.",
-  "environment": "e.g. Qiskit Aer simulator, version used",
+  "environment": "Qiskit 2.5.2, qiskit-aer 0.17.2 (Aer simulator)",
   "cases": [
     {
       "N": 15,
-      "expected_factors": [3, 5],
-      "runs": null,
-      "successes": null,
+      "expected_factors": [
+        3,
+        5
+      ],
+      "runs": 1024,
+      "successes": 509,
       "backend": "simulator",
-      "notes": ""
+      "notes": "saved from live_dashboard.py"
     },
     {
       "N": 21,
-      "expected_factors": [3, 7],
-      "runs": null,
-      "successes": null,
+      "expected_factors": [
+        3,
+        7
+      ],
+      "runs": 1024,
+      "successes": 297,
       "backend": "simulator",
-      "notes": ""
+      "notes": "saved from live_dashboard.py"
     }
   ],
   "recordings": []

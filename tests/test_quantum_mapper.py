@@ -19,9 +19,9 @@ from quantum_mapper import (  # noqa: E402
     ("ED448", "ECC"), ("Ed25519", "ECC"), ("ECDSA", "ECC"),
     ("DSA", "DSA"), ("DH2048", "DH"), ("Diffie-Hellman", "DH"),
     ("AES-256-GCM", "AES"), ("SHA-256", "SHA"), ("HMAC-SHA256", "SHA"),
-    ("3DES", "LEGACY_SYMMETRIC"), ("DES-EDE3-CBC", "LEGACY_SYMMETRIC"),
-    ("DES", "LEGACY_SYMMETRIC"), ("Blowfish", "LEGACY_SYMMETRIC"),
-    ("RC4", "LEGACY_SYMMETRIC"),
+    ("3DES", "3DES"), ("DES-EDE3-CBC", "3DES"),
+    ("DES", "DES"), ("Blowfish", "BLOWFISH"),
+    ("RC4", "RC4"),
     ("DHCP", None), ("DESCRIPTION", None), ("FOO", None),
     ("", None), (None, None),
 ])
@@ -32,8 +32,8 @@ def test_canonical_primitive(name, expected):
 def test_legacy_routes_to_grover():
     r = map_finding({"primitive": "3DES"})
     assert r["quantum_algorithm"] == GROVER
-    assert r["post_quantum_security_bits"] is None
-    assert "classically weak" in r["grover_assessment"]
+    assert r["post_quantum_security_bits"] == 56
+    assert "weak classically" in r["grover_assessment"]
 
 
 def test_unknown_is_labelled_not_dropped():

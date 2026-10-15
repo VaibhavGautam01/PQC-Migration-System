@@ -251,7 +251,7 @@ def canonical_primitive(name):
         return "ECC"
     if norm.startswith("RSA"):
         return "RSA"
-    if norm.startswith(("FFDHE", "DHE")):
+    if norm.startswith(("FFDHE", "DHE")) or re.fullmatch(r"DH\d+", norm):
         return "DH"
     if norm.startswith("DSA"):
         return "DSA"

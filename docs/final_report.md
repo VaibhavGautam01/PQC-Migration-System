@@ -50,7 +50,7 @@ The key size decides the qubit cost, so it is extracted carefully:
 | Miss hunt | 166 crypto-looking lines without a finding triaged by hand | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
-| Tests | `run_tests.py` and the files in `tests/` | 349 tests, all pass |
+| Tests | `run_tests.py` and the files in `tests/` | 372 tests, all pass |
 
 ## 3. Stage 1 results on the target projects
 

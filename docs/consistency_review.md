@@ -12,7 +12,7 @@ Reviewer: Vaibhav Gautam. Issue #10. Reviewed against main at 71e7c18.
 
 \- No Python cache files are tracked (`git ls-files | findstr /i "pycache .pyc"` prints nothing).
 
-\- Test count: README.md and docs/final\_report.md both state 349 tests, matching a fresh run (349 tests, OK, with pytest installed).
+\- Test count: README.md and docs/final\_report.md both state 372 tests, matching a fresh run (372 tests, OK, with pytest installed).
 
 \- The 31-bit and 95-bit attack results are labelled as local small-key snapshots, not pinned-commit results, in docs/final\_report.md, docs/edge\_case\_validation.md and (after this review) docs/padding\_weaknesses.md.
 

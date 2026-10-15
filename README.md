@@ -10,6 +10,8 @@
 ![Qiskit](https://img.shields.io/badge/Qiskit-Shor's_Demo-6929C4?style=for-the-badge&logo=ibm&logoColor=white)
 ![Target](https://img.shields.io/badge/Migrate_To-ML--KEM--768-00C853?style=for-the-badge&logo=letsencrypt&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tests-372_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
+![Scanner](https://img.shields.io/badge/Scanner-v0.4.0-2196F3?style=for-the-badge)
+![Patterns](https://img.shields.io/badge/Patterns-48-9C27B0?style=for-the-badge)
 ![Dashboard](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![License](https://img.shields.io/badge/B.Tech-Final_Year-E91E63?style=for-the-badge)
 
@@ -92,7 +94,7 @@ flowchart LR
 
 ## 🔍 Stage 1: Detection Engine
 
-A static scanner that reads code line by line and matches **signature patterns** across six primitive families.
+A static scanner that reads code line by line and matches **48 signature patterns** across six primitive families.
 
 <details>
 <summary><b>👉 What it detects</b></summary>

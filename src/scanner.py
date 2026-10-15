@@ -138,6 +138,41 @@ for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
 
 
+DETECTORS = {}  # extension -> list of detect(rel_path, text) functions
+
+
+def register(ext, fn):
+    """Attach a detector function to a file extension."""
+    DETECTORS.setdefault(ext, []).append(fn)
+
+
+def detect_regex(rel_path, text):
+    """The existing regex detector, moved out of scan_file unchanged."""
+    lines = text.splitlines()
+    findings = []
+    for idx, line in enumerate(lines):
+        for pat in ALL_PATTERNS:
+            m = pat["compiled"].search(line)
+            if not m:
+                continue
+            findings.append({
+                "file": rel_path,
+                "line": idx + 1,
+                "primitive": pat["primitive"],
+                "pattern_id": pat["id"],
+                "description": pat["desc"],
+                "confidence": pat["confidence"],
+                **extract_key_info(lines, idx, m, pat),
+                "snippet": line.strip()[:200],
+            })
+    return findings
+
+
+# For now every extension keeps the old behaviour (same regex everywhere).
+for _ext in SCAN_EXTENSIONS:
+    register(_ext, detect_regex)
+
+
 def scan_file(path, root):
     """Scan one file and return a list of finding dicts."""
     # Skip oversized or unreadable files so one bad file cannot stop the scan.
@@ -153,25 +188,10 @@ def scan_file(path, root):
     # Forward slashes keep paths identical on Windows and Linux, so
     # findings.json does not change between machines.
     rel_path = os.path.relpath(path, root).replace(os.sep, "/")
+    text = "\n".join(lines)
     findings = []
-    # Every pattern is tried on every line; one line can match several.
-    for idx, line in enumerate(lines):
-        for pat in ALL_PATTERNS:
-            m = pat["compiled"].search(line)
-            if not m:
-                continue
-            findings.append({
-                "file": rel_path,
-                "line": idx + 1,
-                "primitive": pat["primitive"],
-                "pattern_id": pat["id"],
-                "description": pat["desc"],
-                "confidence": pat["confidence"],
-                # Adds key_size, modulus_bits, size_basis (None if no size found).
-                **extract_key_info(lines, idx, m, pat),
-                # Snippet is capped at 200 chars to keep findings.json small.
-                "snippet": line.strip()[:200],
-            })
+    for fn in DETECTORS.get(os.path.splitext(path)[1].lower(), []):
+        findings.extend(fn(rel_path, text))
     return findings
 
 

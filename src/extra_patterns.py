@@ -119,6 +119,6 @@ EXTRA_PATTERNS += [
 # (?<!def ) skips the definition line itself, so only real calls match.
 EXTRA_PATTERNS += [
     mk("RSA-WRAPPER-CALL", "RSA",
-       r'(?<!def )\b(?:generate_keypair|generate_key_pair|gen_keypair|make_keypair|generate_rsa_keys?)\s*\(',
+       r'(?<!def )\b(?:\w*key_?pair|generate_rsa_keys?)\s*\(',
        "Call to a keypair-generation wrapper function", "medium", True),
 ]

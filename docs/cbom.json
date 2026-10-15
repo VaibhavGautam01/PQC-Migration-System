@@ -2,7 +2,7 @@
   "cbom_version": "1.0",
   "project_count": 2,
   "entry_count": 6,
-  "finding_count": 26,
+  "finding_count": 31,
   "entries": [
     {
       "id": "CBOM-001",
@@ -13,6 +13,7 @@
       "size_status": "unknown",
       "files": [
         "rsa_utils.py:22",
+        "rsa_utils.py:32",
         "rsa_utils.py:33",
         "rsa_utils.py:35",
         "rsa_utils.py:37",
@@ -45,6 +46,7 @@
       },
       "notes": [
         "Key size is not verified; the qubit estimate and classical assessment depend on it.",
+        "These lines are helper or usage code with no key size of their own. They operate on the keys in CBOM-002 (8-bit), CBOM-003 (256-bit), so treat this entry as usage of those keys, not as a separate key. No qubit estimate is given for it.",
         "Two real key paths: generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101), and generate_small_keypair() in the R-channel module gives n < 256 (at most 8 bits). The 512-bit default in rsa_utils.py is not used."
       ]
     },
@@ -53,9 +55,12 @@
       "project": "Final-Year-project-part1",
       "primitive": "RSA",
       "key_size_bits": 8,
-      "size_basis": "generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256)",
+      "size_basis": "generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256); generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256)",
       "size_status": "override-confirmed",
       "files": [
+        "app.py:229",
+        "app.py:373",
+        "main.py:83",
         "r_channel_stego.py:42",
         "r_channel_stego.py:52",
         "r_channel_stego.py:54",
@@ -140,6 +145,7 @@
       "files": [
         "app.py:263",
         "rsa_crypto.py:45",
+        "rsa_crypto.py:52",
         "rsa_crypto.py:53",
         "rsa_crypto.py:56",
         "rsa_crypto.py:142",
@@ -170,6 +176,7 @@
       },
       "notes": [
         "Key size is not verified; the qubit estimate and classical assessment depend on it.",
+        "These lines are helper or usage code with no key size of their own. They operate on the keys in CBOM-005 (2048-bit), so treat this entry as usage of those keys, not as a separate key. No qubit estimate is given for it.",
         "Key size is user-selectable: the UI offers 1024, 2048 and 3072 bits with 2048 as the UI default; the function default is 1024. A user who picks 1024 gets a key below the 2048-bit minimum."
       ]
     },

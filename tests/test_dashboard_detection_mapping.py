@@ -107,7 +107,7 @@ class TestCli(unittest.TestCase):
         if not os.path.exists(facts):
             self.skipTest("data/manual_facts.json not present")
         text = bd.render_detection(bd.build_context(SAMPLE, facts))
-        self.assertIn("3 confirmed and applied, 0 unconfirmed (not applied)", text)
+        self.assertIn("5 confirmed and applied, 0 unconfirmed (not applied)", text)
 
 
 if __name__ == "__main__":

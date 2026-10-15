@@ -21,6 +21,20 @@
       "match": {"project": "Secure-Video-Steganography", "primitive": "RSA", "has_size": true},
       "set": {"is_default": false, "modulus_bits": 2048, "size_basis": "user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024"},
       "source": "Tarun and Vaibhav (UI selectbox in the video project)"
+    },
+    {
+      "id": "part1-small-keypair-call-app",
+      "confirmed": true,
+      "match": {"project": "Final-Year-project-part1", "file_contains": "app.py", "lines": [229, 373], "primitive": "RSA"},
+      "set": {"is_default": false, "modulus_bits": 8, "size_basis": "generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256)"},
+      "source": "Tarun (confirmed in code)"
+    },
+    {
+      "id": "part1-small-keypair-call-main",
+      "confirmed": true,
+      "match": {"project": "Final-Year-project-part1", "file_contains": "main.py", "lines": [83], "primitive": "RSA"},
+      "set": {"is_default": false, "modulus_bits": 8, "size_basis": "generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256)"},
+      "source": "Tarun (confirmed in code)"
     }
   ],
   "projects": {

@@ -228,7 +228,7 @@ class TestDashboardWithDecisions(unittest.TestCase):
         self.assertIn("31-bit modulus factored in 0.0002 s", text)
 
     def test_detection_reports_all_three_overrides_as_applied(self):
-        self.assertIn("3 confirmed and applied, 0 unconfirmed", bd.render_detection(self.build()))
+        self.assertIn("5 confirmed and applied, 0 unconfirmed", bd.render_detection(self.build()))
 
     def test_cli_still_works_with_the_real_facts_file(self):
         with tempfile.TemporaryDirectory() as tmp:

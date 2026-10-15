@@ -1,4 +1,4 @@
-﻿"""test_scanner.py - unit tests for src/scanner.py (Week 2, Day 3).
+"""test_scanner.py - unit tests for src/scanner.py (Week 2, Day 3).
 
 Why these tests exist: the scanner is regex based, so a small edit to one
 pattern can silently stop detection (or start over-matching). These tests pin
@@ -184,10 +184,10 @@ class TestFixturesRegression(unittest.TestCase):
     def test_fixture_totals_do_not_change_silently(self):
         findings = scanner.scan_path(FIXTURES)
         summary = scanner.build_report(FIXTURES, findings)["summary"]
-        self.assertEqual(summary["total_findings"], 46)
+        self.assertEqual(summary["total_findings"], 48)
         self.assertEqual(summary["files_with_findings"], 4)
         self.assertEqual(summary["by_primitive"],
-                         {"AES": 8, "DH": 1, "DSA": 1, "ECC": 5, "RSA": 27, "SHA": 4})
+                         {"AES": 8, "DH": 1, "DSA": 1, "ECC": 5, "RSA": 29, "SHA": 4})
 
 
 if __name__ == "__main__":

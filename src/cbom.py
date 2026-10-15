@@ -410,6 +410,29 @@ def _build_entry(entry_id, key, group, project_facts):
     }
 
 
+def _link_size_less_entries(entries):
+    """Explain size-less entries by pointing at the sized entries they serve.
+
+    Lines such as modular exponentiation or key-derivation helpers carry no
+    key size of their own, so they form an 'unknown size' entry. When the same
+    project has sized entries of the same primitive, the unknown entry is
+    usage of those keys, not a separate key. Adds a note; changes nothing else.
+    """
+    for entry in entries:
+        if entry["key_size_bits"] is not None or entry["size_status"] != "unknown":
+            continue
+        siblings = [e for e in entries
+                    if e["project"] == entry["project"] and e["primitive"] == entry["primitive"]
+                    and e["key_size_bits"] is not None]
+        if not siblings:
+            continue
+        served = ", ".join(f"{e['id']} ({e['key_size_bits']}-bit)" for e in siblings)
+        entry["notes"].insert(1, (
+            f"These lines are helper or usage code with no key size of their own. "
+            f"They operate on the keys in {served}, so treat this entry as usage of "
+            f"those keys, not as a separate key. No qubit estimate is given for it."))
+
+
 def build_cbom(mapped, facts=None):
     """Build the CBOM dict from mapped findings (quantum_mapper output).
 
@@ -428,6 +451,7 @@ def build_cbom(mapped, facts=None):
         _build_entry(f"CBOM-{n:03d}", key, groups[key], project_facts.get(key[0], {}))
         for n, key in enumerate(sorted(groups, key=sort_key), start=1)
     ]
+    _link_size_less_entries(entries)
     return {
         "cbom_version": CBOM_VERSION,
         "project_count": len({e["project"] for e in entries}),

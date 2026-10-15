@@ -1,6 +1,6 @@
 # Cryptographic Bill of Materials (CBOM)
 
-Entries: 6 | Projects: 2 | Findings covered: 26 | Unmapped: 0
+Entries: 6 | Projects: 2 | Findings covered: 31 | Unmapped: 0
 
 Quantum risk, classical risk and padding risk are shown separately on purpose: textbook RSA is dangerous because it is deterministic, not because of Shor's algorithm.
 
@@ -15,10 +15,10 @@ Quantum risk, classical risk and padding risk are shown separately on purpose: t
 
 ## Evidence
 
-- CBOM-001: rsa_utils.py:22, rsa_utils.py:33, rsa_utils.py:35, rsa_utils.py:37, rsa_utils.py:39, rsa_utils.py:45, rsa_utils.py:50
-- CBOM-002: r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59
+- CBOM-001: rsa_utils.py:22, rsa_utils.py:32, rsa_utils.py:33, rsa_utils.py:35, rsa_utils.py:37, rsa_utils.py:39, rsa_utils.py:45, rsa_utils.py:50
+- CBOM-002: app.py:229, app.py:373, main.py:83, r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59
 - CBOM-003: app.py:239, app.py:385, main.py:101, rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30
-- CBOM-004: app.py:263, rsa_crypto.py:45, rsa_crypto.py:53, rsa_crypto.py:56, rsa_crypto.py:142, rsa_crypto.py:170
+- CBOM-004: app.py:263, rsa_crypto.py:45, rsa_crypto.py:52, rsa_crypto.py:53, rsa_crypto.py:56, rsa_crypto.py:142, rsa_crypto.py:170
 - CBOM-005: rsa_crypto.py:48, rsa_crypto.py:49
 - CBOM-006: frame_selector.py:32
 

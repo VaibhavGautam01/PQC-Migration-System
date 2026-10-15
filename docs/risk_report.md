@@ -8,14 +8,14 @@ All qubit counts are LOGICAL qubits.
 
 | Project | Findings | By primitive | RSA findings | RSA findings without a size | No-padding flags | Indirect usage |
 |---|---|---|---|---|---|---|
-| Final-Year-project-part1 | 17 | RSA: 17 | 17 | 7 | 2 | 6 |
-| Secure-Video-Steganography | 9 | RSA: 8, SHA: 1 | 8 | 6 | 2 | 4 |
+| Final-Year-project-part1 | 21 | RSA: 21 | 21 | 8 | 2 | 6 |
+| Secure-Video-Steganography | 10 | RSA: 9, SHA: 1 | 9 | 7 | 2 | 4 |
 
 ## 2. RSA key sizes and Shor qubit cost
 
 | Project | Modulus bits (n) | Findings | Logical qubits (Shor, 2n+3) | Impact | Post-quantum security bits | Locations |
 |---|---|---|---|---|---|---|
-| Final-Year-project-part1 | 8 | 4 | 19 | BROKEN | 0 | r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59 |
+| Final-Year-project-part1 | 8 | 7 | 19 | BROKEN | 0 | app.py:229, app.py:373, main.py:83, r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59 |
 | Final-Year-project-part1 | 256 | 6 | 515 | BROKEN | 0 | app.py:239, app.py:385, main.py:101, rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30 |
 | Secure-Video-Steganography | 2048 | 2 | 4099 | BROKEN | 0 | rsa_crypto.py:48, rsa_crypto.py:49 |
 
@@ -65,8 +65,11 @@ These ratings are independent of the quantum risk score. A short RSA/DSA/DH key 
 
 | Project | File:line | Modulus (bits) | Basis | Rating | Reason |
 |---|---|---|---|---|---|
+| Final-Year-project-part1 | app.py:229 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | app.py:239 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | app.py:373 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | app.py:385 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
+| Final-Year-project-part1 | main.py:83 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | main.py:101 | 256 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | r_channel_stego.py:42 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
 | Final-Year-project-part1 | r_channel_stego.py:52 | 8 | in use | CRITICAL | breakable on ordinary hardware today (RSA-512 was factored in 1999) |
@@ -78,7 +81,7 @@ These ratings are independent of the quantum risk score. A short RSA/DSA/DH key 
 | Secure-Video-Steganography | rsa_crypto.py:48 | 2048 | in use | OK | meets the classical minimum |
 | Secure-Video-Steganography | rsa_crypto.py:49 | 2048 | in use | OK | meets the classical minimum |
 
-13 further RSA/DSA/DH findings carry no modulus size and are not rated.
+15 further RSA/DSA/DH findings carry no modulus size and are not rated.
 
 Sizes are the modulus sizes resolved by the scanner's key-size extraction.
 Rows marked 'default only' take the size from a function default value; the size really used by callers or the UI may differ.

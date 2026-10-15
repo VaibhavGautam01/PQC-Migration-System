@@ -7,6 +7,7 @@ Finds crypto problems that a plain signature scan reports only as
   1. check_padding        - RSA used without OAEP/PKCS1 padding (textbook RSA)
   2. find_crypto_imports  - files that import known crypto libraries
   3. find_indirect_usage  - files that use crypto defined in another file
+  4. find_insecure_rng    - key material drawn from a non-cryptographic RNG
 
 Used by run_padding_check.py and merge_flags.py.
 """
@@ -125,6 +126,84 @@ def find_indirect_usage(repo_path, provider_files=None):
                 "detail": f"imports crypto module '{module}' ({', '.join(names)})",
             })
     return flags
+
+
+# Functions of the stdlib `random` module (Mersenne Twister, not a CSPRNG)
+INSECURE_RANDOM_FUNCS = {
+    "choice", "choices", "randint", "randrange", "getrandbits", "sample",
+    "shuffle", "random", "uniform", "randbytes",
+}
+
+# sympy helpers that draw from the same Mersenne Twister
+INSECURE_SYMPY_FUNCS = {"randprime", "randint"}
+
+
+def _insecure_rng_calls(tree):
+    """Yield (line, description) for non-cryptographic RNG calls in an AST.
+
+    Matches random.<fn>(...) (also under an alias), names imported with
+    `from random import <fn>`, and sympy's randprime/randint. Calls on
+    random.SystemRandom() or the secrets module are not flagged.
+    """
+    random_aliases, random_names, sympy_names, sympy_aliases = set(), {}, {}, set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for a in node.names:
+                if a.name == "random":
+                    random_aliases.add(a.asname or "random")
+                elif a.name == "sympy":
+                    sympy_aliases.add(a.asname or "sympy")
+        elif isinstance(node, ast.ImportFrom):
+            if node.module == "random":
+                for a in node.names:
+                    if a.name in INSECURE_RANDOM_FUNCS:
+                        random_names[a.asname or a.name] = a.name
+            elif node.module and node.module.split(".")[0] == "sympy":
+                for a in node.names:
+                    if a.name in INSECURE_SYMPY_FUNCS:
+                        sympy_names[a.asname or a.name] = a.name
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+            if func.value.id in random_aliases and func.attr in INSECURE_RANDOM_FUNCS:
+                yield node.lineno, f"random.{func.attr}() (Mersenne Twister)"
+            elif func.value.id in sympy_aliases and func.attr in INSECURE_SYMPY_FUNCS:
+                yield node.lineno, f"sympy.{func.attr}() (Mersenne Twister)"
+        elif isinstance(func, ast.Name):
+            if func.id in random_names:
+                yield node.lineno, f"{random_names[func.id]}() from random (Mersenne Twister)"
+            elif func.id in sympy_names:
+                yield node.lineno, f"{sympy_names[func.id]}() from sympy (Mersenne Twister)"
+
+
+def find_insecure_rng(repo_path, provider_files=None):
+    """Flag non-cryptographic random number generators in crypto code.
+
+    provider_files: file names that contain crypto findings. Only these files
+    are checked, so a random.choice() in unrelated code is not reported. If
+    None, every Python file is checked. Returns INSECURE_RNG flag dicts.
+    This is a heuristic: it cannot tell whether the value feeds a key.
+    """
+    wanted = None if provider_files is None else {Path(p).name for p in provider_files}
+    flags = []
+    for f in _python_files(repo_path):
+        if wanted is not None and f.name not in wanted:
+            continue
+        try:
+            tree = ast.parse(f.read_text(errors="ignore"))
+        except SyntaxError:
+            continue
+        for line, what in _insecure_rng_calls(tree):
+            flags.append({
+                "flag": "INSECURE_RNG",
+                "file": f.name,
+                "line": line,
+                "detail": f"{what} used in a file with crypto code; "
+                          "key material needs a CSPRNG (secrets / os.urandom)",
+            })
+    return sorted(flags, key=lambda x: (x["file"], x["line"]))
 
 
 if __name__ == "__main__":

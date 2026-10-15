@@ -2,7 +2,7 @@
 
 Each finding from the Stage 1 scanner is mapped to the quantum algorithm that threatens it. This is a theoretical mapping; it says which attack applies, not that the attack is practical today.
 
-**Total findings:** 26  
+**Total findings:** 31  
 **Projects:** 2
 
 ## Final-Year-project-part1
@@ -11,14 +11,17 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 
 | Primitive | Findings | Quantum algorithm | Impact | PQC replacement |
 |---|---|---|---|---|
-| RSA | 17 | Shor's algorithm | BROKEN | ML-KEM (encryption/key exchange), ML-DSA (signatures) |
+| RSA | 21 | Shor's algorithm | BROKEN | ML-KEM (encryption/key exchange), ML-DSA (signatures) |
 
 ### Findings
 
 | File:Line | Primitive | Size (bits) | Size basis | PQ-security (bits) | Warning | Padding flag |
 |---|---|---|---|---|---|---|
+| app.py:229 | RSA | 8 | generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
 | app.py:239 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
+| app.py:373 | RSA | 8 | generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
 | app.py:385 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
+| main.py:83 | RSA | 8 | generate_small_keypair() call site: n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
 | main.py:101 | RSA | 256 | keyword argument (per-prime assumed, modulus = 2 x) | 0 | - | - |
 | r_channel_stego.py:42 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
 | r_channel_stego.py:52 | RSA | 8 | generate_small_keypair() gives n < 256, so at most 8 bits (callers pass no argument, so max_n=256) | 0 | - | - |
@@ -28,6 +31,7 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 | rsa_utils.py:27 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
 | rsa_utils.py:28 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
 | rsa_utils.py:30 | RSA | 256 | generate_keypair(bits=128) gives a 256-bit modulus (app.py:239, 385; main.py:101). The bits=256 default in rsa_utils.py (512-bit modulus) is only a default and is not used. | 0 | - | - |
+| rsa_utils.py:32 | RSA | - | - | 0 | - | - |
 | rsa_utils.py:33 | RSA | - | - | 0 | - | - |
 | rsa_utils.py:35 | RSA | - | - | 0 | - | - |
 | rsa_utils.py:37 | RSA | - | - | 0 | - | - |
@@ -41,7 +45,7 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 
 | Primitive | Findings | Quantum algorithm | Impact | PQC replacement |
 |---|---|---|---|---|
-| RSA | 8 | Shor's algorithm | BROKEN | ML-KEM (encryption/key exchange), ML-DSA (signatures) |
+| RSA | 9 | Shor's algorithm | BROKEN | ML-KEM (encryption/key exchange), ML-DSA (signatures) |
 | SHA | 1 | Grover's algorithm | WEAKENED | Keep SHA-2/SHA-3 with 256-bit or larger output |
 
 ### Findings
@@ -53,6 +57,7 @@ Each finding from the Stage 1 scanner is mapped to the quantum algorithm that th
 | rsa_crypto.py:45 | RSA | - | - | 0 | - | - |
 | rsa_crypto.py:48 | RSA | 2048 | user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024 | 0 | - | - |
 | rsa_crypto.py:49 | RSA | 2048 | user-selectable: the UI selectbox offers 1024, 2048 and 3072 with 2048 as the UI default (index=1); the function default is 1024 | 0 | - | - |
+| rsa_crypto.py:52 | RSA | - | - | 0 | - | - |
 | rsa_crypto.py:53 | RSA | - | - | 0 | - | - |
 | rsa_crypto.py:56 | RSA | - | - | 0 | - | - |
 | rsa_crypto.py:142 | RSA | - | - | 0 | - | NO_PADDING |
@@ -64,11 +69,13 @@ Resolve these before treating the sizes above as final.
 
 - Secure-Video-Steganography app.py:263: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:45: RSA has no size information.
+- Secure-Video-Steganography rsa_crypto.py:52: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:53: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:56: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:142: RSA has no size information.
 - Secure-Video-Steganography rsa_crypto.py:170: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:22: RSA has no size information.
+- Final-Year-project-part1 rsa_utils.py:32: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:33: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:35: RSA has no size information.
 - Final-Year-project-part1 rsa_utils.py:37: RSA has no size information.

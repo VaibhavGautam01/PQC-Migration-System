@@ -60,6 +60,7 @@ def build_context(findings_path, facts_path=None, demo_path=None, conclusion_pat
     with open(findings_path, "r", encoding="utf-8") as fh:
         raw = json.load(fh)
     ctx["edge_totals"] = raw.get("edge_case_totals") if isinstance(raw, dict) else None
+    ctx["rng_total"] = raw.get("insecure_rng_total") if isinstance(raw, dict) else None
     facts = cb.load_facts(facts_path) if facts_path else None
     ctx["cbom"] = cb.build_cbom(mapped, facts)
     ctx["demo"] = load_demo(demo_path)
@@ -127,6 +128,10 @@ def render_detection(ctx):
     if totals:
         shown = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in sorted(totals.items()))
         lines.append(f"Edge-case module totals: {shown} (the padding findings were confirmed by hand).")
+    rng_total = ctx.get("rng_total")
+    if rng_total:
+        lines.append(f"Insecure randomness flags: {rng_total} (heuristic: random / sympy.randprime "
+                     "in files with crypto code; key material needs a CSPRNG such as `secrets`).")
     confirmed = sum(1 for o in ctx["overrides"] if o["confirmed"])
     pending = sum(1 for o in ctx["overrides"] if not o["confirmed"])
     if ctx["overrides"]:

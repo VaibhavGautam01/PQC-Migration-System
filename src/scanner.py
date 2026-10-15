@@ -209,6 +209,77 @@ def scan_path(root):
     return findings
 
 
+import time
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ScanOptions:
+    """Filters for scan(). Defaults match the old scan_path() behaviour."""
+    max_file_bytes: int = MAX_FILE_BYTES
+    skip_dirs: set = field(default_factory=lambda: set(SKIP_DIRS))
+    skip_minified: bool = True
+
+
+@dataclass
+class ScanResult:
+    """What scan() returns: findings plus simple scan statistics."""
+    findings: list
+    files_scanned: int = 0
+    files_skipped: int = 0
+    errors: list = field(default_factory=list)
+    seconds: float = 0.0
+
+
+def _looks_minified(path):
+    """True for *.min.js style names or a huge first line in .js/.ts files."""
+    name = os.path.basename(path).lower()
+    if ".min." in name or name.endswith((".bundle.js", ".chunk.js")):
+        return True
+    if os.path.splitext(name)[1] not in (".js", ".ts"):
+        return False
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            head = f.read(4096)
+    except OSError:
+        return False
+    return len(head.split("\n", 1)[0]) > 1000
+
+
+def scan(path, options=None):
+    """Scan a folder or file and return a ScanResult (findings + stats)."""
+    opts = options or ScanOptions()
+    start = time.time()
+    root = os.path.abspath(path)
+    res = ScanResult(findings=[])
+    if not os.path.exists(root):
+        res.errors.append("path not found: " + str(path))
+        return res
+    if os.path.isfile(root):
+        todo = [(root, os.path.dirname(root))]
+    else:
+        todo = []
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [d for d in dirnames if d not in opts.skip_dirs]
+            for name in sorted(filenames):
+                if os.path.splitext(name)[1].lower() in SCAN_EXTENSIONS:
+                    todo.append((os.path.join(dirpath, name), root))
+    for fpath, base in todo:
+        try:
+            too_big = os.path.getsize(fpath) > opts.max_file_bytes
+        except OSError as e:
+            res.errors.append(str(e))
+            res.files_skipped += 1
+            continue
+        if too_big or (opts.skip_minified and _looks_minified(fpath)):
+            res.files_skipped += 1
+            continue
+        res.findings.extend(scan_file(fpath, base))
+        res.files_scanned += 1
+    res.seconds = round(time.time() - start, 3)
+    return res
+
+
 def build_report(root, findings):
     """Wrap a list of findings in the report dict that is saved as JSON.
 

@@ -138,6 +138,13 @@ for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
 
 
+LANGUAGE_BY_EXT = {
+    ".py": "python", ".java": "java", ".js": "javascript", ".ts": "typescript",
+    ".c": "c", ".cpp": "cpp", ".h": "c", ".go": "go", ".rs": "rust",
+    ".php": "php", ".rb": "ruby", ".cs": "csharp", ".sh": "shell",
+    ".pem": "key-file", ".key": "key-file", ".pub": "key-file",
+}
+
 DETECTORS = {}  # extension -> list of detect(rel_path, text) functions
 
 
@@ -192,6 +199,12 @@ def scan_file(path, root):
     findings = []
     for fn in DETECTORS.get(os.path.splitext(path)[1].lower(), []):
         findings.extend(fn(rel_path, text))
+    # Contract fields every finding carries (later steps fill the real values).
+    lang = LANGUAGE_BY_EXT.get(os.path.splitext(path)[1].lower(), "unknown")
+    for f in findings:
+        f.setdefault("language", lang)
+        f.setdefault("usage_purpose", "unknown")
+        f.setdefault("flags", [])
     return findings
 
 

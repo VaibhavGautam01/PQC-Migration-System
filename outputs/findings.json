@@ -58,6 +58,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "priv_path, pub_path = rsa_crypto.generate_keypair(",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -72,6 +75,9 @@
       "modulus_bits": null,
       "size_basis": "literal in call",
       "snippet": "digest_hex = hashlib.sha256(secret_key.encode(\"utf-8\")).hexdigest()",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -86,6 +92,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "e = 65537",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -100,6 +109,9 @@
       "modulus_bits": 1024,
       "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
       "snippet": "p = number.getPrime(half)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": true
     },
@@ -114,6 +126,9 @@
       "modulus_bits": 1024,
       "size_basis": "resolved from 'half' (per-prime, modulus = 2 x)",
       "snippet": "q = number.getPrime(half)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": true
     },
@@ -128,6 +143,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "n = p * q",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -142,6 +160,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "phi = (p - 1) * (q - 1)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -156,6 +177,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "d = number.inverse(e, phi)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false
     },
@@ -170,6 +194,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "c = pow(m, e, n)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false,
       "edge_flag": "NO_PADDING"
@@ -185,6 +212,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "m = pow(c, d, n)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Secure-Video-Steganography",
       "is_default": false,
       "edge_flag": "NO_PADDING"
@@ -200,6 +230,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "pub, priv = generate_small_keypair()",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -214,6 +247,9 @@
       "modulus_bits": 256,
       "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
       "snippet": "pub, priv = generate_keypair(bits=128)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -228,6 +264,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "pub_s, priv_s = generate_small_keypair()",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -242,6 +281,9 @@
       "modulus_bits": 256,
       "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
       "snippet": "pub, priv = generate_keypair(bits=128)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -256,6 +298,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "pub, priv = generate_small_keypair()",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -270,6 +315,9 @@
       "modulus_bits": 256,
       "size_basis": "keyword argument (per-prime assumed, modulus = 2 x)",
       "snippet": "pub, priv = generate_keypair(bits=128)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -284,6 +332,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "primes = [p for p in range(2, 40) if isprime(p)]",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -298,6 +349,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "phi = (p - 1) * (q - 1)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -312,6 +366,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "e_candidates = [c for c in range(3, phi) if isprime(c) and phi % c != 0]",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -326,6 +383,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "d = pow(e, -1, phi)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -340,6 +400,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "return randprime(low, high)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -354,6 +417,9 @@
       "modulus_bits": 512,
       "size_basis": "resolved from 'bits' (per-prime, modulus = 2 x)",
       "snippet": "p = generate_prime(bits)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": true
     },
@@ -368,6 +434,9 @@
       "modulus_bits": 512,
       "size_basis": "resolved from 'bits' (per-prime, modulus = 2 x)",
       "snippet": "q = generate_prime(bits)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": true
     },
@@ -382,6 +451,9 @@
       "modulus_bits": 512,
       "size_basis": "resolved from 'bits' (per-prime, modulus = 2 x)",
       "snippet": "q = generate_prime(bits)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": true
     },
@@ -396,6 +468,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "n = p * q",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -410,6 +485,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "phi = (p - 1) * (q - 1)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -424,6 +502,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "e = 65537",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -438,6 +519,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "e = nextprime(e)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -452,6 +536,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "d = mod_inverse(e, phi)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false
     },
@@ -466,6 +553,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "return pow(m, e, n)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false,
       "edge_flag": "NO_PADDING"
@@ -481,6 +571,9 @@
       "modulus_bits": null,
       "size_basis": null,
       "snippet": "return pow(c, d, n)",
+      "language": "python",
+      "usage_purpose": "unknown",
+      "flags": [],
       "project": "Final-Year-project-part1",
       "is_default": false,
       "edge_flag": "NO_PADDING"

@@ -33,3 +33,16 @@ def test_skips_minified_and_oversized(tmp_path):
 def test_missing_path_reports_error(tmp_path):
     res = scanner.scan(str(tmp_path / "nope"))
     assert res.errors and res.findings == []
+
+
+def test_findings_carry_contract_fields():
+    targets = ROOT / "data" / "targets"
+    need = {"file", "line", "language", "primitive", "pattern_id",
+            "usage_purpose", "confidence", "key_size", "snippet", "flags"}
+    total = 0
+    for d in sorted(p for p in targets.iterdir() if p.is_dir()):
+        for f in scanner.scan(str(d)).findings:
+            assert need <= set(f), need - set(f)
+            assert isinstance(f["flags"], list)
+            total += 1
+    assert total > 0

@@ -165,7 +165,7 @@ st.markdown(f"""
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
 PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "📈 Qubit calculator",
-         "🎬 Shor's demo (live)", "⚙️ Pipeline"]
+         "🎬 Shor's demo (live)", "🛡️ Migration demo", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
 st.sidebar.caption("Refresh the page after re-running the pipeline.")
@@ -488,6 +488,90 @@ def page_demo():
         st.success("Saved. Rebuild the final dashboard so its Demo section shows it.")
 
 
+# ================================================================ MIGRATION
+def _ms(seconds):
+    """Seconds as a readable millisecond string."""
+    return f"{seconds * 1000:,.1f} ms"
+
+
+def page_migration():
+    """RSA versus ML-KEM-768, run for real, plus the attack that motivates the move."""
+    try:
+        mig = load_module("migration_demo", "notebook/migration_demo.py")
+    except (OSError, ImportError) as exc:
+        st.error(f"notebook/migration_demo.py could not be loaded: {exc}")
+        return
+    missing = []
+    if mig.ML_KEM_768 is None:
+        missing.append("kyber-py")
+    if mig.AESGCM is None:
+        missing.append("cryptography")
+    if missing:
+        st.warning("Missing packages: " + ", ".join(missing) + ".  Run:  pip install " + " ".join(missing))
+    st.markdown("The advisor recommends **ML-KEM-768**. This page runs it next to RSA with real code, "
+                "so the recommendation is demonstrated and not only written down.")
+    c = st.columns([3, 2])
+    message = c[0].text_input("Message (short ASCII)", "PQC!", max_chars=7)
+    bits = c[1].slider("Textbook RSA key size (bits)", 40, 72, 64, step=8)
+    if not message:
+        st.info("Type a short message first.")
+        return
+    if st.button("▶️ Run the comparison", type="primary"):
+        with st.spinner("Generating keys, encrypting, attacking..."):
+            st.session_state["mig"] = mig.compare(message.encode(), textbook_bits=bits)
+    res = st.session_state.get("mig")
+    if not res:
+        st.info("Press the button to run all three schemes.")
+        return
+
+    rows = []
+    for r in res.values():
+        if "error" in r:
+            st.warning(r["error"])
+            continue
+        rows.append({"Scheme": r["name"], "Public key (B)": r["public_key_bytes"],
+                     "Ciphertext (B)": r["ciphertext_bytes"], "Keygen": _ms(r["keygen_s"]),
+                     "Encrypt": _ms(r["encrypt_s"]), "Decrypt": _ms(r["decrypt_s"]),
+                     "Same input, new ciphertext?": "yes" if r["randomised"] else "NO (deterministic)",
+                     "Round trip": "✅" if r["roundtrip_ok"] else "❌", "Quantum status": r["quantum"]})
+    if rows:
+        st.dataframe(pd.DataFrame(rows), hide_index=True)
+        d = pd.DataFrame(rows).melt(id_vars="Scheme", value_vars=["Public key (B)", "Ciphertext (B)"],
+                                    var_name="what", value_name="bytes")
+        st.plotly_chart(style(px.bar(d, x="Scheme", y="bytes", color="what", barmode="group",
+                                     title="Size cost of moving to ML-KEM-768 (bytes)",
+                                     color_discrete_sequence=["#00B0FF", "#FF4081"]), 320), key="mig_sizes")
+
+    t, m = res.get("textbook", {}), res.get("mlkem", {})
+    a, b = st.columns(2)
+    if "factors" in t:
+        a.markdown("#### 🔓 Attack on textbook RSA")
+        a.markdown(f"The attacker has only the **public key** and the ciphertext. They factor n = "
+                   f"{t['factors'][0]} × {t['factors'][1]} in **{_ms(t['attack_seconds'])}** and read the "
+                   f"message: **{'yes' if t['attack_recovered'] else 'no'}**.")
+        a.markdown('<div class="note bad">This demo key is tiny, so a <b>classical</b> attack is enough. '
+                   "Against a large modulus the same job is done by Shor's algorithm.</div>", unsafe_allow_html=True)
+    if "wrong_key_secret_differs" in m:
+        b.markdown("#### 🔐 ML-KEM-768 + AES-256-GCM")
+        b.markdown(f"Public key **{m['public_key_bytes']} B**, KEM ciphertext **{m['kem_ciphertext_bytes']} B**, "
+                   f"shared secret **{m['shared_secret_bytes']} B**. AES-GCM then encrypts the message. "
+                   f"A wrong private key gives a different secret: "
+                   f"**{'yes' if m['wrong_key_secret_differs'] else 'NO'}**.")
+        b.markdown('<div class="note good">No known quantum attack on ML-KEM (NIST FIPS 203). '
+                   "The library used here is educational, so use liboqs or OpenSSL 3.5+ in production.</div>",
+                   unsafe_allow_html=True)
+
+    rsa_entries = [e for e in entries if e.get("primitive") == "RSA"]
+    if rsa_entries and m.get("public_key_bytes"):
+        st.markdown("#### 🧾 What this means for your CBOM")
+        rows = [{"Entry": e["id"], "Project": e["project"],
+                 "Current": f"RSA-{e['key_size_bits']}" if e.get("key_size_bits") else "RSA (size unknown)",
+                 "Padding": e["padding_risk"].get("status"), "Replace with": e["recommended_pqc"]["algorithm"],
+                 "New public key (B)": m["public_key_bytes"]} for e in rsa_entries]
+        st.dataframe(pd.DataFrame(rows), hide_index=True)
+    st.caption("Sizes and timings come from this machine. ML-KEM is slower here because the library is pure Python.")
+
+
 # ================================================================ PIPELINE
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
@@ -540,4 +624,4 @@ def page_pipeline():
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo,
- "⚙️ Pipeline": page_pipeline}[page]()
+ "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()

@@ -61,6 +61,17 @@
       "attack_evidence": []
     }
   },
+  "assumptions": {
+    "_readme": "Section 5 assumptions for the risk score (F5). Working values proposed by Tarun; NOT yet agreed with sir. When sir agrees, set agreed_with_sir to true and agreed_date to YYYY-MM-DD.",
+    "secret_years": {"value": 5, "scenarios": [2, 5, 10]},
+    "migration_years": {"value": 2, "scenarios": [2]},
+    "quantum_years": {"value": 10, "scenarios": [5, 10, 20]},
+    "exposure": "public",
+    "attacker": "stego file and public key, no secret; may record now and decrypt later",
+    "agreed_with_sir": false,
+    "agreed_date": null,
+    "project_overrides": {}
+  },
   "experiments": [
     {
       "id": "EXP-IMAGE-31",

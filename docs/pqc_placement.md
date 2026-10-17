@@ -47,3 +47,47 @@ Verification log:
 | L3 | AES-GCM authentication tag | 128-bit tag | nonce: 12, tag: 16 |
 | L5 | ML-DSA-65 signature (optional) | ML-DSA-65 | public_key: 1,952, signature: 3,309 |
 | HIDING | key-dependent pixel order (not a PQC question) | n/a | n/a |
+
+## Payload size and capacity analysis
+
+Computed by scripts/payload_capacity.py. Assumptions are stated at the top of the script (header size from the reference backend, not yet the pinned project).
+
+Assumed header: 4 B. Hybrid overhead: 1116 B.
+
+| Message (B) | RSA bits | RSA ciphertext (B) | Hybrid blob (B) | Blob / RSA |
+|---|---|---|---|---|
+| 16 | 512 | 64 | 1132 | 17.7x |
+| 16 | 1024 | 128 | 1132 | 8.8x |
+| 16 | 2048 | 256 | 1132 | 4.4x |
+| 16 | 3072 | 384 | 1132 | 2.9x |
+| 64 | 512 | 128 | 1180 | 9.2x |
+| 64 | 1024 | 128 | 1180 | 9.2x |
+| 64 | 2048 | 256 | 1180 | 4.6x |
+| 64 | 3072 | 384 | 1180 | 3.1x |
+| 256 | 512 | 320 | 1372 | 4.3x |
+| 256 | 1024 | 384 | 1372 | 3.6x |
+| 256 | 2048 | 512 | 1372 | 2.7x |
+| 256 | 3072 | 384 | 1372 | 3.6x |
+| 1024 | 512 | 1088 | 2140 | 2.0x |
+| 1024 | 1024 | 1152 | 2140 | 1.9x |
+| 1024 | 2048 | 1280 | 2140 | 1.7x |
+| 1024 | 3072 | 1152 | 2140 | 1.9x |
+
+| Payload | Mode | Smallest square image (pixels per side) |
+|---|---|---|
+| hybrid, message 16 B | 1 LSB, R channel only | 96 |
+| hybrid, message 16 B | 1 LSB, RGB | 56 |
+| RSA-1024, message 16 B | 1 LSB, RGB | 19 |
+| RSA-2048, message 16 B | 1 LSB, RGB | 27 |
+| hybrid, message 64 B | 1 LSB, R channel only | 98 |
+| hybrid, message 64 B | 1 LSB, RGB | 57 |
+| RSA-1024, message 64 B | 1 LSB, RGB | 19 |
+| RSA-2048, message 64 B | 1 LSB, RGB | 27 |
+| hybrid, message 256 B | 1 LSB, R channel only | 105 |
+| hybrid, message 256 B | 1 LSB, RGB | 61 |
+| RSA-1024, message 256 B | 1 LSB, RGB | 33 |
+| RSA-2048, message 256 B | 1 LSB, RGB | 38 |
+| hybrid, message 1024 B | 1 LSB, R channel only | 131 |
+| hybrid, message 1024 B | 1 LSB, RGB | 76 |
+| RSA-1024, message 1024 B | 1 LSB, RGB | 56 |
+| RSA-2048, message 1024 B | 1 LSB, RGB | 59 |

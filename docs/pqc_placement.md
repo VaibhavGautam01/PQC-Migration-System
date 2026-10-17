@@ -38,3 +38,12 @@ Verification log:
 ## Standards status
 - FIPS 203, 204, 205: published August 2024.
 - NIST IR 8547 (quantum-vulnerable public-key algorithms deprecated after 2030, disallowed after 2035): initial public draft published 12 November 2024 (comment period closed January 2025). Call the dates "proposed" unless a final version is confirmed. Last checked: ____
+## Sizes table (generated from data/pqc_recommendations.json)
+
+| Layer | Technique | Parameter set | Sizes (bytes) |
+|---|---|---|---|
+| L1 | ML-KEM-768 + HKDF + AES-256-GCM | ML-KEM-768 | public_key: 1,184, ciphertext: 1,088 |
+| L2 | 256-bit random key with HKDF or HMAC-SHA256 to pick frames | 256-bit key | key: 32 |
+| L3 | AES-GCM authentication tag | 128-bit tag | nonce: 12, tag: 16 |
+| L5 | ML-DSA-65 signature (optional) | ML-DSA-65 | public_key: 1,952, signature: 3,309 |
+| HIDING | key-dependent pixel order (not a PQC question) | n/a | n/a |

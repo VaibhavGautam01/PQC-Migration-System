@@ -54,6 +54,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True, help="path to stego project")
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--bits", type=int, default=None,
+                    help="prime size in bits for the demo key (pinned default is 256, too big for sympy)")
     args = ap.parse_args()
 
     sys.path.insert(0, args.project)
@@ -69,7 +71,7 @@ def main():
 
     # 1. Sender side (simulated)
     Image.frombytes("RGB", (200, 200), os.urandom(200 * 200 * 3)).save(cover)
-    pub, priv = generate_keypair()
+    pub, priv = generate_keypair(bits=args.bits) if args.bits else generate_keypair()
     secret = "HELLO QUANTUM"
     rsa_lsb_embed(cover, secret, stego, pub)
     print(f"[sender]   public key  e={pub[0]}  n={pub[1]} ({pub[1].bit_length()} bits)")

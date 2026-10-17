@@ -26,8 +26,10 @@ class AssumptionTests(unittest.TestCase):
         self.assertEqual(a["exposure"], "public")
         self.assertEqual(A.z_scenarios(a), [10, 5, 20])
 
-    def test_not_agreed_until_date_is_set(self):
-        self.assertFalse(A.load_assumptions()["agreed_with_sir"])
+    def test_agreement_state_is_consistent(self):
+        a = A.load_assumptions()
+        if a["agreed_with_sir"]:
+            self.assertIsNotNone(a["agreed_date"])
 
     def test_good_block_is_valid(self):
         self.assertEqual(A.validate(good()), good())

@@ -62,14 +62,14 @@
     }
   },
   "assumptions": {
-    "_readme": "Section 5 assumptions for the risk score (F5). Working values proposed by Tarun; NOT yet agreed with sir. When sir agrees, set agreed_with_sir to true and agreed_date to YYYY-MM-DD.",
+    "_readme": "Section 5 assumptions for the risk score (F5). Agreed with sir on 2026-10-17. Change values only with sir's agreement and update agreed_date.",
     "secret_years": {"value": 5, "scenarios": [2, 5, 10]},
     "migration_years": {"value": 2, "scenarios": [2]},
     "quantum_years": {"value": 10, "scenarios": [5, 10, 20]},
     "exposure": "public",
     "attacker": "stego file and public key, no secret; may record now and decrypt later",
-    "agreed_with_sir": false,
-    "agreed_date": null,
+    "agreed_with_sir": true,
+    "agreed_date": "2026-10-17",
     "project_overrides": {}
   },
   "experiments": [

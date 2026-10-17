@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from risk_score import (band, classical_weakness, overall_risk,  # noqa: E402
+from risk_score import (band, classical_weakness, overall_risk,  # noqa: E402 # type: ignore
                         project_score, quantum_risk, score_layer)
 
 # X = 5, Y = 2, Z = 10; F6 = 100 (keyless); F4 = 5 for OAEP and AES-GCM

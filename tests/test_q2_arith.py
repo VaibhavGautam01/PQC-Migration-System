@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from qiskit import QuantumCircuit  # noqa: E402
 from qiskit.quantum_info import Statevector  # noqa: E402
 
-from q2_arith import (modular_adder_phi, modular_subtractor_phi, phi_add,  # noqa: E402
+from q2_arith import (modular_adder_phi, modular_subtractor_phi, phi_add,  # noqa: E402 # type: ignore
                       qft_dagger_gates, qft_gates)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))

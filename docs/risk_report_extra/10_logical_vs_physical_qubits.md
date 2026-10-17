@@ -1,6 +1,6 @@
 ## Logical vs Physical Qubits: Why These Numbers Are Not Breakable Today
 
-The qubit counts in this report (for example 2,051 for a 1024-bit RSA key)
+The qubit counts in this report (for example 4,099 for a 2048-bit RSA key)
 are **logical qubits**. A logical qubit is an ideal, error-free qubit. Real
 quantum hardware is built from **physical qubits**, which are noisy: every
 gate and every moment of idle time has a chance of flipping a value. Shor's
@@ -19,9 +19,9 @@ each logical qubit.
 
 | Project | RSA modulus | Logical qubits (2n+3) | Physical qubits at 1,000:1 (illustrative) |
 |---|---|---|---|
-| Secure-Video-Steganography | 1024 bits | 2,051 | about 2.05 million |
+| Secure-Video-Steganography | 2048 bits | 4,099 | about 4.10 million |
 | Final-Year-project-part1 | 256 bits | 515 | about 515 thousand |
-| Final-Year-project-part1 | 32 bits | 67 | about 67 thousand |
+| Final-Year-project-part1 | 8 bits | 19 | about 19 thousand |
 
 The 1,000:1 ratio is an **assumption chosen for illustration**, not a
 measured value. The real ratio depends on future hardware quality.
@@ -46,6 +46,6 @@ recommendation in this report does not wait for the hardware.
 
 ### Important exception: toy key sizes
 
-The 32-bit and 256-bit RSA moduli in Final-Year-project-part1 are breakable
+The 8-bit and 256-bit RSA moduli in Final-Year-project-part1 are breakable
 on an ordinary computer today. They are a **classical** weakness, covered
 by the key-strength check, not a quantum one.

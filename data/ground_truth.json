@@ -1,0 +1,217 @@
+{
+  "_readme": "Hand-labelled crypto lines in the two target repos (read line by line). 'core' = lines that perform a cryptographic step: prime/key generation, modulus, exponents, encrypt/decrypt, hashing, keygen call sites. 'borderline' = control checks that are not counted. Calls to wrappers such as encrypt_text() are covered by the INDIRECT_USAGE flags, not by findings. The scanner patterns were written against these same repos, so the numbers are in-sample.",
+  "core": [
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 22,
+      "what": "prime generation (randprime)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 27,
+      "what": "prime p generated"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 28,
+      "what": "prime q generated"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 30,
+      "what": "prime q regenerated"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 32,
+      "what": "modulus n = p*q"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 33,
+      "what": "phi = (p-1)(q-1)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 35,
+      "what": "public exponent e = 65537"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 37,
+      "what": "public exponent nextprime"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 39,
+      "what": "private exponent mod_inverse"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 45,
+      "what": "encrypt pow(m,e,n)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 50,
+      "what": "decrypt pow(c,d,n)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 42,
+      "what": "small prime table (isprime)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 51,
+      "what": "random pick of n,p,q"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 52,
+      "what": "phi"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 54,
+      "what": "candidate public exponents (isprime)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 57,
+      "what": "random pick of e"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "r_channel_stego.py",
+      "line": 59,
+      "what": "private exponent pow(e,-1,phi)"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "main.py",
+      "line": 83,
+      "what": "generate_small_keypair() call"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "main.py",
+      "line": 101,
+      "what": "generate_keypair(bits=128) call"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "app.py",
+      "line": 229,
+      "what": "generate_small_keypair() call"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "app.py",
+      "line": 239,
+      "what": "generate_keypair(bits=128) call"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "app.py",
+      "line": 373,
+      "what": "generate_small_keypair() call"
+    },
+    {
+      "project": "Final-Year-project-part1",
+      "file": "app.py",
+      "line": 385,
+      "what": "generate_keypair(bits=128) call"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 45,
+      "what": "public exponent e = 65537"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 48,
+      "what": "getPrime p"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 49,
+      "what": "getPrime q"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 52,
+      "what": "modulus n = p*q"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 53,
+      "what": "phi = (p-1)(q-1)"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 56,
+      "what": "private exponent inverse"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 142,
+      "what": "encrypt pow(m,e,n)"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 170,
+      "what": "decrypt pow(c,d,n)"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "frame_selector.py",
+      "line": 32,
+      "what": "SHA-256 of the secret key"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "app.py",
+      "line": 263,
+      "what": "rsa_crypto.generate_keypair() call"
+    }
+  ],
+  "borderline": [
+    {
+      "project": "Final-Year-project-part1",
+      "file": "rsa_utils.py",
+      "line": 36,
+      "what": "coprime check loop: while phi % e == 0"
+    },
+    {
+      "project": "Secure-Video-Steganography",
+      "file": "rsa_crypto.py",
+      "line": 54,
+      "what": "coprime check: number.GCD(e, phi) == 1"
+    }
+  ]
+}

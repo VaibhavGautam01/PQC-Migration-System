@@ -1,26 +1,33 @@
 # Cryptographic Bill of Materials (CBOM)
 
-Entries: 6 | Projects: 2 | Findings covered: 26 | Unmapped: 0
+Entries: 6 | Projects: 2 | Findings covered: 31 | Unmapped: 0
 
 Quantum risk, classical risk and padding risk are shown separately on purpose: textbook RSA is dangerous because it is deterministic, not because of Shor's algorithm.
 
 | ID | Project | Primitive | Size (bits) | Size status | Quantum threat | Logical qubits (est.) | Classical risk | Padding | Recommended PQC |
 |---|---|---|---|---|---|---|---|---|---|
 | CBOM-001 | Final-Year-project-part1 | RSA | - | unknown | Shor's algorithm (BROKEN) | - | unknown | none (textbook RSA) | ML-KEM-768 |
-| CBOM-002 | Final-Year-project-part1 | RSA | 256 | scanner-reported | Shor's algorithm (BROKEN) | 515 | practically-breakable | none (textbook RSA) | ML-KEM-768 |
-| CBOM-003 | Final-Year-project-part1 | RSA | 512 | scanner-reported | Shor's algorithm (BROKEN) | 1027 | practically-breakable | none (textbook RSA) | ML-KEM-768 |
+| CBOM-002 | Final-Year-project-part1 | RSA | 8 | override-confirmed | Shor's algorithm (BROKEN) | 19 | practically-breakable | none (textbook RSA) | ML-KEM-768 |
+| CBOM-003 | Final-Year-project-part1 | RSA | 256 | override-confirmed | Shor's algorithm (BROKEN) | 515 | practically-breakable | none (textbook RSA) | ML-KEM-768 |
 | CBOM-004 | Secure-Video-Steganography | RSA | - | unknown | Shor's algorithm (BROKEN) | - | unknown | none (textbook RSA) | ML-KEM-768 |
-| CBOM-005 | Secure-Video-Steganography | RSA | 1024 | scanner-reported | Shor's algorithm (BROKEN) | 2051 | below-minimum | none (textbook RSA) | ML-KEM-768 |
+| CBOM-005 | Secure-Video-Steganography | RSA | 2048 | override-confirmed | Shor's algorithm (BROKEN) | 4099 | meets-minimum | none (textbook RSA) | ML-KEM-768 |
 | CBOM-006 | Secure-Video-Steganography | SHA | 256 | scanner-reported | Grover's algorithm (WEAKENED) | - | meets-minimum | not-applicable | SHA-256 or larger (SHA-2 / SHA-3) |
 
 ## Evidence
 
-- CBOM-001: r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59, rsa_utils.py:22, rsa_utils.py:33, rsa_utils.py:35, rsa_utils.py:37, rsa_utils.py:39, rsa_utils.py:45, rsa_utils.py:50
-- CBOM-002: app.py:239, app.py:385, main.py:101
-- CBOM-003: rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30
-- CBOM-004: app.py:263, rsa_crypto.py:45, rsa_crypto.py:53, rsa_crypto.py:56, rsa_crypto.py:142, rsa_crypto.py:170
+- CBOM-001: rsa_utils.py:22, rsa_utils.py:32, rsa_utils.py:33, rsa_utils.py:35, rsa_utils.py:37, rsa_utils.py:39, rsa_utils.py:45, rsa_utils.py:50
+- CBOM-002: app.py:229, app.py:373, main.py:83, r_channel_stego.py:42, r_channel_stego.py:52, r_channel_stego.py:54, r_channel_stego.py:59
+- CBOM-003: app.py:239, app.py:385, main.py:101, rsa_utils.py:27, rsa_utils.py:28, rsa_utils.py:30
+- CBOM-004: app.py:263, rsa_crypto.py:45, rsa_crypto.py:52, rsa_crypto.py:53, rsa_crypto.py:56, rsa_crypto.py:142, rsa_crypto.py:170
 - CBOM-005: rsa_crypto.py:48, rsa_crypto.py:49
 - CBOM-006: frame_selector.py:32
+
+## Supporting experiments (local small-key snapshots)
+
+These ran on local small-key copies of the projects, not on the projects of record. They show what a small modulus costs an attacker; they are not evidence about the key sizes in the table above.
+
+- EXP-IMAGE-31: Image steganography attack end to end: extract the ciphertext, factor n, decrypt. Target: local small-key snapshot (Vaibhav's ZIP copy of the image project, whose generate_keypair defaults to bits=16); not the project of record. Result: 31-bit modulus factored in 0.0002 s. Source: Vaibhav.
+- EXP-VIDEO-95: Video steganography attack at a reduced key. It does not need the secret frame key: it scans for the 16-bit length header. Target: local small-key snapshot (video_stego_project_updated, reduced key made with generate_keypair(key_size=96)); not the project of record. Result: 95-bit modulus factored in 0.23 s. Source: Vaibhav.
 
 ## Open data questions
 

@@ -9,9 +9,9 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Qiskit](https://img.shields.io/badge/Qiskit-Shor's_Demo-6929C4?style=for-the-badge&logo=ibm&logoColor=white)
 ![Target](https://img.shields.io/badge/Migrate_To-ML--KEM--768-00C853?style=for-the-badge&logo=letsencrypt&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-282_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-421_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
 ![Scanner](https://img.shields.io/badge/Scanner-v0.4.0-2196F3?style=for-the-badge)
-![Patterns](https://img.shields.io/badge/Patterns-47-9C27B0?style=for-the-badge)
+![Patterns](https://img.shields.io/badge/Patterns-48-9C27B0?style=for-the-badge)
 ![Dashboard](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![License](https://img.shields.io/badge/B.Tech-Final_Year-E91E63?style=for-the-badge)
 
@@ -94,7 +94,7 @@ flowchart LR
 
 ## 🔍 Stage 1: Detection Engine
 
-A static scanner that reads code line by line and matches **47 signature patterns** across six primitive families.
+A static scanner that reads code line by line and matches **48 signature patterns** across six primitive families.
 
 <details>
 <summary><b>👉 What it detects</b></summary>
@@ -153,20 +153,24 @@ The pipeline was run on `Final-Year-project-part1` and `Secure-Video-Steganograp
 
 | Metric | Value |
 |:---|:---:|
-| 🔎 Total findings | **26** |
-| 🔑 RSA findings (Shor's) | **25** |
+| 🔎 Total findings | **31** |
+| 🔑 RSA findings (Shor's) | **30** |
 | #️⃣ SHA findings (Grover's) | **1** |
 | 🧾 CBOM entries | **6** |
-| ⚠️ Entries with a classical key-strength problem | **3** |
-| 🧪 Automated tests | **282** passing |
+| ⚠️ Entries with a classical key-strength problem | **2** |
+| ❓ Entries with unknown key size | **2** |
+| 🧪 Automated tests | **421** passing |
 
 **Risk summary** (logical-qubit estimates, no error-correction overhead):
 
-| Modulus size | Logical qubits (2n + 3) | Classical risk | Padding | Recommended |
-|:---:|:---:|:---:|:---:|:---:|
-| 256-bit | 515 | 🔴 Practically breakable | None (textbook RSA) | ML-KEM-768 |
-| 512-bit | 1027 | 🔴 Practically breakable | None (textbook RSA) | ML-KEM-768 |
-| 1024-bit | 2051 | 🟠 Below minimum | None (textbook RSA) | ML-KEM-768 |
+| CBOM entry | Modulus size | Logical qubits (2n + 3) | Classical risk | Padding | Recommended |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| CBOM-002 | 8-bit | 19 | 🔴 Practically breakable | None (textbook RSA) | ML-KEM-768 |
+| CBOM-003 | 256-bit | 515 | 🔴 Practically breakable | None (textbook RSA) | ML-KEM-768 |
+| CBOM-005 | 2048-bit | 4099 | 🟢 Meets minimum | None (textbook RSA) | ML-KEM-768 |
+| CBOM-001, CBOM-004 | unknown | - | unknown | None (textbook RSA) | ML-KEM-768 |
+
+> The 8-bit, 256-bit and 2048-bit sizes come from confirmed manual review (`data/manual_facts.json`, see `docs/size_decisions.md`). Findings without a visible key size are listed as unknown instead of guessed.
 
 > 📄 Full details: [`docs/final_dashboard.md`](docs/final_dashboard.md) · [`docs/cbom.md`](docs/cbom.md) · [`docs/risk_report.md`](docs/risk_report.md) · [`docs/final_report.md`](docs/final_report.md)
 
@@ -255,7 +259,7 @@ PQC-Migration-System/
 │   ├── quantum_mapper.py       # Stage 2: primitive -> Shor / Grover
 │   ├── cbom.py                 # CBOM builder, validator, Markdown renderer
 │   ├── build_dashboard.py      # final dashboard generator
-│   ├── dashboard_app.py        # Streamlit dashboard
+│   ├── live_dashboard.py       # Streamlit dashboard (live)
 │   └── run_all.py              # merges both scans into findings.json
 ├── notebook/
 │   ├── qubit_estimator.py      # Stage 3: Shor q = 2n + 3, Grover halving

@@ -9,6 +9,7 @@
     "finding_count",
     "entries",
     "unmapped",
+    "experiments",
     "references",
     "notes"
   ],
@@ -220,6 +221,44 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "target",
+          "key_bits",
+          "description",
+          "result",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "pattern": "not the project of record"
+          },
+          "key_bits": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
       }
     }
   }

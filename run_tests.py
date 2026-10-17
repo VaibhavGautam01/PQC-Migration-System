@@ -1,5 +1,7 @@
 """
-run_tests.py - run all Stage 1 tests with one command (Issue #2).
+run_tests.py - run ALL project tests with one command.
+
+Runs the tests in tests/ and in notebook/ (qubit estimator and Shor's demo).
 
 Usage:  python run_tests.py
 Exit code: 0 if every test passes, 1 if a test fails or none are found,
@@ -9,38 +11,38 @@ import sys
 import unittest
 from pathlib import Path
 
-# Absolute path of the "tests" folder next to this file. Using __file__
-# makes the script work no matter which folder it is started from.
-TESTS_DIR = Path(__file__).parent / "tests"
+ROOT = Path(__file__).parent
+
+# Every folder that holds test_*.py files. notebook/ is here because its
+# tests import modules that live next to them (qubit_estimator, shors_demo).
+TEST_DIRS = [ROOT / "tests", ROOT / "notebook"]
 
 
 def main() -> int:
-    """Discover and run every tests/test_*.py file.
+    """Discover and run every test_*.py file in TEST_DIRS.
 
     Returns:
         0 if all tests passed, otherwise 1.
     """
-    # Put the project root on sys.path so tests can import project modules.
-    sys.path.insert(0, str(Path(__file__).parent))
+    # Project root on sys.path so tests can import project modules.
+    sys.path.insert(0, str(ROOT))
 
-    # Discovery picks up every "test_*.py" file in tests/, so adding a new
-    # test file never requires editing this script.
-    suite = unittest.defaultTestLoader.discover(
-        start_dir=str(TESTS_DIR),
-        pattern="test_*.py",
-    )
+    # One suite per folder, combined into a single run.
+    suite = unittest.TestSuite()
+    for folder in TEST_DIRS:
+        suite.addTests(unittest.defaultTestLoader.discover(
+            start_dir=str(folder),
+            pattern="test_*.py",
+            top_level_dir=str(folder),
+        ))
 
-    # verbosity=2 prints each test name with ok/FAIL, useful for debugging
-    # and for demos.
     result = unittest.TextTestRunner(verbosity=2).run(suite)
 
-    # Guard: treat "no tests found" as a failure. Otherwise a wrong folder
-    # or file name would report a false "0 tests passed" success.
+    # Guard: "no tests found" must be a failure, not a false success.
     if result.testsRun == 0:
-        print("ERROR: no tests found. Check tests/ and the test_*.py names.")
+        print("ERROR: no tests found. Check tests/, notebook/ and the test_*.py names.")
         return 1
 
-    # wasSuccessful() is True only when there are no failures or errors.
     return 0 if result.wasSuccessful() else 1
 
 

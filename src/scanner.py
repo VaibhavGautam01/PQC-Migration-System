@@ -75,6 +75,10 @@ RSA_PATTERNS = [
      "regex": r"\b(?:phi|totient)\w*\s*=\s*\(?\s*p\s*-\s*1\s*\)?\s*\*\s*\(?\s*q\s*-\s*1",
      "desc": "Euler totient (p-1)(q-1), textbook RSA key setup",
      "confidence": "high", "keygen": False},
+    {"id": "RSA-MANUAL-MODULUS",
+     "regex": r"^\s*(?:n|modulus)\s*=\s*p\s*\*\s*q\s*(?:#.*)?$",
+     "desc": "RSA modulus n = p * q, textbook RSA key setup",
+     "confidence": "high", "keygen": False},
     {"id": "RSA-MANUAL-MODINV",
      "regex": r"\bpow\s*\(\s*\w+\s*,\s*-1\s*,",
      "desc": "Modular inverse via pow(e,-1,phi), private-exponent computation",
@@ -134,6 +138,48 @@ for _p in ALL_PATTERNS:
     _p["compiled"] = re.compile(_p["regex"])
 
 
+LANGUAGE_BY_EXT = {
+    ".py": "python", ".java": "java", ".js": "javascript", ".ts": "typescript",
+    ".c": "c", ".cpp": "cpp", ".h": "c", ".go": "go", ".rs": "rust",
+    ".php": "php", ".rb": "ruby", ".cs": "csharp", ".sh": "shell",
+    ".pem": "key-file", ".key": "key-file", ".pub": "key-file",
+}
+
+DETECTORS = {}  # extension -> list of detect(rel_path, text) functions
+
+
+def register(ext, fn):
+    """Attach a detector function to a file extension."""
+    DETECTORS.setdefault(ext, []).append(fn)
+
+
+def detect_regex(rel_path, text):
+    """The existing regex detector, moved out of scan_file unchanged."""
+    lines = text.splitlines()
+    findings = []
+    for idx, line in enumerate(lines):
+        for pat in ALL_PATTERNS:
+            m = pat["compiled"].search(line)
+            if not m:
+                continue
+            findings.append({
+                "file": rel_path,
+                "line": idx + 1,
+                "primitive": pat["primitive"],
+                "pattern_id": pat["id"],
+                "description": pat["desc"],
+                "confidence": pat["confidence"],
+                **extract_key_info(lines, idx, m, pat),
+                "snippet": line.strip()[:200],
+            })
+    return findings
+
+
+# For now every extension keeps the old behaviour (same regex everywhere).
+for _ext in SCAN_EXTENSIONS:
+    register(_ext, detect_regex)
+
+
 def scan_file(path, root):
     """Scan one file and return a list of finding dicts."""
     # Skip oversized or unreadable files so one bad file cannot stop the scan.
@@ -149,25 +195,16 @@ def scan_file(path, root):
     # Forward slashes keep paths identical on Windows and Linux, so
     # findings.json does not change between machines.
     rel_path = os.path.relpath(path, root).replace(os.sep, "/")
+    text = "\n".join(lines)
     findings = []
-    # Every pattern is tried on every line; one line can match several.
-    for idx, line in enumerate(lines):
-        for pat in ALL_PATTERNS:
-            m = pat["compiled"].search(line)
-            if not m:
-                continue
-            findings.append({
-                "file": rel_path,
-                "line": idx + 1,
-                "primitive": pat["primitive"],
-                "pattern_id": pat["id"],
-                "description": pat["desc"],
-                "confidence": pat["confidence"],
-                # Adds key_size, modulus_bits, size_basis (None if no size found).
-                **extract_key_info(lines, idx, m, pat),
-                # Snippet is capped at 200 chars to keep findings.json small.
-                "snippet": line.strip()[:200],
-            })
+    for fn in DETECTORS.get(os.path.splitext(path)[1].lower(), []):
+        findings.extend(fn(rel_path, text))
+    # Contract fields every finding carries (later steps fill the real values).
+    lang = LANGUAGE_BY_EXT.get(os.path.splitext(path)[1].lower(), "unknown")
+    for f in findings:
+        f.setdefault("language", lang)
+        f.setdefault("usage_purpose", "unknown")
+        f.setdefault("flags", [])
     return findings
 
 
@@ -183,6 +220,77 @@ def scan_path(root):
             if os.path.splitext(name)[1].lower() in SCAN_EXTENSIONS:
                 findings.extend(scan_file(os.path.join(dirpath, name), root))
     return findings
+
+
+import time
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ScanOptions:
+    """Filters for scan(). Defaults match the old scan_path() behaviour."""
+    max_file_bytes: int = MAX_FILE_BYTES
+    skip_dirs: set = field(default_factory=lambda: set(SKIP_DIRS))
+    skip_minified: bool = True
+
+
+@dataclass
+class ScanResult:
+    """What scan() returns: findings plus simple scan statistics."""
+    findings: list
+    files_scanned: int = 0
+    files_skipped: int = 0
+    errors: list = field(default_factory=list)
+    seconds: float = 0.0
+
+
+def _looks_minified(path):
+    """True for *.min.js style names or a huge first line in .js/.ts files."""
+    name = os.path.basename(path).lower()
+    if ".min." in name or name.endswith((".bundle.js", ".chunk.js")):
+        return True
+    if os.path.splitext(name)[1] not in (".js", ".ts"):
+        return False
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            head = f.read(4096)
+    except OSError:
+        return False
+    return len(head.split("\n", 1)[0]) > 1000
+
+
+def scan(path, options=None):
+    """Scan a folder or file and return a ScanResult (findings + stats)."""
+    opts = options or ScanOptions()
+    start = time.time()
+    root = os.path.abspath(path)
+    res = ScanResult(findings=[])
+    if not os.path.exists(root):
+        res.errors.append("path not found: " + str(path))
+        return res
+    if os.path.isfile(root):
+        todo = [(root, os.path.dirname(root))]
+    else:
+        todo = []
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [d for d in dirnames if d not in opts.skip_dirs]
+            for name in sorted(filenames):
+                if os.path.splitext(name)[1].lower() in SCAN_EXTENSIONS:
+                    todo.append((os.path.join(dirpath, name), root))
+    for fpath, base in todo:
+        try:
+            too_big = os.path.getsize(fpath) > opts.max_file_bytes
+        except OSError as e:
+            res.errors.append(str(e))
+            res.files_skipped += 1
+            continue
+        if too_big or (opts.skip_minified and _looks_minified(fpath)):
+            res.files_skipped += 1
+            continue
+        res.findings.extend(scan_file(fpath, base))
+        res.files_scanned += 1
+    res.seconds = round(time.time() - start, 3)
+    return res
 
 
 def build_report(root, findings):

@@ -121,3 +121,81 @@ def f6_effective(f6: float, f3, f4: float) -> float:
     """Gated F6: F6_eff = F6 x max(F3, F4) / 100; if F3 does not apply, F4 alone."""
     weakness = f4 if f3 is None else max(f3, f4)
     return f6 * weakness / 100.0
+
+
+# ---------------------------------------------------------------------
+# Formulas (Week 1 Day 3)
+# ---------------------------------------------------------------------
+def _weighted(parts: dict, weights: dict) -> float:
+    """Weighted mean of the factors that apply (None = left out, rest re-scaled)."""
+    used = {k: v for k, v in parts.items() if v is not None}
+    if not used:
+        raise ValueError("no factor applies to this layer")
+    total = sum(weights[k] for k in used)
+    return sum(weights[k] * v for k, v in used.items()) / total
+
+
+def quantum_risk(f1, f2, f5_eff, weights=None) -> float:
+    """Quantum Risk % = 0.50 x F1 + 0.25 x F2 + 0.25 x F5_eff (F2 may be None)."""
+    w = (weights or load_weights())["quantum_weights"]
+    return _weighted({"f1": f1, "f2": f2, "f5": f5_eff}, w)
+
+
+def classical_weakness(f3, f4, f6_eff, weights=None) -> float:
+    """Classical Weakness % = 0.40 x F3 + 0.30 x F4 + 0.30 x F6_eff (F3 may be None)."""
+    w = (weights or load_weights())["classical_weights"]
+    return _weighted({"f3": f3, "f4": f4, "f6": f6_eff}, w)
+
+
+def overall_risk(quantum: float, classical: float, weights=None) -> float:
+    """Overall Risk % = 0.60 x Quantum + 0.40 x Classical."""
+    w = (weights or load_weights())["overall_weights"]
+    return w["quantum"] * quantum + w["classical"] * classical
+
+
+def project_score(layer_scores, weights=None) -> float:
+    """Weakest-link rule: 0.7 x (worst layer) + 0.3 x (average of layers)."""
+    scores = list(layer_scores)
+    if not scores:
+        raise ValueError("need at least one layer score")
+    w = (weights or load_weights())["project_weights"]
+    return w["worst_layer"] * max(scores) + w["average"] * (sum(scores) / len(scores))
+
+
+def band(score: float, weights=None) -> str:
+    """Low (<25), Moderate (25-49), High (50-74), Critical (75+)."""
+    if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= score <= 100:
+        raise ValueError(f"score must be between 0 and 100, got {score!r}")
+    for b in (weights or load_weights())["bands"]:
+        if b["below"] is None or score < b["below"]:
+            return b["name"]
+
+
+def score_layer(category, construction, exposure, modulus_bits=None,
+                effective_bits=None, x_years=None, y_years=None, z_years=None,
+                weights=None) -> dict:
+    """Score one layer and return every factor, the three percentages and the band.
+
+    category: F1 category ('shor_broken', 'nist_pqc', 'symmetric').
+    construction: F4 key (for example 'oaep'). exposure: F6 key.
+    modulus_bits: RSA modulus size, or None when F2 and F3 do not apply
+    (ML-KEM, SHA-256). x/y/z default to the values in the weights file.
+    """
+    w = weights or load_weights()
+    d = w["f5_data_lifetime"]
+    x = d["x_years"] if x_years is None else x_years
+    y = d["y_years"] if y_years is None else y_years
+    z = d["z_years"] if z_years is None else z_years
+
+    f1 = f1_quantum_exposure(category, effective_bits, w)
+    f2 = f2_qubit_cost(modulus_bits, w) if category == "shor_broken" else None
+    f3 = f3_classical_key_weakness(modulus_bits, w)
+    f4 = f4_construction_weakness(construction, w)
+    f5_eff = f5_effective(f5_data_lifetime(x, y, z), f1)
+    f6_eff = f6_effective(f6_exposure(exposure, w), f3, f4)
+
+    q = quantum_risk(f1, f2, f5_eff, w)
+    c = classical_weakness(f3, f4, f6_eff, w)
+    o = overall_risk(q, c, w)
+    return {"f1": f1, "f2": f2, "f3": f3, "f4": f4, "f5_eff": f5_eff, "f6_eff": f6_eff,
+            "quantum": q, "classical": c, "overall": o, "band": band(o, w)}

@@ -81,3 +81,17 @@ def modular_adder_phi(qc, b, anc, a, N, controls=()):
     qc.x(msb)
     qft_gates(qc, b)
     phi_add(qc, b, a, controls)
+
+
+
+def modular_subtractor_phi(qc, b, anc, a, N, controls=()):
+    """Modular subtraction in Fourier space: b -> (b - a) mod N.
+
+    Uses (b - a) mod N = (b + (N - a)) mod N, so it reuses the tested adder.
+    This is the "undo" step the Q2 multiplier needs. a = 0 changes nothing.
+    """
+    if not (0 <= a < N):
+        raise ValueError("need 0 <= a < N")
+    if a == 0:
+        return
+    modular_adder_phi(qc, b, anc, N - a, N, controls)

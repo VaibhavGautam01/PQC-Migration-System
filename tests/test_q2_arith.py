@@ -4,6 +4,12 @@ compared with plain Python arithmetic.
 Fast: python -m unittest discover -s tests
 Slow (N = 15, 21): set SLOW_TESTS=1 first (PowerShell: $env:SLOW_TESTS="1")
 """
+"""
+Truth-table tests for the Q2 adders (rule 9): every basis input for small n,
+compared with plain Python arithmetic.
+Fast: python -m unittest discover -s tests
+Slow (N = 15, 21): set SLOW_TESTS=1 first (PowerShell: $env:SLOW_TESTS="1")
+"""
 import itertools
 import os
 import sys
@@ -14,6 +20,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from qiskit import QuantumCircuit  # noqa: E402
 from qiskit.quantum_info import Statevector  # noqa: E402
+
+from q2_arith import (modular_adder_phi, modular_subtractor_phi, phi_add,  # noqa: E402
+                      qft_dagger_gates, qft_gates)
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 
 from q2_arith import (modular_adder_phi, phi_add, qft_dagger_gates,  # noqa: E402 # type: ignore
                       qft_gates)
@@ -135,6 +147,41 @@ class TestModularAdder(unittest.TestCase):
         for N in (15, 21):
             with self.subTest(N=N):
                 check_modular_adder(self, N)
+class TestModularSubtractor(unittest.TestCase):
+    def test_subtract_all_inputs(self):
+        for N in (3, 5, 7):
+            n = N.bit_length()
+            b = list(range(n + 1))
+            anc, ctrl = n + 1, n + 2
+            for a, bv, c in itertools.product(range(N), range(N), (0, 1)):
+                qc = QuantumCircuit(n + 3)
+                load(qc, b, bv)
+                if c:
+                    qc.x(ctrl)
+                qft_gates(qc, b)
+                modular_subtractor_phi(qc, b, anc, a, N, controls=[ctrl])
+                qft_dagger_gates(qc, b)
+                v = outcome(qc)
+                expected = (bv - a) % N if c else bv
+                msg = f"N={N} a={a} b={bv} c={c}"
+                self.assertEqual(v & (2 ** (n + 1) - 1), expected, msg)
+                self.assertEqual((v >> (n + 1)) & 1, 0, "ancilla not 0: " + msg)
+
+    def test_add_then_subtract_restores_input(self):
+        N, n = 7, 3
+        b, anc = list(range(n + 1)), n + 1
+        for a, bv in itertools.product(range(N), repeat=2):
+            qc = QuantumCircuit(n + 2)
+            load(qc, b, bv)
+            qft_gates(qc, b)
+            modular_adder_phi(qc, b, anc, a, N)
+            modular_subtractor_phi(qc, b, anc, a, N)
+            qft_dagger_gates(qc, b)
+            self.assertEqual(outcome(qc), bv, f"a={a} b={bv}")
+
+    def test_bad_input(self):
+        with self.assertRaises(ValueError):
+            modular_subtractor_phi(QuantumCircuit(5), [0, 1, 2, 3], 4, 7, 7)
 
 
 if __name__ == "__main__":

@@ -24,3 +24,4 @@ pycryptodome==4.0.0
 kyber-py==1.2.0
 dilithium-py==1.5.1
 pycryptodome==4.0.0
+reportlab==5.0.1

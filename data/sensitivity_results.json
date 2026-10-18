@@ -1,0 +1,555 @@
+{
+  "weights_version": "v0.1",
+  "weights_sha256": "3f52e451855ab51797bf029a617364574ed9fd3f0c83fda1c84a3e0ea12becf4",
+  "seed": 42,
+  "n_draws": 1000,
+  "stable_fraction_required": 0.95,
+  "note": "Weighted score, not a probability. Reference cases only; formulas and published values, no simulator result.",
+  "baseline": {
+    "RSA-512 no padding": 90.4421477820136,
+    "RSA-1024 no padding": 80.94017169815817,
+    "RSA-2048 OAEP": 50.836610408417485,
+    "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+  },
+  "one_at_a_time": [
+    {
+      "group": "quantum_weights",
+      "weight": "f1",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 89.38016420223734,
+        "RSA-1024 no padding": 79.7113018868424,
+        "RSA-2048 OAEP": 49.44067823157499,
+        "ML-KEM-768 + AES-256-GCM": 4.653846153846153
+      },
+      "order_holds": true,
+      "max_change": 1.3959321768424928
+    },
+    {
+      "group": "quantum_weights",
+      "weight": "f1",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 91.31104343819419,
+        "RSA-1024 no padding": 81.94561063468925,
+        "RSA-2048 OAEP": 51.978736734924986,
+        "ML-KEM-768 + AES-256-GCM": 4.735294117647058
+      },
+      "order_holds": true,
+      "max_change": 1.1421263265075012
+    },
+    {
+      "group": "quantum_weights",
+      "weight": "f2",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 91.00391392169567,
+        "RSA-1024 no padding": 81.73909195634371,
+        "RSA-2048 OAEP": 51.87293508077261,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 1.0363246723551285
+    },
+    {
+      "group": "quantum_weights",
+      "weight": "f2",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 89.93388317944411,
+        "RSA-1024 no padding": 80.21733908360932,
+        "RSA-2048 OAEP": 49.898983323905696,
+        "ML-KEM-768 + AES-256-GCM": 4.700000000000001
+      },
+      "order_holds": true,
+      "max_change": 0.9376270845117887
+    },
+    {
+      "group": "quantum_weights",
+      "weight": "f5",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.886471349488,
+        "RSA-1024 no padding": 81.30544389279807,
+        "RSA-2048 OAEP": 51.1227477983342,
+        "ML-KEM-768 + AES-256-GCM": 4.742857142857142
+      },
+      "order_holds": true,
+      "max_change": 0.44432356747439883
+    },
+    {
+      "group": "quantum_weights",
+      "weight": "f5",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.04014074477485,
+        "RSA-1024 no padding": 80.60968733157921,
+        "RSA-2048 OAEP": 50.577724198492845,
+        "ML-KEM-768 + AES-256-GCM": 4.6625
+      },
+      "order_holds": true,
+      "max_change": 0.40200703723876074
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f3",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 81.98364995902773,
+        "RSA-2048 OAEP": 50.78443649537401,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 1.0434782608695627
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f3",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.44214778201362,
+        "RSA-1024 no padding": 80.05128280926928,
+        "RSA-2048 OAEP": 50.88105485286193,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.8888888888888857
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f4",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.42953340028583,
+        "RSA-2048 OAEP": 50.925972110545146,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.5106382978723332
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f4",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 81.39300188683742,
+        "RSA-2048 OAEP": 50.75736512539862,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.4528301886792576
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f6",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.42953340028583,
+        "RSA-2048 OAEP": 50.79831253607706,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.5106382978723332
+    },
+    {
+      "group": "classical_weights",
+      "weight": "f6",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 81.39300188683742,
+        "RSA-2048 OAEP": 50.87057267256843,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.4528301886792576
+    },
+    {
+      "group": "overall_weights",
+      "weight": "quantum",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 91.31104343819419,
+        "RSA-1024 no padding": 80.85470154378015,
+        "RSA-2048 OAEP": 46.9878276440159,
+        "ML-KEM-768 + AES-256-GCM": 4.727272727272727
+      },
+      "order_holds": true,
+      "max_change": 3.8487827644015837
+    },
+    {
+      "group": "overall_weights",
+      "weight": "quantum",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 89.75944405215743,
+        "RSA-1024 no padding": 81.00732681945517,
+        "RSA-2048 OAEP": 53.86065400901873,
+        "ML-KEM-768 + AES-256-GCM": 4.678571428571428
+      },
+      "order_holds": true,
+      "max_change": 3.024043600601246
+    },
+    {
+      "group": "overall_weights",
+      "weight": "classical",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 89.61103019784088,
+        "RSA-1024 no padding": 81.02192575886757,
+        "RSA-2048 OAEP": 54.51805479175813,
+        "ML-KEM-768 + AES-256-GCM": 4.673913043478261
+      },
+      "order_holds": true,
+      "max_change": 3.681444383340647
+    },
+    {
+      "group": "overall_weights",
+      "weight": "classical",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 91.15013683519777,
+        "RSA-1024 no padding": 80.87052935014646,
+        "RSA-2048 OAEP": 47.70056519297915,
+        "ML-KEM-768 + AES-256-GCM": 4.722222222222221
+      },
+      "order_holds": true,
+      "max_change": 3.1360452154383367
+    },
+    {
+      "group": "project_weights",
+      "weight": "worst_layer",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.94017169815817,
+        "RSA-2048 OAEP": 50.836610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.0
+    },
+    {
+      "group": "project_weights",
+      "weight": "worst_layer",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.94017169815817,
+        "RSA-2048 OAEP": 50.836610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.0
+    },
+    {
+      "group": "project_weights",
+      "weight": "average",
+      "factor": 0.8,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.94017169815817,
+        "RSA-2048 OAEP": 50.836610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.0
+    },
+    {
+      "group": "project_weights",
+      "weight": "average",
+      "factor": 1.2,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.94017169815817,
+        "RSA-2048 OAEP": 50.836610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "order_holds": true,
+      "max_change": 0.0
+    }
+  ],
+  "narrow_random": {
+    "n": 1000,
+    "cases": {
+      "RSA-512 no padding": {
+        "min": 87.5282060466385,
+        "max": 92.86845485603847,
+        "mean": 90.45464418056879,
+        "p05": 88.87155951866878,
+        "p95": 91.87545865399207,
+        "bands": {
+          "Critical": 1000
+        }
+      },
+      "RSA-1024 no padding": {
+        "min": 77.97420227861328,
+        "max": 83.99644453707549,
+        "mean": 80.93687786580375,
+        "p05": 79.21059623711189,
+        "p95": 82.74757284010686,
+        "bands": {
+          "Critical": 1000
+        }
+      },
+      "RSA-2048 OAEP": {
+        "min": 43.560496410317754,
+        "max": 58.19092308251218,
+        "mean": 50.78668249748431,
+        "p05": 45.85368061813567,
+        "p95": 55.778612569052925,
+        "bands": {
+          "High": 590,
+          "Moderate": 410
+        }
+      },
+      "ML-KEM-768 + AES-256-GCM": {
+        "min": 4.577967738617975,
+        "max": 4.785331381801452,
+        "mean": 4.69942379829551,
+        "p05": 4.631959149104759,
+        "p95": 4.761239307425332,
+        "bands": {
+          "Low": 1000
+        }
+      }
+    },
+    "order_fraction": 1.0,
+    "pair_fractions": {
+      "RSA-512 no padding > RSA-1024 no padding": 1.0,
+      "RSA-1024 no padding > RSA-2048 OAEP": 1.0,
+      "RSA-2048 OAEP > ML-KEM-768 + AES-256-GCM": 1.0
+    }
+  },
+  "wide_random": {
+    "n": 1000,
+    "cases": {
+      "RSA-512 no padding": {
+        "min": 69.64348848541994,
+        "max": 99.96777024790515,
+        "mean": 89.30919888502525,
+        "p05": 75.59825112338625,
+        "p95": 98.9808474047438,
+        "bands": {
+          "Critical": 958,
+          "High": 42
+        }
+      },
+      "RSA-1024 no padding": {
+        "min": 55.626271253330856,
+        "max": 98.8005627578866,
+        "mean": 79.2644686788401,
+        "p05": 65.16302235021054,
+        "p95": 93.58491821586432,
+        "bands": {
+          "Critical": 673,
+          "High": 327
+        }
+      },
+      "RSA-2048 OAEP": {
+        "min": 7.173435984600565,
+        "max": 95.90729477284968,
+        "mean": 40.815997406684566,
+        "p05": 11.625701616241233,
+        "p95": 74.21099052635856,
+        "bands": {
+          "Moderate": 421,
+          "High": 288,
+          "Low": 244,
+          "Critical": 47
+        }
+      },
+      "ML-KEM-768 + AES-256-GCM": {
+        "min": 3.549479152406337,
+        "max": 4.999804710963027,
+        "mean": 4.623433256504654,
+        "p05": 3.984699919607508,
+        "p95": 4.9864085893083345,
+        "bands": {
+          "Low": 1000
+        }
+      }
+    },
+    "order_fraction": 1.0,
+    "pair_fractions": {
+      "RSA-512 no padding > RSA-1024 no padding": 1.0,
+      "RSA-1024 no padding > RSA-2048 OAEP": 1.0,
+      "RSA-2048 OAEP > ML-KEM-768 + AES-256-GCM": 1.0
+    }
+  },
+  "assumption_grid": [
+    {
+      "x_years": 2,
+      "z_years": 5,
+      "overall": {
+        "RSA-512 no padding": 91.9421477820136,
+        "RSA-1024 no padding": 82.44017169815817,
+        "RSA-2048 OAEP": 52.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.800000000000001
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "High",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 2,
+      "z_years": 10,
+      "overall": {
+        "RSA-512 no padding": 85.9421477820136,
+        "RSA-1024 no padding": 76.44017169815817,
+        "RSA-2048 OAEP": 46.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.4
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "Moderate",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 2,
+      "z_years": 20,
+      "overall": {
+        "RSA-512 no padding": 82.9421477820136,
+        "RSA-1024 no padding": 73.44017169815817,
+        "RSA-2048 OAEP": 43.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.199999999999999
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "High",
+        "RSA-2048 OAEP": "Moderate",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 5,
+      "z_years": 5,
+      "overall": {
+        "RSA-512 no padding": 94.9421477820136,
+        "RSA-1024 no padding": 85.44017169815817,
+        "RSA-2048 OAEP": 55.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 5.0
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "High",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 5,
+      "z_years": 10,
+      "overall": {
+        "RSA-512 no padding": 90.4421477820136,
+        "RSA-1024 no padding": 80.94017169815817,
+        "RSA-2048 OAEP": 50.836610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.699999999999999
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "High",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 5,
+      "z_years": 20,
+      "overall": {
+        "RSA-512 no padding": 85.1921477820136,
+        "RSA-1024 no padding": 75.69017169815817,
+        "RSA-2048 OAEP": 45.586610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.35
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "Moderate",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 10,
+      "z_years": 5,
+      "overall": {
+        "RSA-512 no padding": 94.9421477820136,
+        "RSA-1024 no padding": 85.44017169815817,
+        "RSA-2048 OAEP": 55.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 5.0
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "High",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 10,
+      "z_years": 10,
+      "overall": {
+        "RSA-512 no padding": 94.9421477820136,
+        "RSA-1024 no padding": 85.44017169815817,
+        "RSA-2048 OAEP": 55.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 5.0
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "High",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    },
+    {
+      "x_years": 10,
+      "z_years": 20,
+      "overall": {
+        "RSA-512 no padding": 88.9421477820136,
+        "RSA-1024 no padding": 79.44017169815817,
+        "RSA-2048 OAEP": 49.336610408417485,
+        "ML-KEM-768 + AES-256-GCM": 4.6
+      },
+      "bands": {
+        "RSA-512 no padding": "Critical",
+        "RSA-1024 no padding": "Critical",
+        "RSA-2048 OAEP": "Moderate",
+        "ML-KEM-768 + AES-256-GCM": "Low"
+      }
+    }
+  ],
+  "decision": {
+    "one_at_a_time_all_hold": true,
+    "narrow_order_fraction": 1.0,
+    "reference_order_stable": true,
+    "largest_single_weight_effects": [
+      {
+        "group": "overall_weights",
+        "weight": "quantum",
+        "factor": 0.8,
+        "max_change": 3.8487827644015837
+      },
+      {
+        "group": "overall_weights",
+        "weight": "classical",
+        "factor": 0.8,
+        "max_change": 3.681444383340647
+      },
+      {
+        "group": "overall_weights",
+        "weight": "classical",
+        "factor": 1.2,
+        "max_change": 3.1360452154383367
+      }
+    ]
+  }
+}

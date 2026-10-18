@@ -21,7 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from qiskit import QuantumCircuit  # noqa: E402
 from qiskit.quantum_info import Statevector  # noqa: E402
 
-from q2_arith import (modular_adder_phi, modular_subtractor_phi, phi_add,  # noqa: E402 # type: ignore
+import math  # noqa: E402
+
+from q2_arith import (controlled_modmul, modular_adder_phi,  # noqa: E402 # type: ignore
+                      modular_exponentiation, modular_subtractor_phi, phi_add,
                       qft_dagger_gates, qft_gates)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -183,6 +186,74 @@ class TestModularSubtractor(unittest.TestCase):
         with self.assertRaises(ValueError):
             modular_subtractor_phi(QuantumCircuit(5), [0, 1, 2, 3], 4, 7, 7)
 
+def check_multiplier(test, N):
+    n = N.bit_length()
+    x, b = list(range(n)), list(range(n, 2 * n + 1))
+    anc, c = 2 * n + 1, 2 * n + 2
+    for a in range(1, N):
+        if math.gcd(a, N) != 1:
+            continue
+        for xv, cv in itertools.product(range(N), (0, 1)):
+            qc = QuantumCircuit(2 * n + 3)
+            load(qc, x, xv)
+            if cv:
+                qc.x(c)
+            controlled_modmul(qc, c, x, b, anc, a, N)
+            v = outcome(qc)
+            msg = f"N={N} a={a} x={xv} c={cv}"
+            test.assertEqual(v & (2 ** n - 1), (a * xv) % N if cv else xv, "x: " + msg)
+            test.assertEqual((v >> n) & (2 ** (n + 1) - 1), 0, "b not returned to 0: " + msg)
+            test.assertEqual((v >> (2 * n + 1)) & 1, 0, "ancilla not 0: " + msg)
+            test.assertEqual((v >> (2 * n + 2)) & 1, cv, "control changed: " + msg)
+
+
+def check_exponentiation(test, N, a_values, m):
+    n = N.bit_length()
+    x, b = list(range(n)), list(range(n, 2 * n + 1))
+    anc = 2 * n + 1
+    e = list(range(2 * n + 2, 2 * n + 2 + m))
+    for a in a_values:
+        for ev in range(2 ** m):
+            qc = QuantumCircuit(2 * n + 2 + m)
+            qc.x(x[0])                       # x starts as |1>
+            load(qc, e, ev)
+            modular_exponentiation(qc, e, x, b, anc, a, N)
+            v = outcome(qc)
+            msg = f"N={N} a={a} e={ev}"
+            test.assertEqual(v & (2 ** n - 1), pow(a, ev, N), "a^e mod N: " + msg)
+            test.assertEqual((v >> n) & (2 ** (n + 1) - 1), 0, "b not 0: " + msg)
+            test.assertEqual((v >> (2 * n + 1)) & 1, 0, "ancilla not 0: " + msg)
+            test.assertEqual(v >> (2 * n + 2), ev, "exponent changed: " + msg)
+
+
+class TestModularMultiplier(unittest.TestCase):
+    def test_all_inputs_small_moduli(self):
+        for N in (3, 5):
+            with self.subTest(N=N):
+                check_multiplier(self, N)
+
+    def test_bad_inputs(self):
+        qc = QuantumCircuit(12)
+        with self.assertRaises(ValueError):
+            controlled_modmul(qc, 8, [0, 1, 2], [3, 4, 5, 6], 7, 3, 6)   # gcd(3, 6) != 1
+        with self.assertRaises(ValueError):
+            controlled_modmul(qc, 8, [0, 1], [3, 4, 5], 7, 2, 5)         # N too big for x
+
+    @unittest.skipUnless(SLOW, "set SLOW_TESTS=1 to run N = 7")
+    def test_n7_slow(self):
+        check_multiplier(self, 7)
+
+
+class TestModularExponentiation(unittest.TestCase):
+    def test_n3_all_exponents(self):
+        check_exponentiation(self, 3, (2,), m=3)
+
+    def test_n5_all_bases(self):
+        check_exponentiation(self, 5, (2, 3, 4), m=2)
+
+    @unittest.skipUnless(SLOW, "set SLOW_TESTS=1 to run N = 15")
+    def test_n15_slow(self):
+        check_exponentiation(self, 15, (7,), m=2)
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,12 +30,18 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+try:                                   # streamlit run puts src/ on the path, tests use the package
+    from src import risk_page_data as rpd
+except ImportError:
+    import risk_page_data as rpd
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
 CBOM_MD = os.path.join(ROOT, "docs", "cbom.md")
 FACTS = os.path.join(ROOT, "data", "manual_facts.json")
 DEMO = os.path.join(ROOT, "data", "demo_results.json")
+RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
 TARGETS = [os.path.join(ROOT, "data", "targets", "steganography"),
            os.path.join(ROOT, "data", "targets", "final-year-part1")]
 
@@ -164,7 +170,7 @@ st.markdown(f"""
 <span class="chip">{len(entries)} CBOM entries</span>
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
-PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "📈 Qubit calculator",
+PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "📈 Qubit calculator",
          "🎬 Shor's demo (live)", "🛡️ Migration demo", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
@@ -573,6 +579,58 @@ def page_migration():
 
 
 # ================================================================ PIPELINE
+def page_risk():
+    """Risk score per project: percentage, band, quantum and classical parts, Z scenarios."""
+    scores = rpd.load_scores(RISK)
+    if scores is None:
+        st.info("outputs/risk_scores.json not found. Run: python -m src.risk_run")
+        return
+    st.caption("A transparent weighted score from 0 to 100. It is not a probability that someone "
+               "attacks the project. Weights " + str(scores.get("weights_version", "?")) +
+               " are our choice and live in data/risk_weights.json. Only layer L1 (message "
+               "encryption) is scored so far. The quantum part uses logical-qubit estimates "
+               "(2n+3), not a simulator run.")
+    text, agreed = rpd.assumptions_note(scores)
+    st.markdown(f'<div class="note {"good" if agreed else ""}">{esc(text)}</div>', unsafe_allow_html=True)
+
+    rows = rpd.summary_rows(scores)
+    for r in rows:
+        color = rpd.BAND_COLORS.get(r["band"], "#90A4AE")
+        st.markdown(f"#### {esc(r['project'].title())} project")
+        kpi_row([("Project score", f"{r['score']}%", color), ("Band", r["band"], color),
+                 ("Quantum part", f"{r['quantum']}%", "#7C4DFF"),
+                 ("Classical weakness", f"{r['classical']}%", "#00B0FF"),
+                 ("Range over Z = 5 to 20", f"{r['z_min']} to {r['z_max']}%", "#FFAB40")])
+
+    c1, c2 = st.columns(2)
+    d = pd.DataFrame(rows).melt(id_vars="project", value_vars=["quantum", "classical", "score"],
+                                var_name="part", value_name="percent")
+    c1.plotly_chart(style(px.bar(d, x="project", y="percent", color="part", barmode="group",
+                                 range_y=[0, 100], title="Quantum, classical and overall (central Z)")),
+                    key="risk_bar")
+    sc = pd.DataFrame(rpd.scenario_rows(scores))
+    c2.plotly_chart(style(px.line(sc, x="z", y="overall", color="project", markers=True,
+                                  range_y=[0, 100],
+                                  title="Overall score by years until a large quantum computer (Z)")),
+                    key="risk_z")
+
+    for name, p in scores["projects"].items():
+        st.markdown(f"#### {esc(name.title())}: factor breakdown (layer L1)")
+        k = p["L1"]["key_in_use"]
+        st.caption(f"Key in use: {k['modulus_bits']}-bit ({k['label']}). Construction: "
+                   f"{p['L1']['construction']}. Exposure: {p['L1']['exposure']}.")
+        fr = pd.DataFrame([{"Factor": a, "Value (0 to 100)": b if b is not None else "n/a", "Meaning": c}
+                           for a, b, c in rpd.factor_rows(p)])
+        st.dataframe(fr, hide_index=True)
+        var = rpd.variant_rows(p)
+        if var:
+            st.caption("Other key sizes in the code, scored with the same engine (not the layer score):")
+            st.dataframe(pd.DataFrame(var), hide_index=True)
+        left = ", ".join(p.get("layers_not_scored_yet", []))
+        if left:
+            st.markdown(f'<div class="note">Layers not scored yet: {esc(left)}.</div>', unsafe_allow_html=True)
+
+
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
@@ -623,5 +681,6 @@ def page_pipeline():
 
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,
+ "🎯 Risk score": page_risk,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo,
  "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()

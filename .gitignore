@@ -23,5 +23,5 @@ output/
 
 venv/
 .venv/
-__pycache__/
-*.pyc
+
+outputs/risk_scores_*.json

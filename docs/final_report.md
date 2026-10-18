@@ -68,7 +68,7 @@ Scanner output (`findings.json`): **26 findings**, RSA 25 and SHA 1.
 | Part1 | `app.py:239, 385`, `main.py:101` | 256 | Really used, breakable by an ordinary computer today |
 | Part1 | `rsa_utils.py:27, 28, 30` | 512 | **Default value only** (`is_default`); callers pass `bits=128` |
 | Steganography | `rsa_crypto.py:48, 49` | 1024 | **Default value only**; the UI default is 2048 |
-| Part1 | `r_channel_stego.py` | n < 256 (about 8 bits) | Manual note, the scanner cannot read it |
+| Part1 | `r_channel_stego.py` | n < 256 (at most 8 bits) | Manual note, the scanner cannot read it |
 
 **Note:** `risk_report.md` marks these rows in a Basis column (`default only` or `in use`). The 512-bit and 1024-bit rows are defaults, so their figures (1027 and 2051 qubits) describe unused defaults, not the sizes in actual use.
 

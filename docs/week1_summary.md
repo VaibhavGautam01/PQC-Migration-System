@@ -30,7 +30,7 @@ Note: part1 later went from 15 to 17 findings after the Week 2 cross-check added
 ## Manual notes (the scanner cannot determine these)
 
 1. part1 real use: `generate_keypair(bits=128)` gives a 256-bit modulus. The 256/512 in `rsa_utils.py` is only a default value.
-2. part1 `r_channel_stego.py`: modulus `n < 256`, about 8 bits.
+2. part1 `r_channel_stego.py`: modulus `n < 256`, at most 8 bits.
 3. steganography: key size is chosen in the UI (1024 / 2048 / 3072, default 2048).
 4. `bits=N` is assumed to be the per-prime size (modulus = 2 x N), based on the `rsa_utils.py` docstring.
 

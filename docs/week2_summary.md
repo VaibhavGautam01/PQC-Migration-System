@@ -12,7 +12,9 @@
 
 **Open questions (need a team decision before the CBOM is final)**
 
-1. Modulus size for `Final-Year-project-part1`: the findings review says 256 bits (and under 256 as a number, about 8 bits, in `r_channel_stego.py`); the attack work reports a 31-bit modulus. These need to be reconciled and the overrides confirmed.
+1. Modulus size for `Final-Year-project-part1`: the findings review says 256 bits (and under 256 as a number, at most 8 bits, in `r_channel_stego.py`); the attack work reports a 31-bit modulus. These need to be reconciled and the overrides confirmed.
 2. Default key size of `Secure-Video-Steganography`: 1024 or 2048 bits.
+
+**Resolved in Week 3:** see `docs/week3_summary.md` and `docs/size_decisions.md` (part1: 256 bits in use and at most 8 bits in the R-channel module; video: UI default 2048). The 31-bit figure comes from a local small-key copy, not the project of record.
 
 **Limits:** the mapping is theoretical (which attack applies, not that it is practical today). Padding and small-key weaknesses are reported separately from the quantum score. All quantum work runs on a simulator at toy sizes.

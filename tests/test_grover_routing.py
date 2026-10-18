@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
-import quantum_mapper as qm  # noqa: E402
+import quantum_mapper as qm  # type: ignore # noqa: E402
 
 
 class TestGroverRouting(unittest.TestCase):

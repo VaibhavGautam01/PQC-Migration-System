@@ -1,0 +1,39 @@
+{
+  "version": "v0.1",
+  "note": "Single source of truth for the risk model. Changes are documented in docs/risk_model.md.",
+  "f1_quantum_exposure": {
+    "shor_broken": 100,
+    "nist_pqc": 5,
+    "grover_effective_bits": [
+      {"min_bits": 128, "score": 10},
+      {"min_bits": 112, "score": 30},
+      {"min_bits": 0, "score": 60}
+    ]
+  },
+  "f2_qubit_cost": {"min": 20, "max": 100},
+  "f3_classical_key_weakness": [
+    {"max_bits": 512, "score": 100},
+    {"max_bits": 1023, "score": 80},
+    {"max_bits": 2047, "score": 50},
+    {"max_bits": null, "score": 10}
+  ],
+  "f4_construction_weakness": {
+    "no_padding_deterministic": 100,
+    "deterministic_or_oracle": 80,
+    "padding_without_aead": 40,
+    "oaep": 5,
+    "aead": 5
+  },
+  "f5_data_lifetime": {"x_years": 5, "y_years": 2, "z_years": 10, "z_scenarios": [5, 10, 20]},
+  "f6_exposure": {"keyless": 100, "bypassable": 90, "keyed": 30},
+  "quantum_weights": {"f1": 0.50, "f2": 0.25, "f5": 0.25},
+  "classical_weights": {"f3": 0.40, "f4": 0.30, "f6": 0.30},
+  "overall_weights": {"quantum": 0.60, "classical": 0.40},
+  "project_weights": {"worst_layer": 0.7, "average": 0.3},
+  "bands": [
+    {"below": 25, "name": "Low"},
+    {"below": 50, "name": "Moderate"},
+    {"below": 75, "name": "High"},
+    {"below": null, "name": "Critical"}
+  ]
+}

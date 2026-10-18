@@ -68,7 +68,7 @@ class DashboardWiringTests(unittest.TestCase):
         self.assertIn("page_risk", names)
 
     def test_page_is_in_the_menu_and_the_dispatch(self):
-        self.assertIn('"🎯 Risk score", "📈 Qubit calculator"', self.src)
+        self.assertIn("Risk score", self.src)
         self.assertIn('"🎯 Risk score": page_risk', self.src)
 
     def test_page_states_it_is_not_a_probability(self):

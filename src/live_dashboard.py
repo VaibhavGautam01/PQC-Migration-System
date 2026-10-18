@@ -35,6 +35,11 @@ try:                                   # streamlit run puts src/ on the path, te
 except ImportError:
     import risk_page_data as rpd
 
+try:
+    from src import advisor_page_data as adv
+except ImportError:
+    import advisor_page_data as adv
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
@@ -42,6 +47,7 @@ CBOM_MD = os.path.join(ROOT, "docs", "cbom.md")
 FACTS = os.path.join(ROOT, "data", "manual_facts.json")
 DEMO = os.path.join(ROOT, "data", "demo_results.json")
 RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
+ADVISOR = os.path.join(ROOT, "data", "pqc_recommendations.json")
 TARGETS = [os.path.join(ROOT, "data", "targets", "steganography"),
            os.path.join(ROOT, "data", "targets", "final-year-part1")]
 
@@ -170,7 +176,7 @@ st.markdown(f"""
 <span class="chip">{len(entries)} CBOM entries</span>
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
-PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "📈 Qubit calculator",
+PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🧭 PQC advisor", "📈 Qubit calculator",
          "🎬 Shor's demo (live)", "🛡️ Migration demo", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
@@ -579,6 +585,40 @@ def page_migration():
 
 
 # ================================================================ PIPELINE
+def page_advisor():
+    """Layer by layer: which post-quantum technique goes where, with sizes and reasons."""
+    recs = adv.load_records(ADVISOR)
+    if recs is None:
+        st.info("data/pqc_recommendations.json not found or incomplete. "
+                "It holds the layer-by-layer advisor records.")
+        return
+    st.caption("ML-KEM, ML-DSA and AES-GCM are classical algorithms that resist quantum attacks. "
+               "They run on ordinary computers and are not quantum circuits. The prototypes use "
+               "kyber-py and dilithium-py, which are educational pure-Python libraries and "
+               "not production crypto; liboqs-python is the production route.")
+    st.dataframe(pd.DataFrame(adv.overview_rows(recs)), hide_index=True)
+
+    chart = pd.DataFrame(adv.size_chart_rows(recs))
+    if len(chart):
+        st.plotly_chart(style(px.bar(chart, x="layer", y="bytes", text="bytes",
+                                     title="Bytes each recommendation adds (keys, ciphertext, tags)",
+                                     color_discrete_sequence=["#7C4DFF"])), key="adv_sizes")
+        st.caption("A bigger hidden payload is easier to detect, so the steganalysis scripts "
+                   "measure it. The hiding layer is not part of the quantum percentage.")
+
+    for r in recs:
+        color = adv.status_color(r)
+        st.markdown(f'<div class="card">{badge(r["layer"], color)} <b>{esc(r["layer_name"])}</b><br>'
+                    f'<span style="color:#aab2e0">Today:</span> {esc(r["today"])}<br>'
+                    f'<span style="color:#aab2e0">Use:</span> <b>{esc(r["technique"])}</b> '
+                    f'({esc(r["parameter_set"])}, {esc(r["standard"])})<br>'
+                    f'<span style="color:#aab2e0">Status:</span> {esc(r["quantum_status"])}<br>'
+                    f'<span style="color:#aab2e0">Sizes:</span> {esc(adv.sizes_text(r))}<br><br>'
+                    f'<b>Why:</b> {esc(r["rationale"])}<br>'
+                    f'<b>Where:</b> {esc(r["where_to_use"])}<br>'
+                    f'<b>Trade-offs:</b> {esc(r["trade_offs"])}</div>', unsafe_allow_html=True)
+
+
 def page_risk():
     """Risk score per project: percentage, band, quantum and classical parts, Z scenarios."""
     scores = rpd.load_scores(RISK)
@@ -682,5 +722,6 @@ def page_pipeline():
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,
  "🎯 Risk score": page_risk,
+ "🧭 PQC advisor": page_advisor,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo,
  "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()

@@ -1,0 +1,209 @@
+{
+  "note": "Transparent weighted score, not a probability. Simulator-based quantum inputs, toy size.",
+  "weights_version": "v0.1",
+  "assumptions": {
+    "X_secret_years": 5,
+    "Y_migration_years": 2,
+    "Z_scenarios": [
+      10,
+      5,
+      20
+    ],
+    "agreed_with_sir": true,
+    "agreed_date": "2026-10-17"
+  },
+  "projects": {
+    "image": {
+      "project": "image",
+      "repo": "Final-Year-project-part1",
+      "layers_scored": [
+        "L1"
+      ],
+      "layers_not_scored_yet": [
+        "L2",
+        "L3",
+        "L5"
+      ],
+      "L1": {
+        "key_in_use": {
+          "label": "main path, generate_keypair(bits=128)",
+          "modulus_bits": 256,
+          "primary": true
+        },
+        "construction": "no_padding_deterministic",
+        "exposure": "keyless",
+        "score": {
+          "f1": 100.0,
+          "f2": 76.3,
+          "f3": 100.0,
+          "f4": 100.0,
+          "f5_eff": 70.0,
+          "f6_eff": 100.0,
+          "quantum": 86.6,
+          "classical": 100.0,
+          "overall": 91.9,
+          "band": "Critical"
+        },
+        "z_scenarios": {
+          "10": {
+            "f1": 100.0,
+            "f2": 76.3,
+            "f3": 100.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 100.0,
+            "quantum": 86.6,
+            "classical": 100.0,
+            "overall": 91.9,
+            "band": "Critical"
+          },
+          "5": {
+            "f1": 100.0,
+            "f2": 76.3,
+            "f3": 100.0,
+            "f4": 100.0,
+            "f5_eff": 100.0,
+            "f6_eff": 100.0,
+            "quantum": 94.1,
+            "classical": 100.0,
+            "overall": 96.4,
+            "band": "Critical"
+          },
+          "20": {
+            "f1": 100.0,
+            "f2": 76.3,
+            "f3": 100.0,
+            "f4": 100.0,
+            "f5_eff": 35.0,
+            "f6_eff": 100.0,
+            "quantum": 77.8,
+            "classical": 100.0,
+            "overall": 86.7,
+            "band": "Critical"
+          }
+        },
+        "variants": [
+          {
+            "label": "R-channel module, generate_small_keypair()",
+            "modulus_bits": 8,
+            "f1": 100.0,
+            "f2": 100.0,
+            "f3": 100.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 100.0,
+            "quantum": 92.5,
+            "classical": 100.0,
+            "overall": 95.5,
+            "band": "Critical"
+          }
+        ]
+      },
+      "project_score": 91.9,
+      "band": "Critical",
+      "z_range": {
+        "min": 86.7,
+        "max": 96.4
+      },
+      "evidence": {
+        "L1_findings": 21
+      }
+    },
+    "video": {
+      "project": "video",
+      "repo": "Secure-Video-Steganography",
+      "layers_scored": [
+        "L1"
+      ],
+      "layers_not_scored_yet": [
+        "L2",
+        "L3",
+        "L5"
+      ],
+      "L1": {
+        "key_in_use": {
+          "label": "UI default",
+          "modulus_bits": 2048,
+          "primary": true
+        },
+        "construction": "no_padding_deterministic",
+        "exposure": "bypassable",
+        "score": {
+          "f1": 100.0,
+          "f2": 46.2,
+          "f3": 10.0,
+          "f4": 100.0,
+          "f5_eff": 70.0,
+          "f6_eff": 90.0,
+          "quantum": 79.1,
+          "classical": 61.0,
+          "overall": 71.8,
+          "band": "High"
+        },
+        "z_scenarios": {
+          "10": {
+            "f1": 100.0,
+            "f2": 46.2,
+            "f3": 10.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 90.0,
+            "quantum": 79.1,
+            "classical": 61.0,
+            "overall": 71.8,
+            "band": "High"
+          },
+          "5": {
+            "f1": 100.0,
+            "f2": 46.2,
+            "f3": 10.0,
+            "f4": 100.0,
+            "f5_eff": 100.0,
+            "f6_eff": 90.0,
+            "quantum": 86.6,
+            "classical": 61.0,
+            "overall": 76.3,
+            "band": "Critical"
+          },
+          "20": {
+            "f1": 100.0,
+            "f2": 46.2,
+            "f3": 10.0,
+            "f4": 100.0,
+            "f5_eff": 35.0,
+            "f6_eff": 90.0,
+            "quantum": 70.3,
+            "classical": 61.0,
+            "overall": 66.6,
+            "band": "High"
+          }
+        },
+        "variants": [
+          {
+            "label": "UI option / function default",
+            "modulus_bits": 1024,
+            "f1": 100.0,
+            "f2": 56.3,
+            "f3": 50.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 90.0,
+            "quantum": 81.6,
+            "classical": 77.0,
+            "overall": 79.7,
+            "band": "Critical"
+          }
+        ]
+      },
+      "project_score": 71.8,
+      "band": "High",
+      "z_range": {
+        "min": 66.6,
+        "max": 76.3
+      },
+      "evidence": {
+        "L1_findings": 9
+      }
+    }
+  }
+}

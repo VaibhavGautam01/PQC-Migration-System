@@ -8,7 +8,7 @@ Tarun regenerates them on Week 1 Day 5 and names the commit.
 |---|---|---|
 | L1 Message encryption | textbook RSA, no padding. 21 findings | textbook RSA, no padding. 9 findings |
 | L2 Frame-selection key | none (keyless embedding). 0 findings | SHA-256 of passphrase (`frame_selector.py:32`). 1 finding |
-| L3 Integrity | none (manual) | CRC32, works as key-check oracle (manual, **no scanner finding**) |
+| L3 Integrity | none (manual) | CRC32 (`rsa_crypto.py:137` computed, `:180` checked on decrypt), works as key-check oracle (manual, **no scanner finding**; pinned 4514806) |
 | L5 Signature | none (manual) | none (manual) |
 | Hiding layer | LSB, measured by steganalysis, not scored | XOR-LSB, same |
 
@@ -27,6 +27,6 @@ Tarun regenerates them on Week 1 Day 5 and names the commit.
 | `frame_selector.py` | 32 | L2 | SHA-256 digest reaches frames 0-255 only |
 
 ## Open points
-1. L3 CRC32 line numbers in the video project: confirm by hand, then store in `manual_facts.json` (the target submodules are empty in the zip).
+1. L3 CRC32 confirmed in the video project: checksum computed at `rsa_crypto.py:137`, checked on decrypt at `rsa_crypto.py:180` (pinned 4514806). Declared in `src/layers.py`.
 2. Image L1 has several key sizes (8, 256, 512 default). Score the size in use per call site, and flag default-only sizes (F3 rule).
 3. Image L2/L3/L5 are "none" layers. How a missing layer enters the weakest-link score is decided with Yatharth (risk_model.md).

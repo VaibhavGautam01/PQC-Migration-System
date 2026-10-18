@@ -31,7 +31,8 @@ LAYER_DEFS = {
     "video": {
         "L1": {"name": "Message encryption", "today": "textbook RSA, no padding", "source": "scanner"},
         "L2": {"name": "Frame-selection key", "today": "SHA-256 of passphrase", "source": "scanner"},
-        "L3": {"name": "Integrity", "today": "CRC32 (key-check oracle)", "source": "manual"},
+        "L3": {"name": "Integrity", "today": "CRC32 (key-check oracle)", "source": "manual",
+               "evidence": {"file": "rsa_crypto.py", "lines": [137, 180], "pinned": "4514806"}},
         "L5": {"name": "Signature", "today": "none", "source": "manual"},
     },
 }

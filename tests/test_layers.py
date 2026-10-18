@@ -33,6 +33,10 @@ class LayerMapTests(unittest.TestCase):
     def test_manual_layers_declared(self):
         self.assertEqual(layers.LAYER_DEFS["video"]["L3"]["source"], "manual")
 
+    def test_l3_crc32_evidence(self):
+        ev = layers.LAYER_DEFS["video"]["L3"]["evidence"]
+        self.assertEqual(ev["lines"], [137, 180])
+
 
 if __name__ == "__main__":
     unittest.main()

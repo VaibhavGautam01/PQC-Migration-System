@@ -23,3 +23,5 @@ output/
 
 venv/
 .venv/
+
+outputs/risk_scores_*.json

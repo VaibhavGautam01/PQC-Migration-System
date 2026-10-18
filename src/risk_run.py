@@ -123,9 +123,11 @@ def run(projects=("image", "video"), out_path=None, findings_path=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Score the image and/or video project.")
     ap.add_argument("--project", choices=["image", "video", "both"], default="both")
+    ap.add_argument("--out", default=None,
+                    help="output file (default outputs/risk_scores.json)")
     args = ap.parse_args(argv)
     projects = ("image", "video") if args.project == "both" else (args.project,)
-    out = run(projects)
+    out = run(projects, out_path=args.out)
     for p, r in out["projects"].items():
         s = r["L1"]["score"]
         print(f"{p}: {r['project_score']}% ({r['band']}), "

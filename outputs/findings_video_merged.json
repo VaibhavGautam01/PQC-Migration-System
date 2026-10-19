@@ -1,0 +1,114 @@
+{
+  "scanner_version": "0.3.0",
+  "scan_root": "C:\\Users\\Lenovo\\Documents\\video_stego_project_updated",
+  "summary": {
+    "total_findings": 5,
+    "files_with_findings": 2,
+    "by_pattern": {
+      "HASH-SHA2-HASHLIB": 1,
+      "RSA-PUBLIC-EXP": 1,
+      "RSA-MANUAL-PHI": 1,
+      "RSA-MODEXP": 2
+    },
+    "by_primitive": {
+      "SHA": 1,
+      "RSA": 4
+    }
+  },
+  "findings": [
+    {
+      "file": "frame_selector.py",
+      "line": 32,
+      "primitive": "SHA",
+      "pattern_id": "HASH-SHA2-HASHLIB",
+      "description": "SHA-2 hash (hashlib)",
+      "confidence": "high",
+      "key_size": 256,
+      "snippet": "digest_hex = hashlib.sha256(secret_key.encode(\"utf-8\")).hexdigest()"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 45,
+      "primitive": "RSA",
+      "pattern_id": "RSA-PUBLIC-EXP",
+      "description": "Common RSA public exponent e = 65537",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "e = 65537"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 53,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PHI",
+      "description": "Euler totient (p-1)(q-1), textbook RSA key setup",
+      "confidence": "high",
+      "key_size": null,
+      "snippet": "phi = (p - 1) * (q - 1)"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 142,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "c = pow(m, e, n)",
+      "edge_flag": "NO_PADDING"
+    },
+    {
+      "file": "rsa_crypto.py",
+      "line": 170,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "m = pow(c, d, n)",
+      "edge_flag": "NO_PADDING"
+    }
+  ],
+  "edge_cases": {
+    "padding": [
+      {
+        "flag": "NO_PADDING",
+        "file": "C:\\Users\\Lenovo\\Documents\\video_stego_project_updated\\rsa_crypto.py",
+        "line": 142,
+        "detail": "RSA used without OAEP/PKCS1 padding (textbook RSA)"
+      },
+      {
+        "flag": "NO_PADDING",
+        "file": "C:\\Users\\Lenovo\\Documents\\video_stego_project_updated\\rsa_crypto.py",
+        "line": 170,
+        "detail": "RSA used without OAEP/PKCS1 padding (textbook RSA)"
+      }
+    ],
+    "indirect_usage": [
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "app.py",
+        "line": 21,
+        "detail": "imports crypto module 'rsa_crypto' (rsa_crypto)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "app.py",
+        "line": 24,
+        "detail": "imports crypto module 'frame_selector' (frame_selector)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "pipeline.py",
+        "line": 21,
+        "detail": "imports crypto module 'frame_selector' (sha256_select_indices)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "pipeline.py",
+        "line": 23,
+        "detail": "imports crypto module 'rsa_crypto' (rsa_crypto)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "scanner_version": "0.3.0",
+  "scan_root": "C:\\Users\\Lenovo\\Documents\\Final-Year-project-part1-main",
+  "summary": {
+    "total_findings": 13,
+    "files_with_findings": 2,
+    "by_pattern": {
+      "RSA-MANUAL-PHI": 2,
+      "RSA-MANUAL-MODINV": 1,
+      "RSA-MANUAL-PRIME-LIB": 5,
+      "RSA-PUBLIC-EXP": 2,
+      "RSA-MANUAL-INVFUNC": 1,
+      "RSA-MODEXP": 2
+    },
+    "by_primitive": {
+      "RSA": 13
+    }
+  },
+  "findings": [
+    {
+      "file": "r_channel_stego.py",
+      "line": 52,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PHI",
+      "description": "Euler totient (p-1)(q-1), textbook RSA key setup",
+      "confidence": "high",
+      "key_size": null,
+      "snippet": "phi = (p - 1) * (q - 1)"
+    },
+    {
+      "file": "r_channel_stego.py",
+      "line": 59,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-MODINV",
+      "description": "Modular inverse via pow(e,-1,phi), private-exponent computation",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "d = pow(e, -1, phi)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 22,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-LIB",
+      "description": "Prime generation via library helper, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": 16,
+      "snippet": "return randprime(low, high)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 32,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-LIB",
+      "description": "Prime generation via library helper, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "p = generate_prime(bits)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 33,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-LIB",
+      "description": "Prime generation via library helper, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "q = generate_prime(bits)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 35,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-LIB",
+      "description": "Prime generation via library helper, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "q = generate_prime(bits)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 38,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PHI",
+      "description": "Euler totient (p-1)(q-1), textbook RSA key setup",
+      "confidence": "high",
+      "key_size": null,
+      "snippet": "phi = (p - 1) * (q - 1)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 41,
+      "primitive": "RSA",
+      "pattern_id": "RSA-PUBLIC-EXP",
+      "description": "Common RSA public exponent e = 65537",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "e = 65537"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 43,
+      "primitive": "RSA",
+      "pattern_id": "RSA-PUBLIC-EXP",
+      "description": "Common RSA public exponent e = 65537",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "e = 3  # Fall back to a smaller e if phi(n) is smaller than 65537"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 46,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-PRIME-LIB",
+      "description": "Prime generation via library helper, possible hand-rolled RSA key",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "e = nextprime(e)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 48,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MANUAL-INVFUNC",
+      "description": "Modular inverse helper call, private-exponent computation",
+      "confidence": "medium",
+      "key_size": null,
+      "snippet": "d = mod_inverse(e, phi)"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 54,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "return pow(m, e, n)",
+      "edge_flag": "NO_PADDING"
+    },
+    {
+      "file": "rsa_utils.py",
+      "line": 59,
+      "primitive": "RSA",
+      "pattern_id": "RSA-MODEXP",
+      "description": "3-argument modular exponentiation, possible textbook RSA encrypt/decrypt",
+      "confidence": "low",
+      "key_size": null,
+      "snippet": "return pow(c, d, n)",
+      "edge_flag": "NO_PADDING"
+    }
+  ],
+  "edge_cases": {
+    "padding": [
+      {
+        "flag": "NO_PADDING",
+        "file": "C:\\Users\\Lenovo\\Documents\\Final-Year-project-part1-main\\rsa_utils.py",
+        "line": 54,
+        "detail": "RSA used without OAEP/PKCS1 padding (textbook RSA)"
+      },
+      {
+        "flag": "NO_PADDING",
+        "file": "C:\\Users\\Lenovo\\Documents\\Final-Year-project-part1-main\\rsa_utils.py",
+        "line": 59,
+        "detail": "RSA used without OAEP/PKCS1 padding (textbook RSA)"
+      }
+    ],
+    "indirect_usage": [
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "app.py",
+        "line": 25,
+        "detail": "imports crypto module 'r_channel_stego' (generate_small_keypair, embed_r_channel, extract_r_channel)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "app.py",
+        "line": 27,
+        "detail": "imports crypto module 'rsa_utils' (generate_keypair)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "main.py",
+        "line": 12,
+        "detail": "imports crypto module 'r_channel_stego' (generate_small_keypair, embed_r_channel, extract_r_channel)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "main.py",
+        "line": 14,
+        "detail": "imports crypto module 'rsa_utils' (generate_keypair)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "rsa_lsb_stego.py",
+        "line": 11,
+        "detail": "imports crypto module 'rsa_utils' (encrypt_text, decrypt_text)"
+      },
+      {
+        "flag": "INDIRECT_USAGE",
+        "file": "r_channel_stego.py",
+        "line": 23,
+        "detail": "imports crypto module 'rsa_utils' (encrypt_int, decrypt_int)"
+      }
+    ]
+  }
+}

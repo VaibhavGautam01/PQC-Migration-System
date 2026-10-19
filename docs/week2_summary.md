@@ -25,8 +25,8 @@ Slow tests (`SLOW_TESTS=1`): not run for this summary.
   The "after" score was below "before" in every weight draw.
 - Q2: gate-level Shor uses 2n + 3 qubits (11 for N = 15, 13 for N = 21, 15 for
   N = 35). Aer simulator, toy size. N = 15 (a = 7, 200 shots, seed 12345) phase outcomes y = 0, 64, 128, 192 (of 256), factors 3 x 5 in 70 percent of shots;
-  N = 21 (a = 2, 200 shots) y = 0, 171, 341, 512, 683, 853 (of 1024), factors 3 x 7 in 82 percent of shots. One-iteration time for N = 35: <fill seconds from your run of --time-iteration> (estimate per
-  shot: <fill>, an ESTIMATE). Chi-square, change-the-question and diagram file for Q2 are still pending.
+  N = 21 (a = 2, 200 shots) y = 0, 171, 341, 512, 683, 853 (of 1024), factors 3 x 7 in 82 percent of shots. One-iteration time for N = 35: 0.561 s (15 qubits, transpile 51.3 s; Aer simulator, toy size) (estimate per
+  shot: about 6.7 s, an ESTIMATE: 12 iterations x one-iteration time). Chi-square, change-the-question and diagram file for Q2 are still pending.
 - Hybrid review (`python src/hybrid_review.py`): 0 FAIL items (D1 to D11 and static check all PASS), findings sent to Uday:
   none needed; kyber-py is educational and not hardened, production route is liboqs-python.
 

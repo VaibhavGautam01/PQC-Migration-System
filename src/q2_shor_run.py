@@ -29,6 +29,7 @@ from qiskit_aer import AerSimulator  # noqa: E402
 
 from q2_arith import controlled_modmul  # noqa: E402
 from q2_shor import build_shor_ipea, shor_layout  # noqa: E402
+import shor_post as SP  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNS_FILE = ROOT / "data" / "quantum_runs.json"
@@ -40,25 +41,11 @@ SEED_TRANSPILE = 12345
 def factors_from_measurement(y: int, m: int, a: int, N: int):
     """Classical post-processing for one measured value y (phase = y / 2**m).
 
-    Continued fractions give a candidate period r; r (or a small multiple of
-    it) is accepted only if a**r mod N == 1. Returns (p, q) or None.
+    Uses the shared helpers in shor_post.py (continued fractions, then gcd).
+    The period check lives there, not here, so this runner has no period loop
+    (static guard, rule 8). Returns (p, q) or None.
     """
-    if y == 0:
-        return None
-    r0 = Fraction(y, 2 ** m).limit_denominator(N).denominator
-    for k in (1, 2, 3, 4):
-        r = r0 * k
-        if pow(a, r, N) == 1:
-            if r % 2:
-                return None
-            u = pow(a, r // 2, N)
-            if u == N - 1:
-                return None
-            for f in (math.gcd(u - 1, N), math.gcd(u + 1, N)):
-                if f not in (1, N):
-                    return tuple(sorted((f, N // f)))
-            return None
-    return None
+    return SP.factors_from_measurement(y, m, a, N)
 
 
 def run_shor(a: int, N: int, shots: int, m: int = None):

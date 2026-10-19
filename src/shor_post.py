@@ -91,6 +91,12 @@ def factors_from_period(a: int, N: int, r: int):
     return None
 
 
+def factors_from_measurement(y: int, m: int, a: int, N: int):
+    """One measured value y -> factors of N (or None). Post-processing only:
+    decode_outcome (continued fractions) then the gcd step."""
+    return factors_from_period(a, N, decode_outcome(y, m, a, N))
+
+
 def analyse_counts(counts: dict, m: int, a: int, N: int) -> dict:
     """Post-process a whole measured histogram (bitstring -> count).
 

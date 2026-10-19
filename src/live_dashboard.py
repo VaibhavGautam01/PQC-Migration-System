@@ -40,6 +40,11 @@ try:
 except ImportError:
     import advisor_page_data as adv
 
+try:
+    from src import before_after_page_data as ba
+except ImportError:
+    import before_after_page_data as ba
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
@@ -48,6 +53,7 @@ FACTS = os.path.join(ROOT, "data", "manual_facts.json")
 DEMO = os.path.join(ROOT, "data", "demo_results.json")
 RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
 ADVISOR = os.path.join(ROOT, "data", "pqc_recommendations.json")
+BEFORE_AFTER = os.path.join(ROOT, "outputs", "before_after_image.json")
 TARGETS = [os.path.join(ROOT, "data", "targets", "steganography"),
            os.path.join(ROOT, "data", "targets", "final-year-part1")]
 
@@ -176,7 +182,7 @@ st.markdown(f"""
 <span class="chip">{len(entries)} CBOM entries</span>
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
-PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🧭 PQC advisor", "📈 Qubit calculator",
+PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🔁 Before and after", "🧭 PQC advisor", "📈 Qubit calculator",
          "🎬 Shor's demo (live)", "🛡️ Migration demo", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
@@ -671,6 +677,58 @@ def page_risk():
             st.markdown(f'<div class="note">Layers not scored yet: {esc(left)}.</div>', unsafe_allow_html=True)
 
 
+def page_before_after():
+    """Image project before and after migration, scored by the same engine."""
+    data = ba.load(BEFORE_AFTER)
+    if data is None:
+        st.info("outputs/before_after_image.json not found. Run: python src/before_after.py "
+                "--out outputs/before_after_image.json")
+        return
+    st.caption("Image project, layer L1 (message encryption). Before: textbook RSA, no padding. "
+               "After: ML-KEM-768 + AES-256-GCM. Both rows use the same engine and weights "
+               + str(data.get("weights_version", "?")) + ". A weighted score, not a probability. "
+               "Formulas and weights only; no simulator result. The prototype is educational "
+               "code (kyber-py), not production crypto.")
+    bits = st.radio("RSA modulus size in the code", ba.size_options(data), horizontal=True,
+                    format_func=lambda b: f"{b} bits", key="ba_bits")
+    row = ba.row_for(data, bits)
+    s = ba.summary(row)
+    kpi_row([("Before", f"{s['before']:.1f}%", rpd.BAND_COLORS.get(s["before_band"], "#90A4AE")),
+             ("After", f"{s['after']:.1f}%", rpd.BAND_COLORS.get(s["after_band"], "#90A4AE")),
+             ("Drop", f"{s['drop']:.1f} points", "#7C4DFF"),
+             ("Band", f"{s['before_band']} to {s['after_band']}", "#00B0FF")])
+
+    c1, c2 = st.columns(2)
+    parts = pd.DataFrame(ba.parts_rows(row)).melt(id_vars="part", var_name="setup", value_name="percent")
+    c1.plotly_chart(style(px.bar(parts, x="part", y="percent", color="setup", barmode="group",
+                                 range_y=[0, 100], title="Quantum, classical and overall")),
+                    key="ba_parts")
+    sc = pd.DataFrame(ba.scenario_rows(row)).melt(id_vars="z", var_name="setup", value_name="overall")
+    c2.plotly_chart(style(px.line(sc, x="z", y="overall", color="setup", markers=True,
+                                  range_y=[0, 100],
+                                  title="Overall score by years until a large quantum computer (Z)")),
+                    key="ba_z")
+
+    st.markdown("#### Factor breakdown")
+    fr = pd.DataFrame(ba.factor_rows(row))
+    for col in ("before", "after"):
+        fr[col] = fr[col].map(lambda v: "n/a" if pd.isna(v) else f"{v:.1f}")
+    st.dataframe(fr, hide_index=True)
+    st.caption("n/a means the factor does not apply to that setup (for example, no RSA modulus "
+               "after migration).")
+
+    st.markdown("#### Why the after score is not zero")
+    st.dataframe(pd.DataFrame(ba.floor_rows(data)), hide_index=True)
+    st.markdown('<div class="note">The hiding layer (LSB embedding) is measured by steganalysis and '
+                'is not part of this score. A larger post-quantum payload can be easier to detect; '
+                'see the steganalysis results.</div>', unsafe_allow_html=True)
+
+    st.markdown("#### Does the result depend on the weights?")
+    st.dataframe(pd.DataFrame(ba.sensitivity_rows(row)), hide_index=True)
+    st.caption(f"{data.get('n_draws', '?')} random weight draws per row (seed {data.get('seed', '?')}). "
+               "A value of 1.0 means the after score was lower than the before score in every draw.")
+
+
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
@@ -722,6 +780,7 @@ def page_pipeline():
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,
  "🎯 Risk score": page_risk,
+ "🔁 Before and after": page_before_after,
  "🧭 PQC advisor": page_advisor,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo,
  "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()

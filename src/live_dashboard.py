@@ -45,6 +45,11 @@ try:
 except ImportError:
     import before_after_page_data as ba
 
+try:
+    from src import quantum_lab_page_data as ql
+except ImportError:
+    import quantum_lab_page_data as ql
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
@@ -183,7 +188,7 @@ st.markdown(f"""
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
 PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🔁 Before and after", "🧭 PQC advisor", "📈 Qubit calculator",
-         "🎬 Shor's demo (live)", "🛡️ Migration demo", "⚙️ Pipeline"]
+         "🎬 Shor's demo (live)", "🔬 Quantum Lab", "🛡️ Migration demo", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
 st.sidebar.caption("Refresh the page after re-running the pipeline.")
@@ -729,6 +734,69 @@ def page_before_after():
                "A value of 1.0 means the after score was lower than the before score in every draw.")
 
 
+def page_quantum_lab():
+    """Real quantum circuits run on a simulator: evidence, histograms, diagrams, checks."""
+    runs = ql.load_runs()
+    st.caption("Aer simulator, toy size. Every number here comes from a saved run in "
+               "data/quantum_runs.json. Nothing on this page ran on real quantum hardware. "
+               "Q1 builds its unitaries as matrices on a classical computer, so it does not scale "
+               "and its gate counts are not resource estimates.")
+    if not runs:
+        st.info("data/quantum_runs.json has no runs yet. Run: python src/q1_run.py")
+        return
+    n, errors, warnings = ql.gate_summary()
+    problems = ql.guard_problems()
+    kpi_row([("Saved runs", n, "#00B0FF"),
+             ("Algorithms", len({r["algorithm"] for r in runs}), "#B388FF"),
+             ("Evidence gate", "PASS" if not errors else "FAIL", "#00E676" if not errors else "#FF1744"),
+             ("Static guard", "PASS" if not problems else "FAIL", "#00E676" if not problems else "#FF1744")])
+
+    t1, t2, t3, t4 = st.tabs(["Evidence table", "Histogram", "Circuit diagram", "Verification"])
+    with t1:
+        st.dataframe(pd.DataFrame(ql.evidence_rows(runs)), hide_index=True)
+        st.markdown("#### Which Must items have evidence")
+        st.dataframe(pd.DataFrame(ql.progress_rows(runs)), hide_index=True)
+    labels = ql.run_labels(runs)
+    with t2:
+        pick = st.selectbox("Run", range(len(runs)), format_func=lambda i: labels[i], key="ql_hist")
+        run = runs[pick]
+        h = pd.DataFrame(ql.histogram_rows(run))
+        st.plotly_chart(style(px.bar(h, x="bitstring", y="count",
+                                     title=f"Measured outcomes, top {len(h)} ({ql.label_of(run)})",
+                                     color_discrete_sequence=["#7C4DFF"]).update_xaxes(type="category")),
+                        key="ql_hist_chart")
+        res = run.get("result", {})
+        st.write(f"Found from the measurements: {res}. Success rate {run['success_rate']:.1%} "
+                 f"over {run['shots']} shots, seed {run['seed_simulator']}.")
+        chi = run.get("chi_square")
+        if chi:
+            st.caption(f"Chi-square against the ideal distribution: statistic {chi['statistic']}, "
+                       f"{chi['dof']} degrees of freedom, p = {chi['p_value']}. "
+                       "A large p means the measured counts match theory.")
+    with t3:
+        pick = st.selectbox("Run", range(len(runs)), format_func=lambda i: labels[i], key="ql_diag")
+        run = runs[pick]
+        text, total, path = ql.diagram_text(run)
+        if text is None:
+            st.warning(f"Diagram file not found: {path}")
+        else:
+            st.caption(f"{path}: {total} lines, showing the first 40. {run['qubits']} qubits, "
+                       f"depth {run['depth']}. {ql.label_of(run)}.")
+            st.code(text, language="text")
+            with open(os.path.join(ROOT, path), "rb") as fh:
+                st.download_button("Download full diagram", fh.read(), os.path.basename(path), "text/plain")
+    with t4:
+        st.dataframe(pd.DataFrame(ql.verification_rows(runs, errors, warnings, problems)), hide_index=True)
+        st.markdown("#### Change-the-question test (rule 6)")
+        st.dataframe(pd.DataFrame(ql.question_rows(runs)), hide_index=True)
+        for p in problems:
+            st.error(p)
+        for e in errors:
+            st.error(e)
+        st.caption("The static guard only catches obvious shortcuts. A second person also reviews "
+                   "every circuit builder.")
+
+
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
@@ -782,5 +850,5 @@ def page_pipeline():
  "🎯 Risk score": page_risk,
  "🔁 Before and after": page_before_after,
  "🧭 PQC advisor": page_advisor,
- "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo,
+ "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo, "🔬 Quantum Lab": page_quantum_lab,
  "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()

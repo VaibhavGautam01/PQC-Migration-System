@@ -1,0 +1,153 @@
+{
+  "weights_version": "v0.1",
+  "weights_sha256": "3f52e451855ab51797bf029a617364574ed9fd3f0c83fda1c84a3e0ea12becf4",
+  "project": "image",
+  "layer": "L1 message encryption",
+  "seed": 42,
+  "n_draws": 1000,
+  "label": "formulas and weights only; no simulator result; weighted score, not a probability",
+  "after_floor": [
+    {
+      "factor": "F1 quantum exposure (NIST PQC level)",
+      "value": 5.0
+    },
+    {
+      "factor": "F4 construction (AES-GCM, not zero by design)",
+      "value": 5.0
+    },
+    {
+      "factor": "F5_eff data lifetime, gated by F1",
+      "value": 3.5
+    },
+    {
+      "factor": "F6_eff exposure, gated by F4",
+      "value": 5.0
+    }
+  ],
+  "rows": [
+    {
+      "modulus_bits": 256,
+      "before": {
+        "f1": 100.0,
+        "f2": 76.27309236529362,
+        "f3": 100.0,
+        "f4": 100.0,
+        "f5_eff": 70.0,
+        "f6_eff": 100.0,
+        "quantum": 86.5682730913234,
+        "classical": 100.0,
+        "overall": 91.94096385479403,
+        "band": "Critical"
+      },
+      "after": {
+        "f1": 5.0,
+        "f2": null,
+        "f3": null,
+        "f4": 5.0,
+        "f5_eff": 3.5,
+        "f6_eff": 5.0,
+        "quantum": 4.5,
+        "classical": 5.0,
+        "overall": 4.699999999999999,
+        "band": "Low"
+      },
+      "drop": 87.24096385479403,
+      "project_before": 91.94096385479403,
+      "project_after": 4.699999999999999,
+      "z_scenarios": {
+        "5": {
+          "before": 96.44096385479403,
+          "after": 5.0
+        },
+        "10": {
+          "before": 91.94096385479403,
+          "after": 4.699999999999999
+        },
+        "20": {
+          "before": 86.69096385479403,
+          "after": 4.35
+        }
+      },
+      "sensitivity": {
+        "narrow_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 89.41246442953472,
+          "before_max": 93.93821409000535,
+          "after_min": 4.577967738617975,
+          "after_max": 4.785331381801452,
+          "smallest_drop": 84.83391770972686
+        },
+        "wide_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 72.3506971756623,
+          "before_max": 99.97224943485122,
+          "after_min": 3.549479152406337,
+          "after_max": 4.999804710963027,
+          "smallest_drop": 68.74532460463331
+        }
+      }
+    },
+    {
+      "modulus_bits": 512,
+      "before": {
+        "f1": 100.0,
+        "f2": 66.28098521342405,
+        "f3": 100.0,
+        "f4": 100.0,
+        "f5_eff": 70.0,
+        "f6_eff": 100.0,
+        "quantum": 84.07024630335602,
+        "classical": 100.0,
+        "overall": 90.4421477820136,
+        "band": "Critical"
+      },
+      "after": {
+        "f1": 5.0,
+        "f2": null,
+        "f3": null,
+        "f4": 5.0,
+        "f5_eff": 3.5,
+        "f6_eff": 5.0,
+        "quantum": 4.5,
+        "classical": 5.0,
+        "overall": 4.699999999999999,
+        "band": "Low"
+      },
+      "drop": 85.7421477820136,
+      "project_before": 90.44214778201359,
+      "project_after": 4.699999999999999,
+      "z_scenarios": {
+        "5": {
+          "before": 94.9421477820136,
+          "after": 5.0
+        },
+        "10": {
+          "before": 90.4421477820136,
+          "after": 4.699999999999999
+        },
+        "20": {
+          "before": 85.1921477820136,
+          "after": 4.35
+        }
+      },
+      "sensitivity": {
+        "narrow_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 87.5282060466385,
+          "before_max": 92.86845485603847,
+          "after_min": 4.577967738617975,
+          "after_max": 4.785331381801452,
+          "smallest_drop": 82.94965932683064
+        },
+        "wide_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 69.64348848541994,
+          "before_max": 99.96777024790515,
+          "after_min": 3.549479152406337,
+          "after_max": 4.999804710963027,
+          "smallest_drop": 66.0940093330136
+        }
+      }
+    }
+  ]
+}

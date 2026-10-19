@@ -11,7 +11,7 @@ Formulas and weights only; no quantum simulation is involved.
 | 512 bits | Before: textbook RSA, no padding | 84.1 | 100.0 | 90.4 | Critical |
 | 512 bits | After: ML-KEM-768 + AES-256-GCM | 4.5 | 5.0 | 4.7 | Low |
 
-Size used in the report: <256 or 512, with the basis from outputs/risk_scores.json>
+Size used in the report: 256 bits (the size in use: `generate_keypair(bits=128)` in app.py and main.py; 512 bits is only an unused default in rsa_utils.py). Basis: docs/size_decisions.md.
 
 ## Z scenarios (overall %, before to after)
 

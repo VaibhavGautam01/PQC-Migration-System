@@ -7,7 +7,7 @@ Every result names the version it was measured on.
 All quantum results: **Aer simulator, toy size.**
 Versions: qiskit 2.5.2, qiskit-aer 0.17.2, Python 3.14.5, kyber-py 1.2.0, pycryptodome 4.0.0.
 Pinned image project: `final-year-part1` at commit `bb6d944`.
-Code commit for sections 1 to 4: **[FILL: run `git rev-parse --short HEAD` right after your last commit on this branch]**.
+Code commit for sections 1 to 4: `eb1a442` (last change to the scripts; branch `vaibhav/week2-attacks`).
 
 ## 1. Q1 Shor phase estimation (circuit built from gates, run on Aer)
 
@@ -77,12 +77,16 @@ Embedder (a): reference LSB (a stand-in, not the pinned project's code). Result:
 
 Embedder (b): the pinned project's own `lsb_stego.py` (commit `bb6d944`) embed/extract on `lena_stego.png`. Its wire format
 is a 32-bit length header followed by the blob as hex text. Result: **12 of 12 checks passed.**
-Every tampered copy was rejected, but not always by the same layer: flips in the nonce and the GCM tag reached
-decryption and failed authentication (HybridDecryptError); flips in the length header, the first and middle KEM
-ciphertext bytes and the first AES ciphertext byte were rejected earlier with a plain ValueError.
-**[FILL: after re-running with the updated script, copy the short error text printed after "ValueError" and say what it
-shows, e.g. a hex-parsing error in the extraction step. Do not claim these were caught by the GCM tag unless the text
-says so.]** The reference-embedder run (a) shows the GCM tag catching KEM, nonce, tag and AES-part flips.
+Every tampered copy was rejected. Latest run (`outputs/attack_pqc_image_pinned.json`):
+- flip in the 32-bit length header: rejected while parsing, before decryption (ValueError, non-hexadecimal text in the
+  extracted string);
+- flips in the KEM ciphertext (2 positions), the nonce, the GCM tag and the AES ciphertext: all rejected by the AES-GCM
+  authentication check (HybridDecryptError, "authentication failed"), 5 of 5.
+An earlier run of the same script (new random key and blob each run) rejected three of the payload flips with a plain
+ValueError instead. The likely reason, not separately verified: the pinned format stores the blob as hex text, flipping
+the lowest bit of a hex character's code can turn 'a' or 'f' into a non-hex character, and the parser then rejects it
+before decryption. Either way the result is a loud failure and never a wrong plaintext; the script prints which layer
+rejected each flip. The reference-embedder run (a) shows the GCM tag catching KEM, nonce, tag and AES-part flips.
 
 Conclusion: the encryption layer no longer gives the attacker anything to factor or forge, and a flipped payload bit
 is rejected. Extraction still works, so the hiding layer is unchanged; its weakness is not a quantum weakness.

@@ -82,7 +82,14 @@ class ReferenceCarrier:
 
 
 class PinnedCarrier:
-    """Uses the pinned image project's own embed_lsb / extract_lsb on a hex string of the blob."""
+    """Uses the pinned image project's own embed_lsb / extract_lsb on a hex string of the blob.
+
+    The pinned wire format (from its lsb_stego.py): [32-bit header = payload length in bytes]
+    then the payload as UTF-8 text, one bit per pixel byte, most significant bit first. The blob
+    is hidden as hex text, so blob byte k is stored as two characters = 16 pixel bytes starting
+    at pixel byte 32 + 16 * k.
+    """
+    HEADER_PIXEL_BYTES = 32
 
     def __init__(self, project_dir):
         sys.path.insert(0, str(project_dir))
@@ -98,12 +105,12 @@ class PinnedCarrier:
         return bytes.fromhex(self._extract(str(stego_png)))
 
     def region_bytes(self, blob_len):
-        return 8 * 2 * blob_len                                 # 2 hex chars per byte, 8 bits per char
+        return self.HEADER_PIXEL_BYTES + 16 * blob_len          # header + 2 hex chars (16 bits) per byte
 
     def pixel_byte_of(self, blob_offset):
-        return 8 * 2 * blob_offset                              # first bit of the blob byte's hex chars
+        return self.HEADER_PIXEL_BYTES + 16 * blob_offset       # first bit of the blob byte's hex chars
 
-    header_pixel_byte = None       # the pinned project's own format is not parsed here
+    header_pixel_byte = 31         # the last bit of the 32-bit length header (changes the length by 1)
 
 
 # ------------------------------------------------------------------ small helpers

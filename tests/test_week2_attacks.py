@@ -55,6 +55,61 @@ class AttackOnPqcImage(unittest.TestCase):
         self.assertTrue(any("AES ciphertext" in c["check"] for c in checks))
 
 
+FAKE_PINNED = '''
+# stand-in for the pinned lsb_stego.py, written from its documented wire format:
+# [32-bit header = payload length in bytes][UTF-8 payload], 1 bit per pixel byte, MSB first
+import numpy as np
+from PIL import Image
+def embed_lsb(cover_path, secret_text, out_path):
+    arr = np.array(Image.open(cover_path).convert("RGB")); flat = arr.reshape(-1).copy()
+    data = secret_text.encode("utf-8")
+    bits = np.array([int(b) for b in format(len(data), "032b")] +
+                    [int(b) for byte in data for b in format(byte, "08b")], dtype=np.uint8)
+    flat[:bits.size] = (flat[:bits.size] & 0xFE) | bits
+    Image.fromarray(flat.reshape(arr.shape)).save(out_path)
+def extract_lsb(path):
+    flat = np.array(Image.open(path).convert("RGB")).reshape(-1)
+    n = int("".join(str(b) for b in (flat[:32] & 1)), 2)
+    if 32 + n * 8 > flat.size:
+        raise ValueError("length exceeds this image's capacity")
+    return np.packbits(flat[32:32 + n * 8] & 1).tobytes().decode("utf-8")
+'''
+
+
+@unittest.skipUnless(HAS_PQC, "kyber-py / pycryptodome / Pillow not installed")
+class PinnedFormatSupport(unittest.TestCase):
+    """The pinned project's real format (32-bit length header + hex text) with a stand-in module."""
+
+    def setUp(self):
+        import sys
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        (Path(self.tmp.name) / "lsb_stego.py").write_text(FAKE_PINNED, encoding="utf-8")
+        sys.modules.pop("lsb_stego", None)
+        self.atk = load_script("attack_pqc_image", "extras/attack_pqc_image.py")
+        self.st = load_script("steganalysis_pqc", "extras/steganalysis_pqc.py")
+
+    def tearDown(self):
+        import sys
+        sys.modules.pop("lsb_stego", None)
+        self.tmp.cleanup()
+
+    def test_attack_checks_all_pass_through_the_pinned_functions(self):
+        carrier = self.atk.PinnedCarrier(self.tmp.name)
+        checks = self.atk.run_attack(carrier, b"HELLO", 200)
+        self.assertEqual([c for c in checks if not c["ok"]], [])
+        self.assertTrue(any("length header" in c["check"] for c in checks))
+
+    def test_hex_text_is_found_after_the_32_bit_header(self):
+        cover = np.random.default_rng(6).integers(0, 256, 20000, dtype=np.uint8)
+        data = b"0123456789abcdef" * 8
+        bits = np.unpackbits(np.frombuffer(len(data).to_bytes(4, "big") + data, dtype=np.uint8))
+        stego = cover.copy()
+        stego[:bits.size] = (stego[:bits.size] & 0xFE) | bits
+        self.assertFalse(self.st.hex_header_found(stego))                  # not at bit 0
+        self.assertTrue(self.st.hex_header_found(stego, 64, skip_bits=32))  # right after the header
+
+
 @unittest.skipUnless(HAS_PQC, "kyber-py / pycryptodome / Pillow not installed")
 class SteganalysisPqc(unittest.TestCase):
     @classmethod

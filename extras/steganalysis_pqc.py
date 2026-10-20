@@ -64,6 +64,7 @@ from src import shor_post as SP                             # noqa: E402  (chi-s
 
 HEX_RE = re.compile(rb"[0-9a-f]+")
 RULE_P = 0.5                                                # the repo's "EMBEDDED" threshold
+PINNED_HEADER_BITS = 32                                     # pinned lsb_stego.py: 32-bit length prefix
 
 
 # ------------------------------------------------------------------ textbook RSA payload
@@ -124,9 +125,10 @@ def embed_bytes(cover_flat: np.ndarray, data: bytes) -> np.ndarray:
     return out
 
 
-def lsb_stream_bytes(flat: np.ndarray, nbytes: int) -> bytes:
-    """Read `nbytes` bytes back from the start of the LSB plane (1 bit per pixel byte, MSB first)."""
-    return np.packbits(flat[:nbytes * 8] & 1).tobytes()
+def lsb_stream_bytes(flat: np.ndarray, nbytes: int, skip_bits: int = 0) -> bytes:
+    """Read `nbytes` bytes from the LSB plane (1 bit per pixel byte, MSB first), starting at bit
+    `skip_bits` (0 = the very start; 32 = just after the pinned project's length header)."""
+    return np.packbits(flat[skip_bits:skip_bits + nbytes * 8] & 1).tobytes()
 
 
 # ------------------------------------------------------------------ the detectors
@@ -148,9 +150,13 @@ def chi_square_pair_p(values: np.ndarray) -> float:
     return SP.chi2_sf(stat, int(keep.sum()) - 1)
 
 
-def hex_header_found(flat: np.ndarray, nchars: int = 64) -> bool:
-    """Does the start of the LSB stream read as a clean hex string? (a tell-tale of hex payloads)"""
-    return HEX_RE.fullmatch(lsb_stream_bytes(flat, nchars)) is not None
+def hex_header_found(flat: np.ndarray, nchars: int = 64, skip_bits: int = 0) -> bool:
+    """Does the LSB stream read as a clean hex string? (a tell-tale of hex payloads)
+
+    skip_bits=0 checks the very start (reference embedder). The pinned project writes a 32-bit
+    length header first, so for it the hex text starts at bit 32: use skip_bits=32.
+    """
+    return HEX_RE.fullmatch(lsb_stream_bytes(flat, nchars, skip_bits)) is not None
 
 
 def length_header_plausible(flat: np.ndarray) -> bool:
@@ -159,8 +165,10 @@ def length_header_plausible(flat: np.ndarray) -> bool:
     return hybrid.OVERHEAD <= length <= flat.size // 8 - 4
 
 
-def analyse(flat: np.ndarray, region_bytes: int, capacity_bytes: int, payload_bytes: int = 0) -> dict:
-    """All detector numbers for one image. `region_bytes` = pixel bytes the payload covers."""
+def analyse(flat: np.ndarray, region_bytes: int, capacity_bytes: int, payload_bytes: int = 0,
+            hex_skip_bits: int = 0) -> dict:
+    """All detector numbers for one image. `region_bytes` = pixel bytes the payload covers.
+    `hex_skip_bits` = bits to skip before looking for hex text (32 for the pinned embedder)."""
     region = flat[:region_bytes] if region_bytes else flat
     p_all, p_region = chi_square_pair_p(flat), chi_square_pair_p(region)
     return {
@@ -171,7 +179,7 @@ def analyse(flat: np.ndarray, region_bytes: int, capacity_bytes: int, payload_by
         "chi_p_whole": None if np.isnan(p_all) else round(p_all, 4),
         "chi_p_region": None if np.isnan(p_region) else round(p_region, 4),
         "flagged_region": bool(p_region > RULE_P) if not np.isnan(p_region) else False,
-        "hex_header_found": hex_header_found(flat),
+        "hex_header_found": hex_header_found(flat, 64, hex_skip_bits),
         "length_header_found": length_header_plausible(flat),
     }
 
@@ -234,14 +242,17 @@ def run_experiment(cover, lengths, rsa_bits, project=None):
                 rows.append({"message_chars": length, "payload": kind, "payload_bytes": len(data),
                              "note": "does not fit in this cover"})
                 continue
+            skip = 0
             if project and kind != "PQC raw":
                 out_png = Path(tmp) / "pinned_stego.png"
                 pinned_embed(project, cover_png, data.decode(), out_png)
                 stego = np.array(Image.open(out_png).convert("RGB")).reshape(-1)
+                skip = PINNED_HEADER_BITS          # the pinned format starts with a 32-bit length header
+                region += skip
             else:
                 stego = embed_bytes(flat_cover, data)
             rows.append({"message_chars": length, "payload": kind,
-                         **analyse(stego, region, capacity, len(data))})
+                         **analyse(stego, region, capacity, len(data), skip)})
     return rows, {"rsa_bits": rsa_bits, "cover_bytes": int(flat_cover.size),
                   "capacity_bytes": capacity}
 

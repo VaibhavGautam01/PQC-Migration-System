@@ -12,8 +12,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from q2_shor import build_shor_ipea, shor_layout  # type: ignore # noqa: E402
-from q2_shor_run import factors_from_measurement, run_shor  # type: ignore # noqa: E402
-
+from shor_run import factors_from_measurement, run_shor # type: ignore
 SLOW = os.environ.get("SLOW_TESTS") == "1"
 FORBIDDEN = ("sympy", "factorint", "n_order", "multiplicative_order", "isprime", "primefactors")
 

@@ -5,9 +5,9 @@ Runs the Q2 gate-level Shor circuit (q2_shor.py), does the classical
 post-processing the algorithm defines (continued fractions, gcd), times one
 iteration, and builds the evidence record (rule 4).
 
-  python src/q2_shor_run.py --N 15 --a 7 --shots 20
-  python src/q2_shor_run.py --time-iteration --N 35 --a 2
-  python src/q2_shor_run.py --N 15 --a 7 --shots 20 --save   # append to data/quantum_runs.json
+  python src/shor_run.py --N 15 --a 7 --shots 20
+  python src/shor_run.py --time-iteration --N 35 --a 2
+  python src/shor_run.py --N 15 --a 7 --shots 20 --save   # append to data/quantum_runs.json
 
 All results: Aer simulator, toy size.
 """

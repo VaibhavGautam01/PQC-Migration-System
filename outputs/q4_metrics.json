@@ -1,0 +1,205 @@
+{
+  "label": "transpiler metrics and Aer simulator, toy size",
+  "qiskit_version": "2.5.2",
+  "basis": [
+    "cx",
+    "rz",
+    "sx",
+    "x"
+  ],
+  "optimization_level": 0,
+  "seed_transpiler": 12345,
+  "moduli": {
+    "4": 15,
+    "5": 21,
+    "6": 35,
+    "7": 77,
+    "8": 221
+  },
+  "rows": [
+    {
+      "n": 4,
+      "N": 15,
+      "a": 2,
+      "phase_bits": 8,
+      "qubits_2n_plus_3": 11,
+      "iteration": {
+        "qubits": 11,
+        "depth": 2794,
+        "size": 4472,
+        "two_qubit_gates": 1784,
+        "gate_counts": {
+          "rz": 2484,
+          "cx": 1784,
+          "sx": 188,
+          "x": 16
+        },
+        "transpile_seconds": 5.13
+      },
+      "estimate_full_depth": 22352,
+      "estimate_full_two_qubit_gates": 14272,
+      "estimate_note": "ESTIMATE: 2n x one iteration; the full circuit adds only single-qubit corrections",
+      "simulated_iteration": {
+        "x_after": 2,
+        "x_expected": 2,
+        "correct": true,
+        "run_seconds": 0.065
+      },
+      "full": {
+        "qubits": 11,
+        "depth": 22352,
+        "size": 35868,
+        "two_qubit_gates": 14272,
+        "gate_counts": {
+          "rz": 19904,
+          "cx": 14272,
+          "sx": 1520,
+          "x": 129,
+          "if_else": 28,
+          "measure": 8,
+          "reset": 7
+        },
+        "transpile_seconds": 1.16
+      },
+      "full_vs_estimate_two_qubit": 1.0
+    },
+    {
+      "n": 5,
+      "N": 21,
+      "a": 2,
+      "phase_bits": 10,
+      "qubits_2n_plus_3": 13,
+      "iteration": {
+        "qubits": 13,
+        "depth": 4168,
+        "size": 7333,
+        "two_qubit_gates": 2976,
+        "gate_counts": {
+          "rz": 4063,
+          "cx": 2976,
+          "sx": 274,
+          "x": 20
+        },
+        "transpile_seconds": 0.21
+      },
+      "estimate_full_depth": 41680,
+      "estimate_full_two_qubit_gates": 29760,
+      "estimate_note": "ESTIMATE: 2n x one iteration; the full circuit adds only single-qubit corrections",
+      "simulated_iteration": {
+        "x_after": 2,
+        "x_expected": 2,
+        "correct": true,
+        "run_seconds": 0.106
+      },
+      "full": {
+        "qubits": 13,
+        "depth": 41680,
+        "size": 73455,
+        "two_qubit_gates": 29760,
+        "gate_counts": {
+          "rz": 40670,
+          "cx": 29760,
+          "sx": 2760,
+          "x": 201,
+          "if_else": 45,
+          "measure": 10,
+          "reset": 9
+        },
+        "transpile_seconds": 2.42
+      },
+      "full_vs_estimate_two_qubit": 1.0
+    },
+    {
+      "n": 6,
+      "N": 35,
+      "a": 2,
+      "phase_bits": 12,
+      "qubits_2n_plus_3": 15,
+      "iteration": {
+        "qubits": 15,
+        "depth": 5814,
+        "size": 10974,
+        "two_qubit_gates": 4404,
+        "gate_counts": {
+          "rz": 6170,
+          "cx": 4404,
+          "sx": 376,
+          "x": 24
+        },
+        "transpile_seconds": 0.33
+      },
+      "estimate_full_depth": 69768,
+      "estimate_full_two_qubit_gates": 52848,
+      "estimate_note": "ESTIMATE: 2n x one iteration; the full circuit adds only single-qubit corrections",
+      "simulated_iteration": {
+        "x_after": 2,
+        "x_expected": 2,
+        "correct": true,
+        "run_seconds": 0.327
+      },
+      "full": {
+        "qubits": 15,
+        "depth": 69768,
+        "size": 131850,
+        "two_qubit_gates": 52848,
+        "gate_counts": {
+          "rz": 74088,
+          "cx": 52848,
+          "sx": 4536,
+          "x": 289,
+          "if_else": 66,
+          "measure": 12,
+          "reset": 11
+        },
+        "transpile_seconds": 3.9
+      },
+      "full_vs_estimate_two_qubit": 1.0
+    },
+    {
+      "n": 7,
+      "N": 77,
+      "a": 2,
+      "phase_bits": 14,
+      "qubits_2n_plus_3": 17,
+      "iteration": {
+        "qubits": 17,
+        "depth": 7732,
+        "size": 15803,
+        "two_qubit_gates": 6404,
+        "gate_counts": {
+          "rz": 8877,
+          "cx": 6404,
+          "sx": 494,
+          "x": 28
+        },
+        "transpile_seconds": 0.48
+      },
+      "estimate_full_depth": 108248,
+      "estimate_full_two_qubit_gates": 89656,
+      "estimate_note": "ESTIMATE: 2n x one iteration; the full circuit adds only single-qubit corrections"
+    },
+    {
+      "n": 8,
+      "N": 221,
+      "a": 2,
+      "phase_bits": 16,
+      "qubits_2n_plus_3": 19,
+      "iteration": {
+        "qubits": 19,
+        "depth": 9922,
+        "size": 21604,
+        "two_qubit_gates": 8688,
+        "gate_counts": {
+          "rz": 12256,
+          "cx": 8688,
+          "sx": 628,
+          "x": 32
+        },
+        "transpile_seconds": 0.6
+      },
+      "estimate_full_depth": 158752,
+      "estimate_full_two_qubit_gates": 139008,
+      "estimate_note": "ESTIMATE: 2n x one iteration; the full circuit adds only single-qubit corrections"
+    }
+  ]
+}

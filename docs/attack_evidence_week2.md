@@ -5,9 +5,9 @@ If an attack_evidence.md already exists on main, move these sections into it and
 Every result names the version it was measured on.
 
 All quantum results: **Aer simulator, toy size.**
-Versions: qiskit **[FILL: `pip show qiskit`]**, qiskit-aer **[FILL: `pip show qiskit-aer`]**,
-Python **[FILL: `python --version`]**, kyber-py **[FILL: `pip show kyber-py`]**, pycryptodome **[FILL]**.
-Code commit for sections 1 to 4: **[FILL: `git rev-parse --short HEAD` after your last commit]**.
+Versions: qiskit 2.5.2, qiskit-aer 0.17.2, Python 3.14.5, kyber-py 1.2.0, pycryptodome 4.0.0.
+Pinned image project: `final-year-part1` at commit `bb6d944`.
+Code commit for sections 1 to 4: **[FILL: run `git rev-parse --short HEAD` right after your last commit on this branch]**.
 
 ## 1. Q1 Shor phase estimation (circuit built from gates, run on Aer)
 
@@ -44,8 +44,17 @@ but does not scale, so its gate counts are not resource estimates (Q4 uses the Q
 ## 2. Shor circuit connected to the toy stego attack
 
 Code: `extras/stego_attack_toy.py --shor`. Attacker input: the public modulus N only.
-Results: N=15 **[FILL: base a, measured period, BREAK SUCCESSFUL?]**, N=21 **[FILL]**, N=35 **[FILL]**.
-Measured on: local toy key, not the pinned project's key size.
+Results (pinned project's `embed_lsb` / `extract_lsb`, message "HELLO", 10 ciphertext blocks extracted each time):
+
+| N | toy key e | base a | measured period r | factors | recovered d | result |
+|---|---|---|---|---|---|---|
+| 15 | 3 | 2 | 4 | 3 x 5 | 3 | BREAK SUCCESSFUL, HELLO decrypted |
+| 21 | 5 | 2 | 6 | 3 x 7 | 5 | BREAK SUCCESSFUL, HELLO decrypted |
+| 35 | 5 | 2 | 12 | 5 x 7 | 5 | BREAK SUCCESSFUL, HELLO decrypted |
+
+Each break needed 1 attempt (the first base worked). The factoring step is the Q1 circuit on the Aer simulator; the
+attacker gives it only the public N. Measured on: local toy keys (N=15, 21, 35), not the pinned project's real 256-bit or
+512-bit keys.
 
 ## 3. Attack on the PQC image variant
 
@@ -66,9 +75,14 @@ Embedder (a): reference LSB (a stand-in, not the pinned project's code). Result:
 | Flip 1 bit in KEM ciphertext (first byte, middle), nonce, GCM tag, AES part | decryption fails every time (HybridDecryptError), 5 of 5 |
 | Flip 1 bit outside the payload | message still correct |
 
-Embedder (b): the pinned project's own `lsb_stego.py` embed/extract (wire format: 32-bit length header, then the blob as
-hex text). Result: **[FILL: run `python extras\attack_pqc_image.py --cover stego_images\lena_stego.png --project data\targets\final-year-part1`
-and paste PASS/FAIL count; also record the pinned commit]**.
+Embedder (b): the pinned project's own `lsb_stego.py` (commit `bb6d944`) embed/extract on `lena_stego.png`. Its wire format
+is a 32-bit length header followed by the blob as hex text. Result: **12 of 12 checks passed.**
+Every tampered copy was rejected, but not always by the same layer: flips in the nonce and the GCM tag reached
+decryption and failed authentication (HybridDecryptError); flips in the length header, the first and middle KEM
+ciphertext bytes and the first AES ciphertext byte were rejected earlier with a plain ValueError.
+**[FILL: after re-running with the updated script, copy the short error text printed after "ValueError" and say what it
+shows, e.g. a hex-parsing error in the extraction step. Do not claim these were caught by the GCM tag unless the text
+says so.]** The reference-embedder run (a) shows the GCM tag catching KEM, nonce, tag and AES-part flips.
 
 Conclusion: the encryption layer no longer gives the attacker anything to factor or forge, and a flipped payload bit
 is rejected. Extraction still works, so the hiding layer is unchanged; its weakness is not a quantum weakness.
@@ -93,13 +107,38 @@ Lena, reference embedder (capacity 98,304 B):
 | 200 | PQC hex | 2632 | 2.7% | 0.4933 | 0.4395 | 0.0 | False | True | False |
 | 200 | PQC raw | 1320 | 1.3% | 0.4944 | 0.5011 | 0.9996 | True | False | True |
 
-Bell pepper (reference embedder, capacity 38,400 B; the 200-character RSA payload does not fit, so lengths 5 and 40):
-paste `outputs/steg_bellpepper.md` here **[FILL]**.
+Bell pepper, reference embedder (capacity 38,400 B; the 200-character RSA payload does not fit, so lengths 5 and 40):
 
-Lena, pinned embedder (hex rows use the pinned `embed_lsb`; PQC raw rows still use the reference embedder):
-the first run of this table used a hex scan at bit 0, which misses the pinned format (its hex text starts after a 32-bit
-header), so `hex header` read False and `length header` read True. Re-run with the updated script and paste
-`outputs/steg_lena_pinned.md` **[FILL]**. Expected change: `hex header` becomes True for the pinned hex rows.
+| msg chars | payload | bytes | cap used | ones whole | ones region | chi p region | flagged (p>0.5) | hex header | length header |
+|---|---|---|---|---|---|---|---|---|---|
+| - | clean cover | - | 0.0% | 0.4926 | 0.495 | 0.0 | False | False | False |
+| 5 | RSA hex | 1280 | 3.3% | 0.4906 | 0.435 | 0.0056 | False | True | False |
+| 5 | PQC hex | 2242 | 5.8% | 0.4891 | 0.4413 | 0.0002 | False | True | False |
+| 5 | PQC raw | 1125 | 2.9% | 0.4931 | 0.5092 | 1.0 | True | False | True |
+| 40 | RSA hex | 10240 | 26.7% | 0.477 | 0.4364 | 0.0 | False | True | False |
+| 40 | PQC hex | 2312 | 6.0% | 0.4886 | 0.4361 | 0.0 | False | True | False |
+| 40 | PQC raw | 1160 | 3.0% | 0.4927 | 0.4984 | 1.0 | True | False | True |
+
+Lena, pinned embedder (`lsb_stego.py` at `bb6d944` for the hex rows; the PQC raw rows still use the reference embedder).
+The pinned format starts with a 32-bit length header, so the hex scan skips 32 bits:
+
+| msg chars | payload | bytes | cap used | ones whole | ones region | chi p region | flagged (p>0.5) | hex header | length header |
+|---|---|---|---|---|---|---|---|---|---|
+| - | clean cover | - | 0.0% | 0.4939 | 0.4819 | 0.0 | False | False | False |
+| 5 | RSA hex | 1280 | 1.3% | 0.4936 | 0.4371 | 0.0 | False | True | True |
+| 5 | PQC hex | 2242 | 2.3% | 0.4933 | 0.4351 | 0.0 | False | True | True |
+| 5 | PQC raw | 1125 | 1.1% | 0.4943 | 0.4924 | 0.9993 | True | False | True |
+| 40 | RSA hex | 10240 | 10.4% | 0.4911 | 0.4372 | 0.0 | False | True | True |
+| 40 | PQC hex | 2312 | 2.4% | 0.4933 | 0.4386 | 0.0 | False | True | True |
+| 40 | PQC raw | 1160 | 1.2% | 0.4944 | 0.5008 | 1.0 | True | False | True |
+| 200 | RSA hex | 51200 | 52.1% | 0.4707 | 0.4373 | 0.0 | False | True | True |
+| 200 | PQC hex | 2632 | 2.7% | 0.4933 | 0.4385 | 0.0 | False | True | True |
+| 200 | PQC raw | 1320 | 1.3% | 0.4945 | 0.5041 | 0.9998 | True | False | True |
+
+With the pinned embedder both hex payloads (RSA and PQC) show a recognisable structure at the start of the LSB plane: the
+32-bit length header (plausible length, `length header` True) followed by clean hex text (`hex header` True). The structure
+is the same for RSA and PQC, so it does not separate them. (An earlier pinned run before the 32-bit-header fix read
+`hex header` False because the scan started at bit 0.)
 
 Facts from the formulas (match the table): textbook RSA-1024 hides 128 bytes per message character; the PQC blob adds a
 fixed 1,120 bytes (4-byte header + 1,116); so the PQC raw payload is smaller than the RSA payload for messages longer

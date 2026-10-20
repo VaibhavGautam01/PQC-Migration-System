@@ -134,7 +134,9 @@ def try_decrypt(carrier, secret_key, stego_png):
         blob = carrier.reveal_blob(stego_png)
         return "ok", hybrid.hybrid_decrypt(secret_key, blob)
     except Exception as exc:                                    # any loud failure is a detection
-        return "error", type(exc).__name__
+        # the short message shows WHICH layer rejected the input (parser or AES-GCM tag)
+        text = " ".join(str(exc).split())[:60]
+        return "error", f"{type(exc).__name__}" + (f" ({text})" if text else "")
 
 
 # ------------------------------------------------------------------ the attack

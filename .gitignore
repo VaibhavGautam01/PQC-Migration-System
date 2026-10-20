@@ -28,3 +28,6 @@ outputs/risk_scores_*.json
 
 outputs/toykeys/
 outputs/chi_*.png
+
+outputs/*.png
+outputs/toykeys/

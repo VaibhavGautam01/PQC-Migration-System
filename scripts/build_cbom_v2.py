@@ -1,4 +1,4 @@
-"""Build CBOM v2 entries for the image project.
+"""Build CBOM v2 entries for the image or video project.
 
 Risk fields stay null until outputs/risk_scores.json has been wired in (attach_scores).
 Fields follow docs/cbom_v2_fields.md.
@@ -16,6 +16,19 @@ IMAGE_COMPONENTS = [
     ("L1", "RSA (textbook, no padding)"),
 ]
 
+VIDEO_COMPONENTS = [
+    ("L1", "RSA (textbook, no padding)"),
+    ("L2", "SHA-256 of passphrase (frame-selection key)"),
+    ("L3", "CRC32 (integrity, key-check oracle)"),
+]
+
+# One entry per project: pinned commit and the layers that exist in it.
+# risk_report_sections.py reads this, so add a project here, not there.
+PROJECTS = {
+    "image": {"commit": "bb6d944", "components": IMAGE_COMPONENTS},
+    "video": {"commit": "4514806", "components": VIDEO_COMPONENTS},
+}
+
 
 def attach_scores(entry, scores):
     """Fill risk fields from outputs/risk_scores.json once its structure is known."""
@@ -25,7 +38,8 @@ def attach_scores(entry, scores):
 def build(project="image", scores=None):
     recs = pqc_advisor.load_recommendations()
     entries = []
-    for layer, component in IMAGE_COMPONENTS:
+    spec = PROJECTS[project]
+    for layer, component in spec["components"]:
         rec = recs[layer]
         entry = {
             "component": component,
@@ -42,7 +56,7 @@ def build(project="image", scores=None):
             "post_migration_risk_percent": None,
             "scenario_range_z5_z10_z20": [None, None, None],
             "scanner_version": "v0.4.0",
-            "pinned_commit": "bb6d944",
+            "pinned_commit": spec["commit"],
         }
         entries.append(attach_scores(entry, scores) if scores else entry)
     return {"cbom_version": "2.0-draft", "project": project, "entries": entries}

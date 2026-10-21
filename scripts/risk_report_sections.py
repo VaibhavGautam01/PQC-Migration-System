@@ -14,11 +14,6 @@ import pqc_advisor    # noqa: E402
 
 NOT_SCORED = "not yet scored"
 
-# Only the image project exists in build_cbom_v2 today (commit is hard-coded there).
-PROJECTS = {
-    "image": {"commit": "bb6d944", "components": build_cbom_v2.IMAGE_COMPONENTS},
-}
-
 # Worked reference values from the risk model specification (plan section 4).
 # Assumptions: X = 5, Y = 2, Z = 10 years; F4 = 5 for OAEP and AES-GCM; F6 = 100; F3 n/a for ML-KEM.
 REFERENCE_CASES = [
@@ -49,7 +44,7 @@ def fmt(v):
 def section_risk_percentages(scores):
     lines = ["## Risk percentages by layer", "",
              "The percentage is a transparent weighted score from 0 to 100. It is not the probability of an attack.", ""]
-    for project, spec in PROJECTS.items():
+    for project, spec in build_cbom_v2.PROJECTS.items():
         lines += [f"### {project.capitalize()} project (pinned commit {spec['commit']})", "",
                   "| Layer | Component | Quantum % | Classical % | Overall % | Band |", "|---|---|---|---|---|---|"]
         for layer, component in spec["components"]:
@@ -76,7 +71,7 @@ def section_advisor():
 def section_before_after(scores):
     lines = ["## Before and after migration", "",
              "Same scoring engine for both columns. Any remaining floor is explained in the validation chapter.", ""]
-    for project, spec in PROJECTS.items():
+    for project, spec in build_cbom_v2.PROJECTS.items():
         lines += [f"### {project.capitalize()} project", "",
                   "| Layer | Overall % before | Overall % after | Recommendation |", "|---|---|---|---|"]
         recs = pqc_advisor.load_recommendations()

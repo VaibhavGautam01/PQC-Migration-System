@@ -84,3 +84,14 @@ classical weaknesses.
 
 The weights are our choice and are not fitted to data. There is no ground truth
 for a probability.
+
+
+## Physical qubits (estimates)
+
+The model's qubit factor F2 uses logical qubits, q = 2n + 3. Physical-qubit
+figures are shown beside it for context and are **estimates, not measurements**.
+The 1,000:1 ratio is an assumption for illustration. The only published figure
+used is Gidney and Ekera (2021) for RSA-2048 under their stated assumptions
+(`data/published_estimates.json`, marked unverified until checked against the
+paper). Their logical-qubit formula describes a different circuit from 2n + 3,
+so the two are never mixed. F2 does not use physical qubits.

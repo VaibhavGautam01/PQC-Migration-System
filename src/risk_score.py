@@ -41,6 +41,8 @@ def f1_quantum_exposure(category: str, effective_bits=None, weights=None) -> flo
         return float(w["shor_broken"])
     if category == "nist_pqc":
         return float(w["nist_pqc"])
+    if category == "none":
+        return float(w["none"])
     if category == "symmetric":
         if isinstance(effective_bits, bool) or not isinstance(effective_bits, (int, float)) or effective_bits < 0:
             raise ValueError("symmetric needs effective_bits >= 0")

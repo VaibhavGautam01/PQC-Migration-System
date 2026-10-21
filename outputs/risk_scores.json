@@ -19,11 +19,14 @@
       "layers_scored": [
         "L1"
       ],
-      "layers_not_scored_yet": [
+      "layers_not_scored_yet": [],
+      "pending_reason": null,
+      "no_protection": [
         "L2",
         "L3",
         "L5"
       ],
+      "other_layers": {},
       "L1": {
         "key_in_use": {
           "label": "main path, generate_keypair(bits=128)",
@@ -113,13 +116,76 @@
       "project": "video",
       "repo": "Secure-Video-Steganography",
       "layers_scored": [
-        "L1"
+        "L1",
+        "L2"
       ],
       "layers_not_scored_yet": [
-        "L2",
-        "L3",
+        "L3"
+      ],
+      "pending_reason": "F1 category 'none' is not in data/risk_weights.json yet (comes with weights v1.0)",
+      "no_protection": [
         "L5"
       ],
+      "other_layers": {
+        "L2": {
+          "name": "Frame-selection key",
+          "today": "SHA-256 of a passphrase (frames 0 to 255 only)",
+          "evidence": "frame_selector.py:32",
+          "category": "symmetric",
+          "construction": "deterministic_or_oracle",
+          "exposure": "bypassable",
+          "score": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 7.0,
+            "f6_eff": 72.0,
+            "quantum": 9.0,
+            "classical": 76.0,
+            "overall": 35.8,
+            "band": "Moderate"
+          },
+          "z_scenarios": {
+            "10": {
+              "f1": 10.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 7.0,
+              "f6_eff": 72.0,
+              "quantum": 9.0,
+              "classical": 76.0,
+              "overall": 35.8,
+              "band": "Moderate"
+            },
+            "5": {
+              "f1": 10.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 10.0,
+              "f6_eff": 72.0,
+              "quantum": 10.0,
+              "classical": 76.0,
+              "overall": 36.4,
+              "band": "Moderate"
+            },
+            "20": {
+              "f1": 10.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 3.5,
+              "f6_eff": 72.0,
+              "quantum": 7.8,
+              "classical": 76.0,
+              "overall": 35.1,
+              "band": "Moderate"
+            }
+          }
+        }
+      },
       "L1": {
         "key_in_use": {
           "label": "UI default",
@@ -195,11 +261,11 @@
           }
         ]
       },
-      "project_score": 71.8,
+      "project_score": 66.4,
       "band": "High",
       "z_range": {
-        "min": 66.6,
-        "max": 76.3
+        "min": 61.9,
+        "max": 70.3
       },
       "evidence": {
         "L1_findings": 9

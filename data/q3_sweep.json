@@ -1,0 +1,248 @@
+{
+  "183": {
+    "label": "Aer simulator, toy size",
+    "pairs": [
+      [
+        90,
+        128
+      ],
+      [
+        195,
+        23
+      ]
+    ],
+    "matching_keys": 1,
+    "k_opt": 12,
+    "points": [
+      {
+        "iterations": 0,
+        "measured": 0.00390625,
+        "theory": 0.003906249999999999
+      },
+      {
+        "iterations": 2,
+        "measured": 0.10009765625,
+        "theory": 0.0946377220097929
+      },
+      {
+        "iterations": 4,
+        "measured": 0.28173828125,
+        "theory": 0.28474280203265145
+      },
+      {
+        "iterations": 6,
+        "measured": 0.52978515625,
+        "theory": 0.5276176773084243
+      },
+      {
+        "iterations": 8,
+        "measured": 0.76025390625,
+        "theory": 0.7637221440185906
+      },
+      {
+        "iterations": 10,
+        "measured": 0.93701171875,
+        "theory": 0.9351757480633812
+      },
+      {
+        "iterations": 12,
+        "measured": 1.0,
+        "theory": 0.9999470421032736
+      },
+      {
+        "iterations": 14,
+        "measured": 0.9423828125,
+        "theory": 0.9421574959101178
+      },
+      {
+        "iterations": 16,
+        "measured": 0.767578125,
+        "theory": 0.7759740806661463
+      },
+      {
+        "iterations": 18,
+        "measured": 0.54296875,
+        "theory": 0.542136269335161
+      },
+      {
+        "iterations": 20,
+        "measured": 0.294921875,
+        "theory": 0.2979688507876245
+      },
+      {
+        "iterations": 22,
+        "measured": 0.109375,
+        "theory": 0.10332889278180324
+      },
+      {
+        "iterations": 24,
+        "measured": 0.00537109375,
+        "theory": 0.005931922737881282
+      }
+    ]
+  },
+  "42": {
+    "label": "Aer simulator, toy size",
+    "pairs": [
+      [
+        90,
+        204
+      ],
+      [
+        195,
+        46
+      ]
+    ],
+    "matching_keys": 1,
+    "k_opt": 12,
+    "points": [
+      {
+        "iterations": 0,
+        "measured": 0.001953125,
+        "theory": 0.003906249999999999
+      },
+      {
+        "iterations": 2,
+        "measured": 0.091796875,
+        "theory": 0.0946377220097929
+      },
+      {
+        "iterations": 4,
+        "measured": 0.27783203125,
+        "theory": 0.28474280203265145
+      },
+      {
+        "iterations": 6,
+        "measured": 0.53857421875,
+        "theory": 0.5276176773084243
+      },
+      {
+        "iterations": 8,
+        "measured": 0.77587890625,
+        "theory": 0.7637221440185906
+      },
+      {
+        "iterations": 10,
+        "measured": 0.935546875,
+        "theory": 0.9351757480633812
+      },
+      {
+        "iterations": 12,
+        "measured": 1.0,
+        "theory": 0.9999470421032736
+      },
+      {
+        "iterations": 14,
+        "measured": 0.94189453125,
+        "theory": 0.9421574959101178
+      },
+      {
+        "iterations": 16,
+        "measured": 0.78271484375,
+        "theory": 0.7759740806661463
+      },
+      {
+        "iterations": 18,
+        "measured": 0.5498046875,
+        "theory": 0.542136269335161
+      },
+      {
+        "iterations": 20,
+        "measured": 0.2939453125,
+        "theory": 0.2979688507876245
+      },
+      {
+        "iterations": 22,
+        "measured": 0.099609375,
+        "theory": 0.10332889278180324
+      },
+      {
+        "iterations": 24,
+        "measured": 0.00341796875,
+        "theory": 0.005931922737881282
+      }
+    ]
+  },
+  "250": {
+    "label": "Aer simulator, toy size",
+    "pairs": [
+      [
+        90,
+        221
+      ],
+      [
+        195,
+        138
+      ]
+    ],
+    "matching_keys": 1,
+    "k_opt": 12,
+    "points": [
+      {
+        "iterations": 0,
+        "measured": 0.0048828125,
+        "theory": 0.003906249999999999
+      },
+      {
+        "iterations": 2,
+        "measured": 0.09228515625,
+        "theory": 0.0946377220097929
+      },
+      {
+        "iterations": 4,
+        "measured": 0.27197265625,
+        "theory": 0.28474280203265145
+      },
+      {
+        "iterations": 6,
+        "measured": 0.52001953125,
+        "theory": 0.5276176773084243
+      },
+      {
+        "iterations": 8,
+        "measured": 0.75830078125,
+        "theory": 0.7637221440185906
+      },
+      {
+        "iterations": 10,
+        "measured": 0.9375,
+        "theory": 0.9351757480633812
+      },
+      {
+        "iterations": 12,
+        "measured": 1.0,
+        "theory": 0.9999470421032736
+      },
+      {
+        "iterations": 14,
+        "measured": 0.9443359375,
+        "theory": 0.9421574959101178
+      },
+      {
+        "iterations": 16,
+        "measured": 0.7685546875,
+        "theory": 0.7759740806661463
+      },
+      {
+        "iterations": 18,
+        "measured": 0.533203125,
+        "theory": 0.542136269335161
+      },
+      {
+        "iterations": 20,
+        "measured": 0.2880859375,
+        "theory": 0.2979688507876245
+      },
+      {
+        "iterations": 22,
+        "measured": 0.099609375,
+        "theory": 0.10332889278180324
+      },
+      {
+        "iterations": 24,
+        "measured": 0.0078125,
+        "theory": 0.005931922737881282
+      }
+    ]
+  }
+}

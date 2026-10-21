@@ -73,3 +73,25 @@ def assumptions_note(scores):
     if a.get("agreed_with_sir"):
         return f"Assumptions agreed with sir on {a.get('agreed_date')}. {base}", True
     return f"Assumptions NOT yet agreed with sir, so read the Z range, not one number. {base}", False
+
+
+def layer_rows(project_entry):
+    """Every scored layer of a project, one row each (L1 first)."""
+    k = project_entry["L1"]["key_in_use"]
+    s = project_entry["L1"]["score"]
+    rows = [{"Layer": "L1 Message encryption",
+             "Today": f"RSA {k['modulus_bits']}-bit, {project_entry['L1']['construction']}",
+             "Overall %": s["overall"], "Band": s["band"], "Where": "see layer map"}]
+    for lid, e in project_entry.get("other_layers", {}).items():
+        rows.append({"Layer": f"{lid} {e['name']}", "Today": e["today"], "Overall %": e["score"]["overall"],
+                     "Band": e["score"]["band"], "Where": e["evidence"]})
+    return rows
+
+
+def no_protection_text(project_entry):
+    """Sentence listing layers that do not exist (empty string if none)."""
+    ids = project_entry.get("no_protection", [])
+    if not ids:
+        return ""
+    return ("No protection at all in this project: " + ", ".join(ids) +
+            ". They are left out of the average and not counted as safe.")

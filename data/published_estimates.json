@@ -1,0 +1,19 @@
+{
+  "note": "Published resource estimates, copied by hand. Every value is an ESTIMATE from a paper, not something this project measured. 'verified' stays false until a team member has checked each number against the paper itself.",
+  "sources": {
+    "gidney_ekera_2021": {
+      "citation": "Gidney, C. and Ekera, M. How to factor 2048 bit RSA integers in 8 hours using 20 million noisy qubits. Quantum 5, 433 (2021). arXiv:1905.09749",
+      "verified": false,
+      "assumptions": {
+        "architecture": "planar grid of superconducting qubits, nearest-neighbour connectivity",
+        "physical_gate_error_rate": 0.001,
+        "surface_code_cycle_time_us": 1,
+        "reaction_time_us": 10
+      },
+      "abstract_circuit_logical_qubits": "3n + 0.002 n lg n",
+      "estimates": [
+        {"rsa_bits": 2048, "physical_qubits": 20000000, "runtime_hours": 8}
+      ]
+    }
+  }
+}

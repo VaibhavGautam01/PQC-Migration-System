@@ -1,6 +1,6 @@
 {
   "_readme": "Copy to data/demo_results.json and fill in from the REAL simulator runs (Yatharth's demo logs). Do not invent numbers. Leave 'cases' empty until real runs exist.",
-  "environment": "Qiskit 2.5.2, qiskit-aer 0.17.2 (Aer simulator)",
+  "environment": "Qiskit 2.5.2, qiskit-aer 0.17.2",
   "cases": [
     {
       "N": 15,
@@ -8,10 +8,10 @@
         3,
         5
       ],
-      "runs": 1024,
-      "successes": 509,
+      "runs": 40960,
+      "successes": 30724,
       "backend": "simulator",
-      "notes": "saved from live_dashboard.py"
+      "notes": "saved by src/q1_demo_batch.py: a=7, 20 repeats x 2048 shots, seeds 12345..12364, Qiskit 2.5.2, qiskit-aer 0.17.2; Aer simulator, toy size"
     },
     {
       "N": 21,
@@ -19,10 +19,21 @@
         3,
         7
       ],
-      "runs": 1024,
-      "successes": 297,
+      "runs": 40960,
+      "successes": 33548,
       "backend": "simulator",
-      "notes": "saved from live_dashboard.py"
+      "notes": "saved by src/q1_demo_batch.py: a=2, 20 repeats x 2048 shots, seeds 12345..12364, Qiskit 2.5.2, qiskit-aer 0.17.2; Aer simulator, toy size"
+    },
+    {
+      "N": 35,
+      "expected_factors": [
+        5,
+        7
+      ],
+      "runs": 40960,
+      "successes": 37031,
+      "backend": "simulator",
+      "notes": "saved by src/q1_demo_batch.py: a=2, 20 repeats x 2048 shots, seeds 12345..12364, Qiskit 2.5.2, qiskit-aer 0.17.2; Aer simulator, toy size"
     }
   ],
   "recordings": []

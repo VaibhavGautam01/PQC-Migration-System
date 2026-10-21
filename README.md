@@ -253,12 +253,20 @@ The risk score is a **transparent weighted score from 0 to 100. It is not a prob
 ```bash
 python -m src.risk_run --project both       # score image, video or both -> outputs/risk_scores.json
 python run_pipeline.py --project image      # scan -> risk score -> map -> report -> tests
-streamlit run src/live_dashboard.py         # pages: Risk score, PQC advisor
+python src/before_after.py                  # image project: score before and after ML-KEM-768 + AES-256-GCM (same engine)
+python scripts/risk_report_sections.py      # risk %, advisor and before/after sections -> docs/risk_report_sections.md
+python src/weights_lock.py check            # weights match the frozen lock
+python check_env.py                         # qiskit, qiskit-aer, kyber-py, dilithium-py and PyCryptodome smoke test
+streamlit run src/live_dashboard.py         # pages: Risk score, Before and after, PQC advisor, Quantum Lab
 python -m src.quantum_guard                 # static guard: no classical shortcut in circuit builders
 python -m src.evidence_gate                 # every quantum run has a complete record (add --strict for release)
 ```
 
-Only layer L1 (message encryption) is scored so far; the other layers are added during Phase 2. ML-KEM, ML-DSA and AES-GCM are classical algorithms that resist quantum attacks, not quantum circuits. The prototypes use `kyber-py` and `dilithium-py`, which are educational pure-Python libraries and not production crypto. All quantum circuit results are **Aer simulator, toy size**.
+Scored so far: image project L1 (message encryption); video project L1 and L2 (frame-selection key). Video L3 (CRC32 integrity) is not scored yet, because the weights file has no F1 category for "no quantum-vulnerable algorithm". The layer map is in `docs/layer_map.md`.
+
+**Prototype (image project only).** `pqc_stego/hybrid.py` implements ML-KEM-768 + HKDF-SHA256 + AES-256-GCM, and `pqc_stego/image_pqc.py` hides the hybrid blob in an image with LSB embedding. Round-trip and tamper tests are in `tests/test_hybrid.py` and `tests/test_image_pqc.py`. The tests use a simple reference embedder; the pinned project's embedding functions can be loaded by file path, and the pinned repositories are never edited. The video prototype and the reviewable patches are not done yet.
+
+ML-KEM, ML-DSA and AES-GCM are classical algorithms that resist quantum attacks, not quantum circuits. The prototypes use `kyber-py` and `dilithium-py`, which are educational pure-Python libraries and not production crypto. All quantum circuit results are **Aer simulator, toy size**.
 
 ---
 
@@ -274,12 +282,23 @@ PQC-Migration-System/
 │   ├── key_strength_check.py   # classical weak-key check (< 2048-bit)
 │   ├── quantum_mapper.py       # Stage 2: primitive -> Shor / Grover
 │   ├── cbom.py                 # CBOM builder, validator, Markdown renderer
+│   ├── layers.py               # assigns each finding to a layer (L1, L2, L3, L5)
+│   ├── risk_score.py           # risk factors F1 to F6 and formulas (weights in data/risk_weights.json)
+│   ├── risk_run.py             # scores a project -> outputs/risk_scores.json
+│   ├── before_after.py         # image project before/after migration score
+│   ├── pqc_advisor.py          # layer-by-layer PQC recommendations
+│   ├── weights_lock.py         # freezes the risk weights
+│   ├── quantum_guard.py        # static guard for circuit builders
+│   ├── truth_table.py          # truth-table checks for reversible blocks
+│   ├── evidence_gate.py        # checks every quantum run has a record
 │   ├── build_dashboard.py      # final dashboard generator
 │   ├── live_dashboard.py       # Streamlit dashboard (live)
 │   └── run_all.py              # merges both scans into findings.json
 ├── notebook/
 │   ├── qubit_estimator.py      # Stage 3: Shor q = 2n + 3, Grover halving
 │   └── shors_demo.py           # Stage 4: Shor's demo (N = 15, 21)
+├── pqc_stego/                  # PQC prototypes: hybrid.py (ML-KEM-768 + AES-GCM), image_pqc.py
+├── scripts/                    # CBOM v2 builder and risk report sections
 ├── schemas/cbom.schema.json    # JSON Schema for the CBOM
 ├── tests/                      # unit tests and scanner fixtures
 ├── data/                       # manual facts, demo results template, targets
@@ -287,6 +306,7 @@ PQC-Migration-System/
 ├── outputs/findings.json       # Stage 1 output, input for Stages 2 and 3
 ├── generate_risk_report.py     # builds docs/risk_report.md
 ├── run_pipeline.py             # whole pipeline in one command
+├── check_env.py                # environment check (qiskit, PQC libraries)
 ├── run_tests.py                # all tests in one command
 └── requirements.txt
 ```
@@ -308,13 +328,14 @@ Being clear about limits is part of the work.
 - The scanner is **pattern-based** (rule-based). It can miss crypto that is loaded dynamically or obfuscated.
 - Key sizes the scanner cannot see come from manual review (`data/manual_facts.json`). Unverified sizes are labelled as such.
 - Only two target projects were analysed, so results illustrate the method and do not support statistical claims.
-- Recommendations are at algorithm level. No migration was performed on the target code.
+- Recommendations are at algorithm level. A hybrid ML-KEM-768 + AES-256-GCM prototype exists for the image project in `pqc_stego/`; no patch has been applied to the target repositories.
 
 ---
 
 ## 🛣️ Future Work
 
-- [ ] Prototype a hybrid migration (ML-KEM-768 key establishment with AES-256-GCM) on one target project
+- [x] Prototype a hybrid migration (ML-KEM-768 key establishment with AES-256-GCM) on one target project (image project, `pqc_stego/`)
+- [ ] Video project prototype and reviewable migration patches
 - [ ] Support more languages and libraries, and run the scanner in CI
 - [ ] Export the CBOM in a standard format such as CycloneDX
 - [ ] Replace logical-qubit estimates with full resource estimates including error correction

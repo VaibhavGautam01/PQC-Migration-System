@@ -9,10 +9,14 @@
       "parameter_set": "ML-KEM-768",
       "standard": "FIPS 203",
       "quantum_status": "classical, quantum-resistant",
-      "sizes_bytes": {"public_key": 1184, "ciphertext": 1088},
+      "sizes_bytes": {
+        "public_key": 1184,
+        "ciphertext": 1088
+      },
       "rationale": "RSA is broken by Shor. ML-KEM replaces RSA's key-transport role; AES-256-GCM encrypts the message.",
       "trade_offs": "The KEM ciphertext adds 1,088 B to the payload, which is easier to detect when hidden. ML-KEM-512 is lighter; ML-KEM-1024 suits the longest-lived data.",
-      "where_to_use": "Use it wherever the code calls RSA to protect the message. The sender encapsulates to the receiver's ML-KEM public key, derives an AES key with HKDF, and encrypts with AES-256-GCM."
+      "where_to_use": "Use it wherever the code calls RSA to protect the message. The sender encapsulates to the receiver's ML-KEM public key, derives an AES key with HKDF, and encrypts with AES-256-GCM.",
+      "qkd_note": "Optional future option: a key from QKD (BB84) could replace the ML-KEM step and cut the payload overhead from 1,116 B to 28 B, but it needs a live quantum link and dedicated optical hardware, and a classical channel authenticated with ML-DSA. Our BB84 is a simulation (Aer simulator, toy size). ML-KEM stays the software-only recommendation."
     },
     {
       "layer": "L2",
@@ -22,7 +26,9 @@
       "parameter_set": "256-bit key",
       "standard": "RFC 5869 / FIPS 198-1",
       "quantum_status": "symmetric; Grover halves 256 bits to about 128",
-      "sizes_bytes": {"key": 32},
+      "sizes_bytes": {
+        "key": 32
+      },
       "rationale": "Symmetric primitives need no PQC algorithm. Fix the key strength and cover the whole video.",
       "trade_offs": "None significant.",
       "where_to_use": "Use it where the video code chooses which frames carry data. Derive frame positions from a random 256-bit key so every frame is reachable."
@@ -35,7 +41,10 @@
       "parameter_set": "128-bit tag",
       "standard": "NIST SP 800-38D",
       "quantum_status": "symmetric",
-      "sizes_bytes": {"nonce": 12, "tag": 16},
+      "sizes_bytes": {
+        "nonce": 12,
+        "tag": 16
+      },
       "rationale": "CRC32 is not cryptographic and acts as a key-check oracle. The GCM tag makes tampering fail loudly.",
       "trade_offs": "Never reuse a nonce with the same key.",
       "where_to_use": "Use it in place of the CRC32 check. Decryption fails if any byte of the payload was changed."
@@ -48,7 +57,10 @@
       "parameter_set": "ML-DSA-65",
       "standard": "FIPS 204",
       "quantum_status": "classical, quantum-resistant",
-      "sizes_bytes": {"public_key": 1952, "signature": 3309},
+      "sizes_bytes": {
+        "public_key": 1952,
+        "signature": 3309
+      },
       "rationale": "Proves who sent the payload and detects tampering before decryption.",
       "trade_offs": "Adds 3,309 B. SLH-DSA (FIPS 205) is the conservative alternative with much larger signatures.",
       "where_to_use": "Use it when the receiver must know who sent the hidden message. Sign the payload before embedding and verify after extraction."

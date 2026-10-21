@@ -1,8 +1,10 @@
 """Markdown sections for the risk report: risk percentages, advisor, before/after, reference cases.
 
-No score is invented. Numbers come only from read_scores(); until it is adapted to the real
-structure of outputs/risk_scores.json it returns {} and every number prints as "not yet scored".
+No score is invented. Numbers come only from read_scores(), which reads outputs/risk_scores.json.
+If that file is missing every number prints as "not yet scored".
 """
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -24,13 +26,51 @@ REFERENCE_CASES = [
 ]
 
 
-def read_scores():
-    """ADAPT after you have seen outputs/risk_scores.json. Return:
-    {project: {"layers": {layer: {"quantum": x, "classical": y, "overall": z,
-                                  "band": b, "after_overall": a}},
+SCORES_PATH = ROOT / "outputs" / "risk_scores.json"
+BEFORE_AFTER_PATH = ROOT / "outputs" / "before_after_image.json"
+
+
+def _r(v):
+    return None if v is None else round(v, 1)
+
+
+def read_scores(scores_path=SCORES_PATH, before_after_path=BEFORE_AFTER_PATH):
+    """Read outputs/risk_scores.json (and the image before/after file) into:
+
+    {project: {"layers": {layer: {"quantum": q, "classical": c, "overall": o, "band": b,
+                                  "after_overall": a}},
                "project_score": s}}
+
+    A missing or broken file gives {} so every number prints as "not yet scored".
+    after_overall is filled only where a before/after result exists (image L1, matched on key size).
     """
-    return {}
+    try:
+        data = json.loads(Path(scores_path).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return {}
+    try:
+        ba = json.loads(Path(before_after_path).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        ba = {}
+    out = {}
+    for project, p in data.get("projects", {}).items():
+        layers = {}
+        raw = {k: v for k, v in p.items() if re.fullmatch(r"L\d+", k)}
+        raw.update(p.get("other_layers") or {})
+        for layer, info in raw.items():
+            sc = info.get("score") if isinstance(info, dict) else None
+            if not sc:
+                continue
+            layers[layer] = {"quantum": _r(sc.get("quantum")), "classical": _r(sc.get("classical")),
+                             "overall": _r(sc.get("overall")), "band": sc.get("band"),
+                             "after_overall": None}
+        if ba.get("project") == project and "L1" in layers:
+            bits = (raw["L1"].get("key_in_use") or {}).get("modulus_bits")
+            for row in ba.get("rows", []):
+                if row.get("modulus_bits") == bits:
+                    layers["L1"]["after_overall"] = _r(row["after"]["overall"])
+        out[project] = {"layers": layers, "project_score": _r(p.get("project_score"))}
+    return out
 
 
 def layer_numbers(scores, project, layer):

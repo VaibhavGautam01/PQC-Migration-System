@@ -46,15 +46,15 @@ The key size decides the qubit cost, so it is extracted carefully:
 
 | Check | Method | Result |
 |---|---|---|
-| Line check | Every finding compared with the real source line (`crosscheck.py`) | 26 of 26 findings matched on the first scan; re-run pending on the current 31 findings |
-| Miss hunt | 166 crypto-looking lines without a finding triaged by hand | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually |
+| Line check | Every finding compared with the real source line (`crosscheck.py`) | 31 of 31 findings match (re-run on commit 68d92a2, October 2026); first scan: 26 of 26 |
+| Miss hunt | 166 crypto-looking lines without a finding triaged by hand (first scan) | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually. Re-run on commit 68d92a2: 164 lines (158 code, 6 comments), not yet triaged by hand |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
 | Tests | `run_tests.py` and the files in `tests/` | 740 tests, all pass (13 skipped), run in October 2026 |
 
 ## 3. Stage 1 results on the target projects
 
-Scanner output (`findings.json`): **31 findings**, RSA 30 and SHA 1.
+Scanner output (`findings.json`): **31 findings**, RSA 30 and SHA 1 (measured on commit 68d92a2).
 
 | Project | Findings | Primitives | Key observation |
 |---|---|---|---|
@@ -127,7 +127,7 @@ Done since the first draft of this report:
 
 Still open:
 
-- Re-run the line check (`crosscheck.py`) on the current 31 findings and update the Validation table.
+- Hand-triage the 164 unflagged lines from the latest miss hunt (`docs/crosscheck_week2.md`) and update the Validation table.
 
 ## Appendix A: Edge-case findings (Vaibhav)
 

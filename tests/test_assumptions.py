@@ -31,6 +31,19 @@ class AssumptionTests(unittest.TestCase):
         if a["agreed_with_sir"]:
             self.assertIsNotNone(a["agreed_date"])
 
+    def test_deadline_is_six_weeks_and_dated(self):
+        d = A.load_deadline()
+        self.assertEqual(d["weeks"], 6)
+        self.assertEqual(d["agreed_date"], "2026-10-22")
+
+    def test_deadline_must_be_a_positive_whole_number_with_a_date(self):
+        for bad in ({"weeks": 0, "agreed_date": "2026-10-22"},
+                    {"weeks": 6.5, "agreed_date": "2026-10-22"},
+                    {"weeks": 6, "agreed_date": "soon"}):
+            g = good(); g["deadline"] = bad
+            with self.assertRaises(A.AssumptionError):
+                A.validate(g)
+
     def test_good_block_is_valid(self):
         self.assertEqual(A.validate(good()), good())
 

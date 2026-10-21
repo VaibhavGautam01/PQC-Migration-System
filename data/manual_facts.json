@@ -70,6 +70,7 @@
     "attacker": "stego file and public key, no secret; may record now and decrypt later",
     "agreed_with_sir": true,
     "agreed_date": "2026-10-17",
+    "deadline": {"weeks": 6, "agreed_date": "2026-10-22"},
     "project_overrides": {}
   },
   "experiments": [

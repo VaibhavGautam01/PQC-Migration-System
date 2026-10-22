@@ -1,0 +1,21 @@
+[
+  {
+    "algorithm": "QRNG (Hadamard and measure)",
+    "inputs": {
+      "n_bits": 65536,
+      "chunk": 1024
+    },
+    "qubits": 1024,
+    "depth": 2,
+    "gate_counts": {
+      "h": 1024,
+      "measure": 1024
+    },
+    "shots": 1,
+    "backend": "AerSimulator(method=stabilizer) qiskit 2.5.2 qiskit-aer 0.17.2",
+    "seed_simulator": 7,
+    "seed_transpiler": 7,
+    "run_seconds": 47.5277,
+    "label": "Aer simulator, toy size (pseudo-random, not for production keys)"
+  }
+]

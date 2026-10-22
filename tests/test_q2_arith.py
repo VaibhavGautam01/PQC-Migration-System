@@ -225,6 +225,24 @@ def check_exponentiation(test, N, a_values, m):
             test.assertEqual((v >> (2 * n + 1)) & 1, 0, "ancilla not 0: " + msg)
             test.assertEqual(v >> (2 * n + 2), ev, "exponent changed: " + msg)
 
+def check_multiplier_samples(test, N, samples):
+    """Spot-check the multiplier for chosen (a, x, control) cases."""
+    n = N.bit_length()
+    x, b = list(range(n)), list(range(n, 2 * n + 1))
+    anc, c = 2 * n + 1, 2 * n + 2
+    for a, xv, cv in samples:
+        qc = QuantumCircuit(2 * n + 3)
+        load(qc, x, xv)
+        if cv:
+            qc.x(c)
+        controlled_modmul(qc, c, x, b, anc, a, N)
+        v = outcome(qc)
+        msg = f"N={N} a={a} x={xv} c={cv}"
+        test.assertEqual(v & (2 ** n - 1), (a * xv) % N if cv else xv, "x: " + msg)
+        test.assertEqual((v >> n) & (2 ** (n + 1) - 1), 0, "b not returned to 0: " + msg)
+        test.assertEqual((v >> (2 * n + 1)) & 1, 0, "ancilla not 0: " + msg)
+        test.assertEqual((v >> (2 * n + 2)) & 1, cv, "control changed: " + msg)
+
 
 class TestModularMultiplier(unittest.TestCase):
     def test_all_inputs_small_moduli(self):
@@ -242,7 +260,9 @@ class TestModularMultiplier(unittest.TestCase):
     @unittest.skipUnless(SLOW, "set SLOW_TESTS=1 to run N = 7")
     def test_n7_slow(self):
         check_multiplier(self, 7)
-
+    @unittest.skipUnless(SLOW, "set SLOW_TESTS=1 to run N = 35")
+    def test_n35_sampled_slow(self):
+        check_multiplier_samples(self, 35, [(2, 1, 1), (2, 17, 1), (3, 34, 1), (12, 29, 1), (2, 17, 0)])
 
 class TestModularExponentiation(unittest.TestCase):
     def test_n3_all_exponents(self):

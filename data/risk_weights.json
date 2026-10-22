@@ -1,9 +1,10 @@
 {
-  "version": "v0.1",
+  "version": "v1.0",
   "note": "Single source of truth for the risk model. Changes are documented in docs/risk_model.md.",
   "f1_quantum_exposure": {
     "shor_broken": 100,
     "nist_pqc": 5,
+    "none": 0,
     "grover_effective_bits": [
       {"min_bits": 128, "score": 10},
       {"min_bits": 112, "score": 30},

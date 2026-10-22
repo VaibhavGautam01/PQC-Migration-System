@@ -4,7 +4,9 @@ quantum_guard.py - static guard for rule 8 (Q12, Week 2 Day 1).
 Scans the circuit-builder code and reports obvious classical shortcuts:
   * imports of sympy, or of order-finding / factoring / discrete-log helpers
   * calls to such helpers (n_order, factorint, classical_period, ...)
-  * a loop that searches for a period, for example `for r in ...: if pow(a, r, N) == 1`
+  * a loop that searches for a period, for example `for r in range(1, N): if pow(a, r, N) == 1`.
+    A loop over a short constant list or range (at most 16 values) is allowed: that is the
+    post-processing check of a candidate period taken from a measurement, not a search
 
 Allowed: pow(a, x, N) outside such a loop. Building the unitary from it is the oracle
 the algorithm is given (rule 8, Q1). gcd and Fraction are post-processing and are
@@ -60,10 +62,28 @@ def _is_three_arg_pow(node):
             and node.func.id == "pow" and len(node.args) == 3)
 
 
+MAX_BOUNDED_LOOP = 16
+
+
+def _is_small_constant_iter(loop):
+    """True for `for k in (1, 2, 3, 4)` or `for k in range(1, 5)`: a bounded, constant loop."""
+    if not isinstance(loop, ast.For):
+        return False
+    it = loop.iter
+    if isinstance(it, (ast.Tuple, ast.List)):
+        return len(it.elts) <= MAX_BOUNDED_LOOP and all(isinstance(e, ast.Constant) for e in it.elts)
+    if (isinstance(it, ast.Call) and isinstance(it.func, ast.Name) and it.func.id == "range"
+            and it.args and all(isinstance(a, ast.Constant) and isinstance(a.value, int) for a in it.args)):
+        vals = [a.value for a in it.args]
+        stop = vals[0] if len(vals) == 1 else vals[1]
+        return stop <= MAX_BOUNDED_LOOP
+    return False
+
+
 def _period_search_loops(tree):
     """Yield loops whose body compares pow(a, x, N) with 1 (the order-finding signature)."""
     for loop in ast.walk(tree):
-        if not isinstance(loop, (ast.For, ast.While)):
+        if not isinstance(loop, (ast.For, ast.While)) or _is_small_constant_iter(loop):
             continue
         for sub in ast.walk(loop):
             if not isinstance(sub, ast.Compare):

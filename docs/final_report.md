@@ -46,20 +46,20 @@ The key size decides the qubit cost, so it is extracted carefully:
 
 | Check | Method | Result |
 |---|---|---|
-| Line check | Every finding compared with the real source line (`crosscheck.py`) | 26 of 26 findings match |
-| Miss hunt | 166 crypto-looking lines without a finding triaged by hand | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually |
+| Line check | Every finding compared with the real source line (`crosscheck.py`) | 31 of 31 findings match (re-run on commit 68d92a2, October 2026); first scan: 26 of 26 |
+| Miss hunt | 166 crypto-looking lines without a finding triaged by hand (first scan) | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually. Re-run on commit 68d92a2: 164 lines (158 code, 6 comments), not yet triaged by hand |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
-| Tests | `run_tests.py` and the files in `tests/` | 372 tests, all pass |
+| Tests | `run_tests.py` and the files in `tests/` | 740 tests, all pass (13 skipped), run in October 2026 |
 
 ## 3. Stage 1 results on the target projects
 
-Scanner output (`findings.json`): **26 findings**, RSA 25 and SHA 1.
+Scanner output (`findings.json`): **31 findings**, RSA 30 and SHA 1 (measured on commit 68d92a2).
 
 | Project | Findings | Primitives | Key observation |
 |---|---|---|---|
-| Secure-Video-Steganography | 9 | RSA 8, SHA 1 | Textbook RSA; size chosen in the UI (1024, 2048, 3072; default 2048); SHA-256 used for frame selection |
-| Final-Year-project-part1 | 17 | RSA 17 | Textbook RSA; real use is `generate_keypair(bits=128)`, a 256-bit modulus; one module uses n < 256 |
+| Secure-Video-Steganography | 10 | RSA 9, SHA 1 | Textbook RSA; size chosen in the UI (1024, 2048, 3072; default 2048); SHA-256 used for frame selection |
+| Final-Year-project-part1 | 21 | RSA 21 | Textbook RSA; real use is `generate_keypair(bits=128)`, a 256-bit modulus; one module uses n < 256 |
 
 ### Key sizes found
 
@@ -90,9 +90,9 @@ Scanner output (`findings.json`): **26 findings**, RSA 25 and SHA 1.
 | AES | Grover's | Weakened | Keep AES, use 256-bit keys |
 | SHA | Grover's | Weakened | Keep SHA-2 or SHA-3 with 256-bit or larger output |
 
-**Applied to our findings:** RSA (25 findings) maps to Shor's and is broken. SHA-256 (1 finding) maps to Grover's and keeps about 128 bits of security.
+**Applied to our findings:** RSA (30 findings) maps to Shor's and is broken. SHA-256 (1 finding) maps to Grover's and keeps about 128 bits of security.
 
-**Status:** the final mapping report is built from the real `findings.json` (26 findings, 2 projects) and saved as `mapping_report.md`. `mapping_report_draft.md` is kept only as the early dummy-data draft.
+**Status:** the final mapping report is built from the real `findings.json` (31 findings, 2 projects) and saved as `mapping_report.md`. `mapping_report_draft.md` is kept only as the early dummy-data draft.
 
 ## 5. Stage 3 summary (details in `risk_report.md`)
 
@@ -122,11 +122,12 @@ Done since the first draft of this report:
 - Risk report marks default-value sizes in a Basis column.
 - CBOM merged (`docs/cbom.json`, `docs/cbom.md`, `src/cbom.py`).
 - Classical key-strength check merged (`src/key_strength_check.py`).
-- Final mapping report built from the real findings (`docs/mapping_report.md`, 26 findings).
+- Final mapping report built from the real findings (`docs/mapping_report.md`, 31 findings).
+- All five manual size overrides in `data/manual_facts.json` are confirmed (`confirmed: true`) and applied.
 
 Still open:
 
-- Two manual size overrides in `data/manual_facts.json` are marked `confirmed: false` and are not applied to the mapping report until the team confirms them.
+- Hand-triage the 164 unflagged lines from the latest miss hunt (`docs/crosscheck_week2.md`) and update the Validation table.
 
 ## Appendix A: Edge-case findings (Vaibhav)
 

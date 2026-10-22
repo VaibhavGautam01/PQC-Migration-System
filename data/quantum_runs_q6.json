@@ -1,0 +1,30 @@
+[
+  {
+    "algorithm": "BB84",
+    "inputs": {
+      "n_qubits": 1024,
+      "eve": false,
+      "threshold": 0.11
+    },
+    "qubits": 1024,
+    "depth": 4,
+    "gate_counts": {
+      "measure": 1024,
+      "h": 1019,
+      "x": 518,
+      "barrier": 1
+    },
+    "shots": 1,
+    "backend": "AerSimulator(method=stabilizer) qiskit 2.5.2 qiskit-aer 0.17.2",
+    "seed_simulator": 71,
+    "seed_transpiler": 71,
+    "run_seconds": 0.0707,
+    "label": "Aer simulator, toy size",
+    "sifted_bits": 503,
+    "sample_bits": 125,
+    "qber": 0.0,
+    "outcome": "key",
+    "key_bits": 256,
+    "bits_into_hash": 378
+  }
+]

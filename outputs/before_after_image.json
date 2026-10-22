@@ -1,6 +1,6 @@
 {
-  "weights_version": "v0.1",
-  "weights_sha256": "3f52e451855ab51797bf029a617364574ed9fd3f0c83fda1c84a3e0ea12becf4",
+  "weights_version": "v1.0",
+  "weights_sha256": "b8d2153f20afd4191d61b98be35a2a143714b53f6909dbc0f19d57e8c5792a3a",
   "project": "image",
   "layer": "L1 message encryption",
   "seed": 42,

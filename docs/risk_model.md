@@ -1,7 +1,8 @@
-# Risk Model (v0.1)
+# Risk Model (v1.0)
 
-Status: weights v0.1, frozen in Week 1 Day 5. Changed only if the sensitivity
-study shows an unstable ranking; each change is documented here.
+Status: weights v1.0 (v0.1 was frozen in Week 1 Day 5). Changed only if the
+sensitivity study shows an unstable ranking or a layer cannot be scored; each
+change is documented in the change log at the end of this file.
 
 ## What the percentage is
 
@@ -26,7 +27,7 @@ the quantum percentage.
 
 | Factor | How it is scored |
 |---|---|
-| F1 Quantum exposure | Shor-broken public-key = 100. Grover-weakened symmetric or hash: effective bits >= 128 = 10, 112 to 127 = 30, below 112 = 60. NIST PQC (ML-KEM, ML-DSA, SLH-DSA) with AES-256 = 5 |
+| F1 Quantum exposure | Shor-broken public-key = 100. Grover-weakened symmetric or hash: effective bits >= 128 = 10, 112 to 127 = 30, below 112 = 60. NIST PQC (ML-KEM, ML-DSA, SLH-DSA) with AES-256 = 5. No quantum-vulnerable algorithm in the layer (`none`, for example CRC32) = 0 |
 | F2 Qubit cost | q = 2n+3. Score = 100 x (1 - (log10(q) - 2) / 3), limited to 20 to 100. Shor-broken layers only |
 | F3 Classical key weakness | Modulus up to 512 bits = 100, below 1024 = 80, below 2048 = 50, 2048 or more = 10. Uses the size in use; default-only sizes are flagged |
 | F4 Construction weakness | No padding and deterministic = 100. Deterministic framing or key-check oracle = 80. Padding without AEAD = 40. AES-GCM or OAEP = 0 to 10 |
@@ -95,3 +96,10 @@ used is Gidney and Ekera (2021) for RSA-2048 under their stated assumptions
 (`data/published_estimates.json`, marked unverified until checked against the
 paper). Their logical-qubit formula describes a different circuit from 2n + 3,
 so the two are never mixed. F2 does not use physical qubits.
+
+## Change log
+
+| Version | Date | Change | Why |
+|---|---|---|---|
+| v0.1 | Week 1 Day 5 | First frozen weights | |
+| v1.0 | 2026-10-22 | Added F1 category `none` = 0 (no quantum-vulnerable algorithm in the layer) | The video integrity layer (L3, CRC32) could not be scored. Existing weights are unchanged; image scores are unchanged. Video L3 now scores 30.4 (Moderate, quantum 0, classical 76); the video project score moves from 66.4 to 64.1. CRC32 is not cryptography, so Shor and Grover have nothing to break; its weakness is classical (key-check oracle). |

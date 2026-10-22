@@ -1,0 +1,1021 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-20T11:56:37+00:00",
+  "generated_by": "python -m src.q1_demo_batch",
+  "label": "Aer simulator, toy size",
+  "backend": "AerSimulator (statevector)",
+  "qiskit_version": "2.5.2",
+  "qiskit_aer_version": "0.17.2",
+  "seed_policy": "repeat i uses seed_simulator = seed_transpiler = 12345 + i",
+  "note": "Each repeat is a separate run of the same circuit; single-run evidence records are in data/quantum_runs.json. Aer simulator, toy size.",
+  "cases": [
+    {
+      "N": 15,
+      "a": 7,
+      "counting_qubits": 8,
+      "qubits": 12,
+      "repeats": 20,
+      "shots_per_repeat": 2048,
+      "repeats_finding_factors": 20,
+      "period_found_in_repeats": {
+        "4": 20
+      },
+      "factors_found_in_repeats": {
+        "3x5": 20
+      },
+      "mean_shot_success_rate": 0.7501,
+      "pooled_chi_square": {
+        "statistic": 3.5158,
+        "dof": 3,
+        "p_value": 0.318716,
+        "bins": 4,
+        "shots": 40960
+      },
+      "top_outcomes": [
+        {
+          "y": 128,
+          "count": 10391
+        },
+        {
+          "y": 0,
+          "count": 10236
+        },
+        {
+          "y": 192,
+          "count": 10201
+        },
+        {
+          "y": 64,
+          "count": 10132
+        }
+      ],
+      "runs": [
+        {
+          "seed": 12345,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7554,
+          "shots_with_factors": 1547
+        },
+        {
+          "seed": 12346,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7368,
+          "shots_with_factors": 1509
+        },
+        {
+          "seed": 12347,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7583,
+          "shots_with_factors": 1553
+        },
+        {
+          "seed": 12348,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.749,
+          "shots_with_factors": 1534
+        },
+        {
+          "seed": 12349,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7544,
+          "shots_with_factors": 1545
+        },
+        {
+          "seed": 12350,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7627,
+          "shots_with_factors": 1562
+        },
+        {
+          "seed": 12351,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7354,
+          "shots_with_factors": 1506
+        },
+        {
+          "seed": 12352,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.749,
+          "shots_with_factors": 1534
+        },
+        {
+          "seed": 12353,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7515,
+          "shots_with_factors": 1539
+        },
+        {
+          "seed": 12354,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7603,
+          "shots_with_factors": 1557
+        },
+        {
+          "seed": 12355,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7529,
+          "shots_with_factors": 1542
+        },
+        {
+          "seed": 12356,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7432,
+          "shots_with_factors": 1522
+        },
+        {
+          "seed": 12357,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7588,
+          "shots_with_factors": 1554
+        },
+        {
+          "seed": 12358,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7446,
+          "shots_with_factors": 1525
+        },
+        {
+          "seed": 12359,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7544,
+          "shots_with_factors": 1545
+        },
+        {
+          "seed": 12360,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.731,
+          "shots_with_factors": 1497
+        },
+        {
+          "seed": 12361,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7363,
+          "shots_with_factors": 1508
+        },
+        {
+          "seed": 12362,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7529,
+          "shots_with_factors": 1542
+        },
+        {
+          "seed": 12363,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7539,
+          "shots_with_factors": 1544
+        },
+        {
+          "seed": 12364,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7612,
+          "shots_with_factors": 1559
+        }
+      ],
+      "total_seconds": 18.41
+    },
+    {
+      "N": 15,
+      "a": 2,
+      "counting_qubits": 8,
+      "qubits": 12,
+      "repeats": 20,
+      "shots_per_repeat": 2048,
+      "repeats_finding_factors": 20,
+      "period_found_in_repeats": {
+        "4": 20
+      },
+      "factors_found_in_repeats": {
+        "3x5": 20
+      },
+      "mean_shot_success_rate": 0.7501,
+      "pooled_chi_square": {
+        "statistic": 3.5158,
+        "dof": 3,
+        "p_value": 0.318716,
+        "bins": 4,
+        "shots": 40960
+      },
+      "top_outcomes": [
+        {
+          "y": 128,
+          "count": 10391
+        },
+        {
+          "y": 0,
+          "count": 10236
+        },
+        {
+          "y": 192,
+          "count": 10201
+        },
+        {
+          "y": 64,
+          "count": 10132
+        }
+      ],
+      "runs": [
+        {
+          "seed": 12345,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7554,
+          "shots_with_factors": 1547
+        },
+        {
+          "seed": 12346,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7368,
+          "shots_with_factors": 1509
+        },
+        {
+          "seed": 12347,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7583,
+          "shots_with_factors": 1553
+        },
+        {
+          "seed": 12348,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.749,
+          "shots_with_factors": 1534
+        },
+        {
+          "seed": 12349,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7544,
+          "shots_with_factors": 1545
+        },
+        {
+          "seed": 12350,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7627,
+          "shots_with_factors": 1562
+        },
+        {
+          "seed": 12351,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7354,
+          "shots_with_factors": 1506
+        },
+        {
+          "seed": 12352,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.749,
+          "shots_with_factors": 1534
+        },
+        {
+          "seed": 12353,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7515,
+          "shots_with_factors": 1539
+        },
+        {
+          "seed": 12354,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7603,
+          "shots_with_factors": 1557
+        },
+        {
+          "seed": 12355,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7529,
+          "shots_with_factors": 1542
+        },
+        {
+          "seed": 12356,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7432,
+          "shots_with_factors": 1522
+        },
+        {
+          "seed": 12357,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7588,
+          "shots_with_factors": 1554
+        },
+        {
+          "seed": 12358,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7446,
+          "shots_with_factors": 1525
+        },
+        {
+          "seed": 12359,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7544,
+          "shots_with_factors": 1545
+        },
+        {
+          "seed": 12360,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.731,
+          "shots_with_factors": 1497
+        },
+        {
+          "seed": 12361,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7363,
+          "shots_with_factors": 1508
+        },
+        {
+          "seed": 12362,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7529,
+          "shots_with_factors": 1542
+        },
+        {
+          "seed": 12363,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7539,
+          "shots_with_factors": 1544
+        },
+        {
+          "seed": 12364,
+          "period": 4,
+          "factors": [
+            3,
+            5
+          ],
+          "shot_success_rate": 0.7612,
+          "shots_with_factors": 1559
+        }
+      ],
+      "total_seconds": 1.43
+    },
+    {
+      "N": 21,
+      "a": 2,
+      "counting_qubits": 10,
+      "qubits": 15,
+      "repeats": 20,
+      "shots_per_repeat": 2048,
+      "repeats_finding_factors": 20,
+      "period_found_in_repeats": {
+        "6": 20
+      },
+      "factors_found_in_repeats": {
+        "3x7": 20
+      },
+      "mean_shot_success_rate": 0.819,
+      "pooled_chi_square": {
+        "statistic": 75.863,
+        "dof": 82,
+        "p_value": 0.669779,
+        "bins": 83,
+        "shots": 40960
+      },
+      "top_outcomes": [
+        {
+          "y": 512,
+          "count": 6928
+        },
+        {
+          "y": 0,
+          "count": 6725
+        },
+        {
+          "y": 853,
+          "count": 4798
+        },
+        {
+          "y": 171,
+          "count": 4667
+        },
+        {
+          "y": 683,
+          "count": 4638
+        },
+        {
+          "y": 341,
+          "count": 4601
+        },
+        {
+          "y": 342,
+          "count": 1235
+        },
+        {
+          "y": 170,
+          "count": 1178
+        }
+      ],
+      "runs": [
+        {
+          "seed": 12345,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8101,
+          "shots_with_factors": 1659
+        },
+        {
+          "seed": 12346,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8267,
+          "shots_with_factors": 1693
+        },
+        {
+          "seed": 12347,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8174,
+          "shots_with_factors": 1674
+        },
+        {
+          "seed": 12348,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8164,
+          "shots_with_factors": 1672
+        },
+        {
+          "seed": 12349,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8247,
+          "shots_with_factors": 1689
+        },
+        {
+          "seed": 12350,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8247,
+          "shots_with_factors": 1689
+        },
+        {
+          "seed": 12351,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8433,
+          "shots_with_factors": 1727
+        },
+        {
+          "seed": 12352,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8257,
+          "shots_with_factors": 1691
+        },
+        {
+          "seed": 12353,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8135,
+          "shots_with_factors": 1666
+        },
+        {
+          "seed": 12354,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8228,
+          "shots_with_factors": 1685
+        },
+        {
+          "seed": 12355,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8125,
+          "shots_with_factors": 1664
+        },
+        {
+          "seed": 12356,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8081,
+          "shots_with_factors": 1655
+        },
+        {
+          "seed": 12357,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8193,
+          "shots_with_factors": 1678
+        },
+        {
+          "seed": 12358,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8188,
+          "shots_with_factors": 1677
+        },
+        {
+          "seed": 12359,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8174,
+          "shots_with_factors": 1674
+        },
+        {
+          "seed": 12360,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8154,
+          "shots_with_factors": 1670
+        },
+        {
+          "seed": 12361,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8237,
+          "shots_with_factors": 1687
+        },
+        {
+          "seed": 12362,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8115,
+          "shots_with_factors": 1662
+        },
+        {
+          "seed": 12363,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.8149,
+          "shots_with_factors": 1669
+        },
+        {
+          "seed": 12364,
+          "period": 6,
+          "factors": [
+            3,
+            7
+          ],
+          "shot_success_rate": 0.814,
+          "shots_with_factors": 1667
+        }
+      ],
+      "total_seconds": 1.6
+    },
+    {
+      "N": 35,
+      "a": 2,
+      "counting_qubits": 12,
+      "qubits": 18,
+      "repeats": 20,
+      "shots_per_repeat": 2048,
+      "repeats_finding_factors": 20,
+      "period_found_in_repeats": {
+        "12": 20
+      },
+      "factors_found_in_repeats": {
+        "5x7": 20
+      },
+      "mean_shot_success_rate": 0.9041,
+      "pooled_chi_square": {
+        "statistic": 104.0726,
+        "dof": 116,
+        "p_value": 0.7786,
+        "bins": 117,
+        "shots": 40960
+      },
+      "top_outcomes": [
+        {
+          "y": 1024,
+          "count": 3458
+        },
+        {
+          "y": 3072,
+          "count": 3430
+        },
+        {
+          "y": 0,
+          "count": 3424
+        },
+        {
+          "y": 2048,
+          "count": 3377
+        },
+        {
+          "y": 341,
+          "count": 2366
+        },
+        {
+          "y": 3413,
+          "count": 2364
+        },
+        {
+          "y": 2389,
+          "count": 2358
+        },
+        {
+          "y": 3755,
+          "count": 2352
+        }
+      ],
+      "runs": [
+        {
+          "seed": 12345,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9048,
+          "shots_with_factors": 1853
+        },
+        {
+          "seed": 12346,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.916,
+          "shots_with_factors": 1876
+        },
+        {
+          "seed": 12347,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9189,
+          "shots_with_factors": 1882
+        },
+        {
+          "seed": 12348,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9023,
+          "shots_with_factors": 1848
+        },
+        {
+          "seed": 12349,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.918,
+          "shots_with_factors": 1880
+        },
+        {
+          "seed": 12350,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9097,
+          "shots_with_factors": 1863
+        },
+        {
+          "seed": 12351,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9033,
+          "shots_with_factors": 1850
+        },
+        {
+          "seed": 12352,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9062,
+          "shots_with_factors": 1856
+        },
+        {
+          "seed": 12353,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8989,
+          "shots_with_factors": 1841
+        },
+        {
+          "seed": 12354,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9014,
+          "shots_with_factors": 1846
+        },
+        {
+          "seed": 12355,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9043,
+          "shots_with_factors": 1852
+        },
+        {
+          "seed": 12356,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8999,
+          "shots_with_factors": 1843
+        },
+        {
+          "seed": 12357,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8916,
+          "shots_with_factors": 1826
+        },
+        {
+          "seed": 12358,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9004,
+          "shots_with_factors": 1844
+        },
+        {
+          "seed": 12359,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8989,
+          "shots_with_factors": 1841
+        },
+        {
+          "seed": 12360,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9058,
+          "shots_with_factors": 1855
+        },
+        {
+          "seed": 12361,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8999,
+          "shots_with_factors": 1843
+        },
+        {
+          "seed": 12362,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.8984,
+          "shots_with_factors": 1840
+        },
+        {
+          "seed": 12363,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.897,
+          "shots_with_factors": 1837
+        },
+        {
+          "seed": 12364,
+          "period": 12,
+          "factors": [
+            5,
+            7
+          ],
+          "shot_success_rate": 0.9058,
+          "shots_with_factors": 1855
+        }
+      ],
+      "total_seconds": 4.38
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Week 2 Day 1: scanner cross-check
 
-**Check A** (finding matches real source line): 26 of 26.
+**Check A** (finding matches real source line): 31 of 31.
 
 **Check B** (crypto-looking lines with no finding): 164, for manual review.
 

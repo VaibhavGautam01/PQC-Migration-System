@@ -37,6 +37,23 @@ class GuardCatchesShortcuts(unittest.TestCase):
                      "    while pow(a, r, N) != 1:\n        r += 1\n    return r\n")
         self.assertTrue(G.scan_source(src_while, "all"))
 
+    def test_bounded_check_of_a_measured_candidate_is_allowed(self):
+        src = ("def post(y, a, N, r0):\n"
+               "    for k in (1, 2, 3, 4):\n"
+               "        if pow(a, r0 * k, N) == 1:\n"
+               "            return r0 * k\n")
+        self.assertEqual(G.scan_source(src, "all"), [])
+        src_range = src.replace("(1, 2, 3, 4)", "range(1, 5)")
+        self.assertEqual(G.scan_source(src_range, "all"), [])
+
+    def test_large_or_variable_range_is_still_flagged(self):
+        base = ("def build_x(a, N):\n"
+                "    for r in {it}:\n"
+                "        if pow(a, r, N) == 1:\n"
+                "            return r\n")
+        for it in ("range(1, N)", "range(1, 100)", "range(1, 10 ** 6)", "range(N)", "list(range(1, 5))"):
+            self.assertTrue(G.scan_source(base.format(it=it), "all"), it)
+
     def test_builder_calling_classical_period_is_flagged(self):
         src = "def build_x(a, N):\n    return classical_period(a, N)\n"
         self.assertTrue(G.scan_source(src, "builders"))

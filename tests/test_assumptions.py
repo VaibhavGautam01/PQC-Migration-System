@@ -31,6 +31,33 @@ class AssumptionTests(unittest.TestCase):
         if a["agreed_with_sir"]:
             self.assertIsNotNone(a["agreed_date"])
 
+    def test_deadline_is_six_weeks_and_dated(self):
+        d = A.load_deadline()
+        self.assertEqual(d["weeks"], 6)
+        self.assertEqual(d["agreed_date"], "2026-10-22")
+
+    def test_deadline_must_be_a_positive_whole_number_with_a_date(self):
+        for bad in ({"weeks": 0, "agreed_date": "2026-10-22"},
+                    {"weeks": 6.5, "agreed_date": "2026-10-22"},
+                    {"weeks": 6, "agreed_date": "soon"}):
+            g = good(); g["deadline"] = bad
+            with self.assertRaises(A.AssumptionError):
+                A.validate(g)
+
+    def test_analyzer_flow_is_agreed_but_scope_is_not_yet(self):
+        an = A.load_analyzer()
+        self.assertEqual(an["flow_agreed_date"], "2026-10-22")
+        self.assertFalse(an["scope_confirmed_with_sir"])
+
+    def test_analyzer_scope_confirmed_needs_a_date(self):
+        g = good()
+        g["analyzer"] = {"flow": "f", "flow_agreed_date": "2026-10-22", "scope": "s",
+                         "scope_confirmed_with_sir": True}
+        with self.assertRaises(A.AssumptionError):
+            A.validate(g)
+        g["analyzer"]["scope_confirmed_date"] = "2026-10-25"
+        A.validate(g)
+
     def test_good_block_is_valid(self):
         self.assertEqual(A.validate(good()), good())
 

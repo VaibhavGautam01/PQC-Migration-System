@@ -78,7 +78,7 @@ class TestRun(unittest.TestCase):
         self.assertEqual(len(self.result["assumption_grid"]), 9)
 
     def test_result_names_version_and_seed(self):
-        self.assertEqual(self.result["weights_version"], "v0.1")
+        self.assertEqual(self.result["weights_version"], "v1.0")
         self.assertEqual(len(self.result["weights_sha256"]), 64)
         self.assertEqual(self.result["seed"], 42)
 

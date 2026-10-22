@@ -1,4 +1,4 @@
-"""Build CBOM v2 entries for the image and video projects.
+"""Build CBOM v2 entries for the image or video project.
 
 Risk fields stay null until outputs/risk_scores.json has been wired in (attach_scores).
 Fields follow docs/cbom_v2_fields.md.
@@ -16,9 +16,17 @@ IMAGE_COMPONENTS = [
     ("L1", "RSA (textbook, no padding)"),
 ]
 
-# Add "video" here once its pinned commit and components are confirmed (see the commands below).
+VIDEO_COMPONENTS = [
+    ("L1", "RSA (textbook, no padding)"),
+    ("L2", "SHA-256 of passphrase (frame-selection key)"),
+    ("L3", "CRC32 (integrity, key-check oracle)"),
+]
+
+# One entry per project: pinned commit and the layers that exist in it.
+# risk_report_sections.py reads this, so add a project here, not there.
 PROJECTS = {
     "image": {"commit": "bb6d944", "components": IMAGE_COMPONENTS},
+    "video": {"commit": "4514806", "components": VIDEO_COMPONENTS},
 }
 
 
@@ -28,9 +36,9 @@ def attach_scores(entry, scores):
 
 
 def build(project="image", scores=None):
-    spec = PROJECTS[project]
     recs = pqc_advisor.load_recommendations()
     entries = []
+    spec = PROJECTS[project]
     for layer, component in spec["components"]:
         rec = recs[layer]
         entry = {

@@ -59,6 +59,15 @@ def validate(a):
             raise AssumptionError("agreed_with_sir is true, so agreed_date must be YYYY-MM-DD")
     elif d is not None:
         raise AssumptionError("agreed_date must be null until sir agrees")
+    dl = a.get("deadline")
+    if dl is not None:
+        if not isinstance(dl, dict) or isinstance(dl.get("weeks"), bool) \
+                or not isinstance(dl.get("weeks"), int) or dl["weeks"] <= 0:
+            raise AssumptionError("deadline: needs 'weeks' as a positive whole number")
+        try:
+            date.fromisoformat(dl.get("agreed_date"))
+        except (TypeError, ValueError):
+            raise AssumptionError("deadline: agreed_date must be YYYY-MM-DD")
     for proj, ov in a.get("project_overrides", {}).items():
         if proj not in PROJECTS:
             raise AssumptionError(f"unknown project in overrides: {proj}")
@@ -89,6 +98,15 @@ def load_assumptions(project=None, path=None):
         for name in NUMERIC:
             _check_numeric(name, out[name])
     return out
+
+
+def load_deadline(path=None):
+    """The project deadline agreed with sir as {"weeks": int, "agreed_date": str}, or None."""
+    path = Path(path) if path else FACTS_PATH
+    with open(path, encoding="utf-8-sig") as fh:
+        raw = json.load(fh)
+    a = validate(raw["assumptions"])
+    return a.get("deadline")
 
 
 def z_scenarios(a):

@@ -8,9 +8,19 @@ The percentage is a transparent weighted score from 0 to 100. It is not the prob
 
 | Layer | Component | Quantum % | Classical % | Overall % | Band |
 |---|---|---|---|---|---|
-| L1 | RSA (textbook, no padding) | not yet scored | not yet scored | not yet scored | not yet scored |
+| L1 | RSA (textbook, no padding) | 86.6 | 100.0 | 91.9 | Critical |
 
-Project score (0.7 x worst layer + 0.3 x average): not yet scored
+Project score (0.7 x worst layer + 0.3 x average): 91.9
+
+### Video project (pinned commit 4514806)
+
+| Layer | Component | Quantum % | Classical % | Overall % | Band |
+|---|---|---|---|---|---|
+| L1 | RSA (textbook, no padding) | 79.1 | 61.0 | 71.8 | High |
+| L2 | SHA-256 of passphrase (frame-selection key) | 9.0 | 76.0 | 35.8 | Moderate |
+| L3 | CRC32 (integrity, key-check oracle) | not yet scored | not yet scored | not yet scored | not yet scored |
+
+Project score (0.7 x worst layer + 0.3 x average): 66.4
 
 ## PQC advisor
 
@@ -32,7 +42,15 @@ Same scoring engine for both columns. Any remaining floor is explained in the va
 
 | Layer | Overall % before | Overall % after | Recommendation |
 |---|---|---|---|
-| L1 | not yet scored | not yet scored | ML-KEM-768 + HKDF + AES-256-GCM |
+| L1 | 91.9 | 4.7 | ML-KEM-768 + HKDF + AES-256-GCM |
+
+### Video project
+
+| Layer | Overall % before | Overall % after | Recommendation |
+|---|---|---|---|
+| L1 | 71.8 | not yet scored | ML-KEM-768 + HKDF + AES-256-GCM |
+| L2 | 35.8 | not yet scored | 256-bit random key with HKDF or HMAC-SHA256 to pick frames |
+| L3 | not yet scored | not yet scored | AES-GCM authentication tag |
 
 ## Worked reference values (from the risk model specification)
 

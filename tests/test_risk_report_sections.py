@@ -18,6 +18,17 @@ class TestSections(unittest.TestCase):
         self.assertIn("| L1 | RSA (textbook, no padding) | 1.0 | 2.0 | 3.0 | Low |", rrs.section_risk_percentages(scores))
         self.assertIn("0.5", rrs.section_before_after(scores))
 
+    def test_read_scores_reads_real_file(self):
+        scores = rrs.read_scores()
+        self.assertIn("L1", scores["image"]["layers"])
+        self.assertEqual(scores["image"]["layers"]["L1"]["overall"], 91.9)
+        self.assertEqual(scores["image"]["layers"]["L1"]["after_overall"], 4.7)
+        self.assertIn("L2", scores["video"]["layers"])
+        self.assertIsNone(scores["video"]["layers"]["L1"]["after_overall"])
+
+    def test_read_scores_missing_file_gives_empty(self):
+        self.assertEqual(rrs.read_scores(scores_path="no_such_file.json"), {})
+
     def test_advisor_section_mentions_ml_kem_768(self):
         self.assertIn("ML-KEM-768", rrs.section_advisor())
 

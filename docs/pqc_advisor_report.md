@@ -15,3 +15,36 @@ Prototype libraries are educational and not production crypto.
 - Trade-offs: The KEM ciphertext adds 1,088 B to the payload, which is easier to detect when hidden. ML-KEM-512 is lighter; ML-KEM-1024 suits the longest-lived data.
 - QKD note: Optional future option: a key from QKD (BB84) could replace the ML-KEM step and cut the payload overhead from 1,116 B to 28 B, but it needs a live quantum link and dedicated optical hardware, and a classical channel authenticated with ML-DSA. Our BB84 is a simulation (Aer simulator, toy size). ML-KEM stays the software-only recommendation.
 - Risk now: not yet scored | after migration: not yet scored
+
+## Video project (pinned commit 4514806)
+
+### L1 Message encryption
+
+- Today: RSA (textbook, no padding)
+- Recommended: ML-KEM-768 + HKDF + AES-256-GCM (FIPS 203)
+- Sizes: public_key: 1,184 B, ciphertext: 1,088 B
+- Where to use it: Use it wherever the code calls RSA to protect the message. The sender encapsulates to the receiver's ML-KEM public key, derives an AES key with HKDF, and encrypts with AES-256-GCM.
+- Why: RSA is broken by Shor. ML-KEM replaces RSA's key-transport role; AES-256-GCM encrypts the message.
+- Trade-offs: The KEM ciphertext adds 1,088 B to the payload, which is easier to detect when hidden. ML-KEM-512 is lighter; ML-KEM-1024 suits the longest-lived data.
+- QKD note: Optional future option: a key from QKD (BB84) could replace the ML-KEM step and cut the payload overhead from 1,116 B to 28 B, but it needs a live quantum link and dedicated optical hardware, and a classical channel authenticated with ML-DSA. Our BB84 is a simulation (Aer simulator, toy size). ML-KEM stays the software-only recommendation.
+- Risk now: not yet scored | after migration: not yet scored
+
+### L2 Frame-selection key
+
+- Today: SHA-256 of passphrase (frame-selection key)
+- Recommended: 256-bit random key with HKDF or HMAC-SHA256 to pick frames (RFC 5869 / FIPS 198-1)
+- Sizes: key: 32 B
+- Where to use it: Use it where the video code chooses which frames carry data. Derive frame positions from a random 256-bit key so every frame is reachable.
+- Why: Symmetric primitives need no PQC algorithm. Fix the key strength and cover the whole video.
+- Trade-offs: None significant.
+- Risk now: not yet scored | after migration: not yet scored
+
+### L3 Integrity
+
+- Today: CRC32 (integrity, key-check oracle)
+- Recommended: AES-GCM authentication tag (NIST SP 800-38D)
+- Sizes: nonce: 12 B, tag: 16 B
+- Where to use it: Use it in place of the CRC32 check. Decryption fails if any byte of the payload was changed.
+- Why: CRC32 is not cryptographic and acts as a key-check oracle. The GCM tag makes tampering fail loudly.
+- Trade-offs: Never reuse a nonce with the same key.
+- Risk now: not yet scored | after migration: not yet scored

@@ -30,9 +30,12 @@ from qiskit_aer import AerSimulator  # noqa: E402
 from q2_arith import controlled_modmul  # noqa: E402
 from q2_shor import build_shor_ipea, shor_layout  # noqa: E402
 import shor_post as SP  # noqa: E402
+import quantum_runs as QR  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNS_FILE = ROOT / "data" / "quantum_runs.json"
+DIAGRAM_DIR = ROOT / "docs" / "circuits"
+QUESTION_GROUP = "q2_shor_gate"      # runs that differ only in N and a (rule 6)
 LABEL = "Aer simulator, toy size"
 SEED_SIM = 12345
 SEED_TRANSPILE = 12345
@@ -113,11 +116,68 @@ def time_one_iteration(a: int, N: int) -> dict:
             "estimate_note": f"ESTIMATE: {m} iterations x one-iteration run time; real time per shot may differ"}
 
 
-def save_record(record, path=RUNS_FILE):
-    path = Path(path)
-    data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
-    data.append(record)
-    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+def write_diagram(qc, N: int, a: int) -> str:
+    """Write a structure file for the circuit and return its path relative to the repo root.
+
+    The full text drawing of a gate-level Shor circuit is megabytes long (N=15 alone is 2.6 MB), so
+    it is not committed. This file holds what a reviewer needs: register layout, gate counts and the
+    start of the instruction sequence, run-length encoded. It is a SUMMARY of the circuit, not a drawing.
+    """
+    lay = shor_layout(N)
+    names = [ins.operation.name for ins in qc.data]
+    runs = []
+    for name in names:
+        if runs and runs[-1][0] == name:
+            runs[-1][1] += 1
+        else:
+            runs.append([name, 1])
+    lines = [f"Shor order finding, gate level (Beauregard, iterative phase estimation). {LABEL}.",
+             f"N = {N}, a = {a}, qubits = {qc.num_qubits}, phase bits = {qc.num_clbits}, depth = {qc.depth()}, "
+             f"instructions = {len(names)}",
+             "This is a structure summary, not a full drawing (the full text drawing is megabytes long).",
+             "",
+             "Registers (qubit indices):",
+             f"  x (value register, {lay['n']} qubits): {lay['x']}",
+             f"  b (accumulator, {len(lay['b'])} qubits): {lay['b']}",
+             f"  anc (overflow ancilla): {lay['anc']}",
+             f"  c (single control qubit, reused each round): {lay['c']}",
+             "",
+             "Gate counts (before transpiling): " + ", ".join(f"{k} {v}" for k, v in sorted(qc.count_ops().items())),
+             "",
+             f"First 60 of {len(runs)} runs of identical instructions (name x count):"]
+    lines += [f"  {name} x {cnt}" for name, cnt in runs[:60]]
+    DIAGRAM_DIR.mkdir(parents=True, exist_ok=True)
+    out = DIAGRAM_DIR / f"q2_shor_gate_N{N}_a{a}.txt"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out.relative_to(ROOT).as_posix()
+
+
+def to_evidence(record: dict, diagram_file: str) -> dict:
+    """Convert run_shor()'s record into the evidence schema of quantum_runs.py (rule 4)."""
+    top = max(record["factors_found"].items(), key=lambda kv: kv[1])[0] if record["factors_found"] else None
+    factors = [int(x) for x in top.split("x")] if top else []
+    return {
+        "run_id": record["id"],
+        "timestamp_utc": QR.now_utc(),
+        "algorithm": "shor_gate",
+        "question_group": QUESTION_GROUP,
+        "inputs": {"N": record["N"], "a": record["a"], "phase_bits": record["phase_bits"]},
+        "qubits": record["qubits"], "depth": record["depth"], "gate_counts": record["gate_counts"],
+        "shots": record["shots"], "backend": record["backend"],
+        "backend_version": record["qiskit_aer_version"], "qiskit_version": record["qiskit_version"],
+        "seed_simulator": record["seed_simulator"], "seed_transpiler": record["seed_transpiler"],
+        "counts": record["counts"], "success_rate": record["success_rate"],
+        "runtime_seconds": round(record["transpile_seconds"] + record["run_seconds"], 3),
+        "diagram_file": diagram_file, "label": record["label"], "simulated": True,
+        "result": {"factors": factors, "factors_found": record["factors_found"]},
+        "notes": "chi-square against the theoretical distribution (rule 5) and a second-method "
+                 "cross-check (rule 9) are not done yet; diagram_file is a structure summary",
+    }
+
+
+def save_record(record, qc, path=RUNS_FILE):
+    """Validate and append the run to data/quantum_runs.json ({"schema_version": 1, "runs": [...]})."""
+    QR.append_run(to_evidence(record, write_diagram(qc, record["N"], record["a"])), path)
 
 
 def print_record(r):
@@ -142,8 +202,8 @@ if __name__ == "__main__":
         for k, v in time_one_iteration(args.a, args.N).items():
             print(f"  {k}: {v}")
     else:
-        rec, _ = run_shor(args.a, args.N, args.shots)
+        rec, circuit = run_shor(args.a, args.N, args.shots)
         print_record(rec)
         if args.save:
-            save_record(rec)
+            save_record(rec, circuit)
             print("saved to", RUNS_FILE)

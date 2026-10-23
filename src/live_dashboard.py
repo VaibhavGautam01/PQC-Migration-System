@@ -50,6 +50,11 @@ try:
 except ImportError:
     import quantum_lab_page_data as ql
 
+try:
+    from src import qubit_cost_page_data as qcd
+except ImportError:
+    import qubit_cost_page_data as qcd
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
@@ -638,9 +643,9 @@ def page_risk():
         return
     st.caption("A transparent weighted score from 0 to 100. It is not a probability that someone "
                "attacks the project. Weights " + str(scores.get("weights_version", "?")) +
-               " are our choice and live in data/risk_weights.json. Only layer L1 (message "
-               "encryption) is scored so far. The quantum part uses logical-qubit estimates "
-               "(2n+3), not a simulator run.")
+               " are our choice and live in data/risk_weights.json. The quantum part uses "
+               "logical-qubit estimates (2n+3), not a simulator run. Measured circuit sizes "
+               "(Q4, toy size) and published estimates are shown below the factor breakdown.")
     text, agreed = rpd.assumptions_note(scores)
     st.markdown(f'<div class="note {"good" if agreed else ""}">{esc(text)}</div>', unsafe_allow_html=True)
 
@@ -680,6 +685,34 @@ def page_risk():
         left = ", ".join(p.get("layers_not_scored_yet", []))
         if left:
             st.markdown(f'<div class="note">Layers not scored yet: {esc(left)}.</div>', unsafe_allow_html=True)
+
+    qubit_cost_section()
+
+
+def qubit_cost_section():
+    """F2 qubit cost: the formula the score uses, next to measured Q4 circuits and published estimates."""
+    with st.expander("Qubit cost (F2): formula, measured circuits and published estimates"):
+        st.caption("Three kinds of number, never mixed. FORMULA: F2 uses 2n+3 logical qubits. MEASURED: "
+                   + qcd.LABEL_MEASURED + ". ESTIMATE: published figures and any extrapolation, "
+                   "not measured. Real key sizes (1024 bits and up) cannot be run here.")
+        st.markdown("**Formula and published estimates, by RSA size**")
+        st.dataframe(pd.DataFrame(qcd.size_rows()), hide_index=True)
+        st.caption("The Gidney-Ekera circuit is a different circuit from 2n+3, so the two logical counts "
+                   "are shown side by side and never combined. Published values are marked unverified "
+                   "in data/published_estimates.json until checked against the paper.")
+        measured = qcd.measured_rows()
+        st.markdown("**Measured: gate-level Shor circuits (Q2), transpiled (Q4)**")
+        if measured:
+            st.caption(qcd.summary_text())
+            st.dataframe(pd.DataFrame(measured), hide_index=True)
+        else:
+            st.info("outputs/q4_metrics.json not found. Run: python src/metrics_run.py")
+        extra = qcd.extrapolation_rows()
+        st.markdown("**Extrapolated to real key sizes (ESTIMATE)**")
+        if extra:
+            st.dataframe(pd.DataFrame(extra), hide_index=True)
+        else:
+            st.caption("Not available yet: the Q4 fit and extrapolation (outputs/q4_fit.json) has not been written.")
 
 
 def page_before_after():

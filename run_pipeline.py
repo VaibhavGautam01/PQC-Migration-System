@@ -1,10 +1,11 @@
-﻿"""
+"""
 run_pipeline.py - poori pipeline ek command mein (Issue #2)
 
-Chain: scanner (run_all.py) -> mapper + estimator (generate_risk_report.py)
-       -> tests. Phir check karta hai ki committed outputs badle ya nahi.
+Chain: scan -> risk score -> mapper + estimator (risk report) -> PQC advisor report
+       -> before/after migration score -> evidence gate -> tests.
+Phir check karta hai ki committed outputs badle ya nahi.
 Usage (repo root se): python run_pipeline.py [--project image|video|both]
-Exit code: 0 = sab pass aur outputs unchanged, 1 = kuch fail ya badla
+Exit code: 0 = sab pass aur outputs unchanged, 1 = kuch fail ya badla, 2 = --input (not built yet)
 """
 import argparse
 import hashlib
@@ -19,6 +20,9 @@ OUTPUTS = [ROOT / "outputs" / "findings.json",
            ROOT / "docs" / "risk_report.md"]
 # Risk scores are only compared for --project both (that is the committed file).
 RISK_OUTPUT = ROOT / "outputs" / "risk_scores.json"
+ADVISOR_OUTPUT = ROOT / "docs" / "pqc_advisor_report.md"
+BEFORE_AFTER = {"image": ROOT / "outputs" / "before_after_image.json",
+                "video": ROOT / "outputs" / "before_after_video.json"}
 PROJECTS = ("image", "video", "both")
 
 # Scan ke liye target repos yahan hone chahiye (git submodules).
@@ -26,22 +30,41 @@ TARGETS = [ROOT / "data" / "targets" / "steganography",
            ROOT / "data" / "targets" / "final-year-part1"]
 
 def build_steps(project="both"):
-    """Stages in order: scan -> risk score -> mapper/report -> tests (tests always last).
+    """Stages in order: scan -> risk score -> mapper/report -> advisor -> before/after -> gate -> tests.
 
     A single-project run writes outputs/risk_scores_<project>.json so it never
     overwrites the committed outputs/risk_scores.json (which holds both projects).
+    Tests always run last. The numbers in the titles follow the order.
     """
     if project not in PROJECTS:
         raise ValueError(f"unknown project {project!r}")
     risk = ["-m", "src.risk_run", "--project", project]
     if project != "both":
         risk += ["--out", f"outputs/risk_scores_{project}.json"]
-    return [
-        ("1. Scan both targets (scanner + edge flags)", ["src/run_all.py"]),
-        (f"2. Risk score ({project})", risk),
-        ("3. Mapper + estimator -> risk report", ["generate_risk_report.py"]),
-        ("4. Test suite", ["run_tests.py"]),
+    stages = [
+        ("Scan both targets (scanner + edge flags)", ["src/run_all.py"]),
+        (f"Risk score ({project})", risk),
+        ("Mapper + estimator -> risk report", ["generate_risk_report.py"]),
+        ("PQC advisor report (layer by layer)", ["scripts/advisor_report.py"]),
     ]
+    if project in ("image", "both"):
+        stages.append(("Before/after migration score (image)", ["src/before_after.py"]))
+    if project in ("video", "both"):
+        stages.append(("Before/after migration score (video)", ["src/before_after_video.py"]))
+    stages += [
+        ("Evidence gate (quantum run records)", ["-m", "src.evidence_gate"]),
+        ("Test suite", ["run_tests.py"]),
+    ]
+    return [(f"{i}. {title}", args) for i, (title, args) in enumerate(stages, 1)]
+
+
+def outputs_for(project="both"):
+    """Committed outputs the pipeline must leave unchanged for this project."""
+    out = list(OUTPUTS) + [ADVISOR_OUTPUT]
+    if project == "both":
+        out.append(RISK_OUTPUT)
+    out += [path for name, path in BEFORE_AFTER.items() if project in (name, "both")]
+    return out
 
 
 STEPS = build_steps("both")
@@ -56,8 +79,15 @@ def digest(path):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Run the whole pipeline.")
     ap.add_argument("--project", choices=PROJECTS, default="both")
-    project = ap.parse_args(argv).project
-    outputs = OUTPUTS + ([RISK_OUTPUT] if project == "both" else [])
+    ap.add_argument("--input", metavar="STEGO_IMAGE",
+                    help="Stego Analyzer: not built yet (planned Week 6)")
+    args = ap.parse_args(argv)
+    if args.input:
+        print("--input (Stego Analyzer) is not implemented yet. Planned for Week 6: upload, detect the "
+              "hiding method, extract, identify the cipher, attack (toy size) or estimate, report.")
+        return 2
+    project = args.project
+    outputs = outputs_for(project)
 
     # Khali target folder se scan 0 findings dega aur sab chupchap toot jayega.
     missing = [t for t in TARGETS if not t.is_dir() or not any(t.iterdir())]

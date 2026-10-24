@@ -37,6 +37,51 @@ class PipelineStageTests(unittest.TestCase):
         args = next(a for t, a in run_pipeline.build_steps("both") if "Risk score" in t)
         self.assertNotIn("--out", args)
 
+    def test_full_stage_order(self):
+        order = ["Scan", "Risk score", "Mapper", "advisor report", "Before/after", "Evidence gate", "Test suite"]
+        for p in run_pipeline.PROJECTS:
+            n = names(p)
+            idx = [next(i for i, t in enumerate(n) if key in t) for key in order]
+            self.assertEqual(idx, sorted(idx), p)
+
+    def test_stage_titles_are_numbered_in_order(self):
+        for p in run_pipeline.PROJECTS:
+            self.assertEqual([t.split(".")[0] for t in names(p)], [str(i) for i in range(1, len(names(p)) + 1)])
+
+    def test_before_after_stage_follows_the_project(self):
+        self.assertEqual([t for t in names("image") if "Before/after" in t].__len__(), 1)
+        self.assertIn("(image)", next(t for t in names("image") if "Before/after" in t))
+        self.assertIn("(video)", next(t for t in names("video") if "Before/after" in t))
+        self.assertEqual(len([t for t in names("both") if "Before/after" in t]), 2)
+
+    def test_evidence_gate_stage_runs_the_gate_module(self):
+        args = next(a for t, a in run_pipeline.build_steps("both") if "Evidence gate" in t)
+        self.assertEqual(args, ["-m", "src.evidence_gate"])
+
+    def test_outputs_checked_per_project(self):
+        names_ = lambda p: {x.name for x in run_pipeline.outputs_for(p)}  # noqa: E731
+        self.assertIn("before_after_image.json", names_("image"))
+        self.assertNotIn("before_after_video.json", names_("image"))
+        self.assertIn("before_after_video.json", names_("video"))
+        self.assertNotIn("risk_scores.json", names_("video"))
+        self.assertTrue({"risk_scores.json", "before_after_image.json", "before_after_video.json",
+                         "pqc_advisor_report.md", "findings.json", "risk_report.md"} <= names_("both"))
+
+    def test_every_stage_script_exists(self):
+        for p in run_pipeline.PROJECTS:
+            for title, args in run_pipeline.build_steps(p):
+                if args[0] != "-m":
+                    self.assertTrue((run_pipeline.ROOT / args[0]).is_file(), (title, args[0]))
+
+    def test_input_option_is_a_clear_not_built_yet_message(self):
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = run_pipeline.main(["--input", "some_image.png"])
+        self.assertEqual(code, 2)
+        self.assertIn("not implemented yet", buf.getvalue())
+
     def test_unknown_project_rejected(self):
         with self.assertRaises(ValueError):
             run_pipeline.build_steps("audio")

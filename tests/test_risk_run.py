@@ -25,8 +25,8 @@ class RiskRunTests(unittest.TestCase):
             s = p["L1"]["z_scenarios"]
             self.assertGreaterEqual(s["5"]["overall"], s["10"]["overall"])
             self.assertGreaterEqual(s["10"]["overall"], s["20"]["overall"])
-            self.assertEqual(p["z_range"]["max"], s["5"]["overall"])
-            self.assertEqual(p["z_range"]["min"], s["20"]["overall"])
+            self.assertGreaterEqual(p["z_range"]["max"], p["project_score"])
+            self.assertLessEqual(p["z_range"]["min"], p["project_score"])
 
     def test_central_value_matches_central_scenario(self):
         for p in (self.image, self.video):
@@ -40,13 +40,21 @@ class RiskRunTests(unittest.TestCase):
         v = self.video["L1"]
         self.assertGreaterEqual(v["variants"][0]["overall"], v["score"]["overall"])  # 1024 vs 2048
 
-    def test_only_l1_is_scored_for_now(self):
+    def test_layers_are_scored_pending_or_no_protection(self):
         for p in (self.image, self.video):
-            self.assertEqual(p["layers_scored"], ["L1"])
-            self.assertEqual(p["layers_not_scored_yet"], ["L2", "L3", "L5"])
+            self.assertEqual(p["layers_scored"][0], "L1")
+            covered = set(p["layers_scored"]) | set(p["layers_not_scored_yet"]) | set(p["no_protection"])
+            self.assertEqual(covered, {"L1", "L2", "L3", "L5"})
+
+    def test_video_crc32_layer_is_scored(self):
+        self.assertEqual(self.video["layers_not_scored_yet"], [])
+        self.assertIsNone(self.video["pending_reason"])
+        s = self.video["other_layers"]["L3"]["score"]
+        self.assertEqual(s["quantum"], 0.0)
+        self.assertEqual((s["overall"], s["band"]), (30.4, "Moderate"))
 
     def test_assumptions_and_weights_version_recorded(self):
-        self.assertEqual(self.out["weights_version"], "v0.1")
+        self.assertEqual(self.out["weights_version"], "v1.0")
         self.assertEqual(self.out["assumptions"]["X_secret_years"], 5)
         self.assertEqual(sorted(self.out["assumptions"]["Z_scenarios"]), [5, 10, 20])
 

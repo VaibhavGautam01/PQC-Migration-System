@@ -5,7 +5,8 @@ For each project it scores layer L1 (message encryption: textbook RSA) with
 risk_score.score_layer(), using the key size IN USE, the construction and the
 exposure, and the agreed assumptions (X, Y, Z) from data/manual_facts.json.
 Z is shown as a range over its scenarios, not as one number.
-Layers L2, L3 and L5 are scored in Week 3 (plan: Week 3 Day 1).
+Layers beyond L1 are scored where the code has them (video L2 frame-selection key, video L3
+CRC32). Layers with no protection at all are listed and left out of the average.
 The result is written to outputs/risk_scores.json.
 
 The score is a transparent weighted score, NOT a probability.
@@ -45,6 +46,24 @@ L1_CONFIG = {
 }
 
 
+# Other layers with something to score (evidence: layer map, docs/layer_map.md).
+OTHER_LAYERS = {
+    "image": {},
+    "video": {
+        "L2": {"name": "Frame-selection key", "today": "SHA-256 of a passphrase (frames 0 to 255 only)",
+               "category": "symmetric", "effective_bits": 128,
+               "construction": "deterministic_or_oracle", "exposure": "bypassable",
+               "evidence": "frame_selector.py:32"},
+        "L3": {"name": "Integrity", "today": "CRC32 (not cryptographic)",
+               "category": "none", "construction": "deterministic_or_oracle", "exposure": "bypassable",
+               "evidence": "rsa_crypto.py:137 and :180"},
+    },
+}
+# Layers that do not exist in the project: no protection at all, left out of the average.
+NO_PROTECTION = {"image": ["L2", "L3", "L5"], "video": ["L5"]}
+PENDING_REASON = "F1 category 'none' is not in data/risk_weights.json yet (comes with weights v1.0)"
+
+
 def _score(cfg, modulus_bits, x, y, z, weights):
     return R.score_layer("shor_broken", cfg["construction"], cfg["exposure"],
                          modulus_bits=modulus_bits, x_years=x, y_years=y, z_years=z,
@@ -53,6 +72,23 @@ def _score(cfg, modulus_bits, x, y, z, weights):
 
 def _round(d):
     return {k: (round(v, 1) if isinstance(v, float) else v) for k, v in d.items()}
+
+
+def _score_other(cfg, x, y, z_list, central_z, weights):
+    """Score a non-RSA layer. Returns None if the engine cannot score its category yet."""
+    kw = {"effective_bits": cfg["effective_bits"]} if "effective_bits" in cfg else {}
+
+    def one(zz):
+        return _round(R.score_layer(cfg["category"], cfg["construction"], cfg["exposure"],
+                                    x_years=x, y_years=y, z_years=zz, weights=weights, **kw))
+    try:
+        score = one(central_z)
+        scenarios = {str(zz): one(zz) for zz in z_list}
+    except KeyError:
+        return None
+    return {"name": cfg["name"], "today": cfg["today"], "evidence": cfg["evidence"],
+            "category": cfg["category"], "construction": cfg["construction"],
+            "exposure": cfg["exposure"], "score": score, "z_scenarios": scenarios}
 
 
 def score_project(project, assume=None, weights=None, findings=None):
@@ -74,9 +110,21 @@ def score_project(project, assume=None, weights=None, findings=None):
                  **_round(_score(cfg, k["modulus_bits"], x, y, z, weights))}
                 for k in cfg["keys"] if not k["primary"]]
 
-    layer_scores = [layer["overall"]]
+    z_list = A.z_scenarios(assume)
+    others, pending = {}, []
+    for lid, ocfg in OTHER_LAYERS[project].items():
+        entry = _score_other(ocfg, x, y, z_list, z, weights)
+        if entry is None:
+            pending.append(lid)
+        else:
+            others[lid] = entry
+
+    layer_scores = [layer["overall"]] + [e["score"]["overall"] for e in others.values()]
     proj = R.project_score(layer_scores, weights)
-    proj_by_z = {zz: R.project_score([s["overall"]], weights) for zz, s in scenarios.items()}
+    proj_by_z = {}
+    for zz in z_list:
+        vals = [scenarios[str(zz)]["overall"]] + [e["z_scenarios"][str(zz)]["overall"] for e in others.values()]
+        proj_by_z[zz] = R.project_score(vals, weights)
     evidence = None
     if findings is not None:
         m = L.build_layer_map(findings)
@@ -84,8 +132,11 @@ def score_project(project, assume=None, weights=None, findings=None):
 
     return {
         "project": project, "repo": cfg["repo"],
-        "layers_scored": ["L1"],
-        "layers_not_scored_yet": ["L2", "L3", "L5"],
+        "layers_scored": ["L1"] + list(others),
+        "layers_not_scored_yet": pending,
+        "pending_reason": PENDING_REASON if pending else None,
+        "no_protection": NO_PROTECTION[project],
+        "other_layers": others,
         "L1": {"key_in_use": primary, "construction": cfg["construction"],
                "exposure": cfg["exposure"], "score": layer,
                "z_scenarios": scenarios, "variants": variants},
@@ -131,7 +182,7 @@ def main(argv=None):
     for p, r in out["projects"].items():
         s = r["L1"]["score"]
         print(f"{p}: {r['project_score']}% ({r['band']}), "
-              f"quantum {s['quantum']}%, classical {s['classical']}%, "
+              f"L1 quantum {s['quantum']}%, L1 classical {s['classical']}%, "
               f"Z range {r['z_range']['min']}-{r['z_range']['max']}%")
     return 0
 

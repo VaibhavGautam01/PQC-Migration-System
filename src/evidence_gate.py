@@ -1,14 +1,16 @@
 """
 evidence_gate.py - the evidence gate for quantum runs (Week 2 Day 2).
 
-Reads data/quantum_runs.json (rule 4) and checks that every quantum run has a complete
-record. Errors (always fail):
+Reads data/quantum_runs.json (rule 4) and every data/quantum_runs_*.json (for example the Q6 and
+Q7 files) and checks that every quantum run has a complete record. Errors (always fail):
   * a record that fails quantum_runs.validate_run()
   * a duplicate run_id
   * a circuit diagram file that does not exist
 Warnings (become errors with --strict, used at release):
   * a question_group that fails the change-the-question test (rule 6): it needs at least
     two runs with different inputs and different results.
+A record in an extra file that is not in the evidence format yet is a warning (an error with
+--strict, used at release), not an error, so a team member can migrate a file step by step.
 No runs yet is not an error, so the gate gets stricter as runs arrive.
 Run:  python -m src.evidence_gate [--strict]
 Aer simulator, toy size.
@@ -46,9 +48,33 @@ def check_runs(runs, root=ROOT, strict=False):
     return errors, warnings
 
 
-def run_gate(path=None, root=ROOT, strict=False):
-    runs = QR.load_runs(path)
-    errors, warnings = check_runs(runs, root, strict)
+def unconverted_warnings(extra_runs, file_problems):
+    """One warning per extra file that still has records outside the evidence format."""
+    bad = {}
+    for run in extra_runs:
+        problems = QR.validate_run({k: v for k, v in run.items() if k != "_source"})
+        if problems:
+            bad.setdefault(run["_source"], []).append(problems)
+    warnings = [f"{name}: {len(items)} record(s) not in the evidence format yet "
+                f"({'; '.join(items[0][:3])}; ...)" for name, items in sorted(bad.items())]
+    return warnings + [f"{p}" for p in file_problems]
+
+
+def run_gate(path=None, root=ROOT, strict=False, data_dir=None):
+    """(n_runs_checked, errors, warnings). With path, only that file is checked (as before)."""
+    if path is not None:
+        runs = QR.load_runs(path)
+        errors, warnings = check_runs(runs, root, strict)
+        return len(runs), errors, warnings
+    main_path = Path(data_dir) / "quantum_runs.json" if data_dir else None
+    runs = QR.load_runs(main_path)
+    extra, file_problems = QR.load_extra_runs(data_dir)
+    runs = runs + [{k: v for k, v in r.items() if k != "_source"} for r in extra if not QR.validate_run(
+        {k: v for k, v in r.items() if k != "_source"})]
+    errors, warnings = check_runs(runs, root, strict=False)
+    warnings = warnings + unconverted_warnings(extra, file_problems)
+    if strict:
+        errors, warnings = errors + warnings, []
     return len(runs), errors, warnings
 
 

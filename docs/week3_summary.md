@@ -18,6 +18,6 @@
 - Sizes carry a `size_status`. Entries whose size is `unverified` or `unknown` are listed under "Open data questions" instead of being presented as settled.
 - RSA entries recommend ML-KEM-768 with AES-256-GCM (ML-KEM is a key-encapsulation mechanism, not a drop-in encryption algorithm).
 
-**Resolved:** the modulus-size questions from Week 2 are now confirmed in `data/manual_facts.json` (part1: 256 bits in use and about 8 bits in the R-channel module; video: UI default 2048). `risk_report.md` and the CBOM now both apply these overrides, so they show the same sizes.
+**Resolved:** the modulus-size questions from Week 2 are now confirmed in `data/manual_facts.json` (part1: 256 bits in use and n below 256, at most 8 bits, in the R-channel module; video: UI default 2048). `risk_report.md` and the CBOM now both apply these overrides, so they show the same sizes.
 
 **Limits:** all quantum work runs on a simulator at toy sizes; the CBOM reports estimates, not measurements.

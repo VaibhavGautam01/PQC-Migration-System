@@ -55,12 +55,18 @@ try:
 except ImportError:
     import qubit_cost_page_data as qcd
 
+try:
+    from src import dashboard_safety as dsafe
+except ImportError:
+    import dashboard_safety as dsafe
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
 CBOM_MD = os.path.join(ROOT, "docs", "cbom.md")
 FACTS = os.path.join(ROOT, "data", "manual_facts.json")
 DEMO = os.path.join(ROOT, "data", "demo_results.json")
+DEMO_SESSION = str(dsafe.session_path(ROOT))     # untracked: a demo click never changes DEMO
 RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
 ADVISOR = os.path.join(ROOT, "data", "pqc_recommendations.json")
 BEFORE_AFTER = os.path.join(ROOT, "outputs", "before_after_image.json")
@@ -407,17 +413,21 @@ def _demo_cases():
 
 
 def save_demo(n, shots, successes, factors, env):
-    """Write one real run into data/demo_results.json (replaces an earlier run of the same N)."""
-    doc = get_json(DEMO) or {"_readme": "Real simulator runs saved from the dashboard.",
-                              "environment": env, "cases": [], "recordings": []}
+    """Save one real run to outputs/tmp_demo_results.json (replaces an earlier run of the same N).
+
+    The tracked data/demo_results.json is only read, never written, so a demo click cannot change a
+    committed file. To keep a run, copy the session file over data/demo_results.json and commit it."""
+    doc = get_json(DEMO_SESSION) or get_json(DEMO) or {
+        "_readme": "Real simulator runs saved from the dashboard.",
+        "environment": env, "cases": [], "recordings": []}
     doc = json.loads(json.dumps(doc))
     doc["environment"] = env
     doc["cases"] = [c for c in doc.get("cases", []) if c.get("N") != n]
     doc["cases"].append({"N": n, "expected_factors": list(factors), "runs": shots, "successes": successes,
                          "backend": "simulator", "notes": "saved from live_dashboard.py"})
     doc["cases"].sort(key=lambda c: c["N"])
-    os.makedirs(os.path.dirname(DEMO), exist_ok=True)
-    with open(DEMO, "w", encoding="utf-8") as fh:
+    os.makedirs(os.path.dirname(DEMO_SESSION), exist_ok=True)
+    with open(DEMO_SESSION, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=2)
         fh.write("\n")
     st.cache_data.clear()
@@ -512,9 +522,11 @@ def page_demo():
         st.warning("No successful outcome this time. Run again, it is random.")
     st.caption("Toy sizes on a simulator. This shows the algorithm works. It does not show RSA-1024 or "
                "RSA-2048 can be broken today.")
-    if st.button("💾 Save this run to data/demo_results.json (replaces an earlier N = %d run)" % n):
+    if st.button("💾 Save this run for this session (replaces an earlier N = %d run)" % n):
         save_demo(n, total, ok, expected, run["env"])
-        st.success("Saved. Rebuild the final dashboard so its Demo section shows it.")
+        st.success("Saved to outputs/tmp_demo_results.json (not tracked by git). The committed "
+                   "data/demo_results.json is unchanged. To keep this run, copy that file over "
+                   "data/demo_results.json and commit it.")
 
 
 # ================================================================ MIGRATION
@@ -913,14 +925,16 @@ def page_pipeline():
         st.markdown(f'<div class="note bad">Target repos missing: {esc(", ".join(missing))}. '
                     'Run <code>git submodule update --init</code> before scanning.</div>', unsafe_allow_html=True)
     st.markdown("#### ▶️ Run a step")
-    st.caption("These buttons run the real project scripts and overwrite their outputs. "
-               "Refresh the page afterwards to see new numbers.")
+    st.caption("Scan, Rebuild CBOM and Full pipeline overwrite tracked output files (findings, CBOM, "
+               "risk report, scores), so they stay switched off until you tick the box below. After a "
+               "run this page lists the tracked files that changed and the command that restores them.")
+    allow = st.checkbox("I understand these buttons can change tracked files", key="allow_overwrite")
     steps = {
-        "🔍 Scan targets": (["src/run_all.py"], 300, bool(missing)),
+        "🔍 Scan targets": (["src/run_all.py"], 300, bool(missing) or not allow),
         "🧾 Rebuild CBOM": (["src/cbom.py", "outputs/findings.json", "--facts", "data/manual_facts.json",
-                             "--json", "docs/cbom.json", "--md", "docs/cbom.md", "--check"], 120, False),
+                             "--json", "docs/cbom.json", "--md", "docs/cbom.md", "--check"], 120, not allow),
         "🧪 Run tests": (["run_tests.py"], 300, False),
-        "🚀 Full pipeline": (["run_pipeline.py"], 900, bool(missing)),
+        "🚀 Full pipeline": (["run_pipeline.py"], 900, bool(missing) or not allow),
     }
     cols = st.columns(len(steps))
     for col, (label, (args, timeout, disabled)) in zip(cols, steps.items()):
@@ -931,6 +945,12 @@ def page_pipeline():
             (st.success if code == 0 else st.error)(f"{label}: exit code {code}")
             tail = "\n".join(out.strip().splitlines()[-40:])
             st.code(tail or "(no output)", language="text")
+            changed = dsafe.git_changes(ROOT)
+            if changed:
+                st.warning("Tracked files that now differ from the last commit: " + ", ".join(changed))
+                st.code(dsafe.restore_hint(changed), language="text")
+            else:
+                st.caption("No tracked file changed (or git is not available here).")
 
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,

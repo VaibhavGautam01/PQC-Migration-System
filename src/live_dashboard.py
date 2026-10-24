@@ -64,6 +64,7 @@ DEMO = os.path.join(ROOT, "data", "demo_results.json")
 RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
 ADVISOR = os.path.join(ROOT, "data", "pqc_recommendations.json")
 BEFORE_AFTER = os.path.join(ROOT, "outputs", "before_after_image.json")
+BEFORE_AFTER_VIDEO = os.path.join(ROOT, "outputs", "before_after_video.json")
 TARGETS = [os.path.join(ROOT, "data", "targets", "steganography"),
            os.path.join(ROOT, "data", "targets", "final-year-part1")]
 
@@ -716,6 +717,59 @@ def qubit_cost_section():
 
 
 def page_before_after():
+    """Before and after migration for the image or the video project, scored by the same engine."""
+    project = st.radio("Project", ["Image", "Video"], horizontal=True, key="ba_project")
+    if project == "Video":
+        page_before_after_video()
+    else:
+        page_before_after_image()
+
+
+def page_before_after_video():
+    """Video project before and after migration (L1 to L3), scored by the same engine."""
+    data = ba.load_video(BEFORE_AFTER_VIDEO)
+    if data is None:
+        st.info("outputs/before_after_video.json not found. Run: python src/before_after_video.py")
+        return
+    st.caption("Video project, layers L1 (message encryption), L2 (frame-selection key) and L3 (integrity). "
+               "Both rows use the same engine and weights " + str(data.get("weights_version", "?"))
+               + ". A weighted score, not a probability. Formulas and weights only; no simulator result. "
+               "The prototype is educational code, not production crypto.")
+    bits = st.radio("RSA modulus size in the code", ba.size_options(data), horizontal=True,
+                    format_func=lambda b: f"{b} bits", key="bav_bits")
+    row = ba.row_for(data, bits)
+    s = ba.video_summary(row)
+    kpi_row([("Project before", f"{s['before']:.1f}%", rpd.BAND_COLORS.get(s["before_band"], "#90A4AE")),
+             ("Project after", f"{s['after']:.1f}%", rpd.BAND_COLORS.get(s["after_band"], "#90A4AE")),
+             ("Drop (lower bound)", f"{s['drop']:.1f} points", "#7C4DFF"),
+             ("Band", f"{s['before_band']} to {s['after_band']}", "#00B0FF")])
+
+    c1, c2 = st.columns(2)
+    chart = pd.DataFrame(ba.video_chart_rows(row))
+    c1.plotly_chart(style(px.bar(chart, x="layer", y="overall", color="setup", barmode="group",
+                                 range_y=[0, 100], title="Overall score by layer")), key="bav_layers")
+    sc = pd.DataFrame(ba.video_scenario_rows(row)).melt(id_vars="z", var_name="setup", value_name="overall")
+    c2.plotly_chart(style(px.line(sc, x="z", y="overall", color="setup", markers=True, range_y=[0, 100],
+                                  title="Project score by years until a large quantum computer (Z)")),
+                    key="bav_z")
+
+    st.markdown("#### Layer by layer")
+    lr = pd.DataFrame(ba.video_layer_rows(row))
+    lr["before"] = lr["before"].map(lambda v: f"{v:.1f}")
+    lr["after"] = lr["after"].map(lambda v: "not credited" if pd.isna(v) else f"{v:.1f}")
+    st.dataframe(lr, hide_index=True)
+    st.markdown(f'<div class="note"><b>Not credited:</b> {esc(data.get("not_credited", ""))}. '
+                'The L2 row keeps its "before" value in the project score, so the drop shown is a lower '
+                f'bound and L2 becomes the weakest layer. {esc(data.get("exposure_note", ""))}.</div>',
+                unsafe_allow_html=True)
+
+    st.markdown("#### Does the result depend on the weights?")
+    st.dataframe(pd.DataFrame(ba.video_sensitivity_rows(row)), hide_index=True)
+    st.caption(f"{data.get('n_draws', '?')} random weight draws per row (seed {data.get('seed', '?')}). "
+               "A value of 1.0 means the after score was lower than the before score in every draw.")
+
+
+def page_before_after_image():
     """Image project before and after migration, scored by the same engine."""
     data = ba.load(BEFORE_AFTER)
     if data is None:

@@ -30,8 +30,13 @@ PLANNED = [
 
 
 def load_runs(path=None):
-    """All evidence records (empty list if the file is missing)."""
-    return QR.load_runs(path)
+    """All evidence records (empty list if the file is missing).
+
+    Without a path this also includes records from data/quantum_runs_*.json that are already in the
+    evidence format; records that are not are left out (the evidence gate warns about them)."""
+    if path is not None:
+        return QR.load_runs(path)
+    return QR.load_all_valid_runs()
 
 
 def label_of(run):

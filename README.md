@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Qiskit](https://img.shields.io/badge/Qiskit-Shor's_Demo-6929C4?style=for-the-badge&logo=ibm&logoColor=white)
 ![Target](https://img.shields.io/badge/Migrate_To-ML--KEM--768-00C853?style=for-the-badge&logo=letsencrypt&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-740_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-894_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
 ![Scanner](https://img.shields.io/badge/Scanner-v0.4.0-2196F3?style=for-the-badge)
 ![Patterns](https://img.shields.io/badge/Patterns-48-9C27B0?style=for-the-badge)
 ![Dashboard](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -159,7 +159,7 @@ The pipeline was run on `Final-Year-project-part1` and `Secure-Video-Steganograp
 | 🧾 CBOM entries | **6** |
 | ⚠️ Entries with a classical key-strength problem | **2** |
 | ❓ Entries with unknown key size | **2** |
-| 🧪 Automated tests | **740** passing (13 skipped) |
+| 🧪 Automated tests | **894** passing (15 skipped) |
 
 **Risk summary** (logical-qubit estimates, no error-correction overhead):
 
@@ -248,7 +248,7 @@ Shor's algorithm is probabilistic. Not every shot finds the factors, and that is
 
 ## 🎯 Risk Score and PQC Advisor (Phase 2)
 
-The risk score is a **transparent weighted score from 0 to 100. It is not a probability** that someone attacks a project. Every factor, weight and threshold is written down in `data/risk_weights.json` (frozen as v0.1, see `data/risk_weights.lock.json`) and explained in `docs/risk_model.md`. The inputs nobody can measure (how long the data must stay secret, years to migrate, years until a large quantum computer) are assumptions, stored in `data/manual_facts.json`, agreed with our supervisor on 2026-10-17, and shown as scenarios (Z = 5, 10, 20), never as one number.
+The risk score is a **transparent weighted score from 0 to 100. It is not a probability** that someone attacks a project. Every factor, weight and threshold is written down in `data/risk_weights.json` (frozen as v1.0, see `data/risk_weights.lock.json`) and explained in `docs/risk_model.md`. The inputs nobody can measure (how long the data must stay secret, years to migrate, years until a large quantum computer) are assumptions, stored in `data/manual_facts.json`, agreed with our supervisor on 2026-10-17, and shown as scenarios (Z = 5, 10, 20), never as one number.
 
 ```bash
 python -m src.risk_run --project both       # score image, video or both -> outputs/risk_scores.json

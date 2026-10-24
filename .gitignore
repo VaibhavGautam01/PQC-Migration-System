@@ -29,3 +29,6 @@ outputs/toykeys/
 outputs/chi_*.png
 
 outputs/*.png
+
+legacy_log.txt
+docs/risk_report_sections.md

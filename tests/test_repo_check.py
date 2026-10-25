@@ -82,6 +82,26 @@ class RepoCheckTests(unittest.TestCase):
         make_repo(self.root, readme="![Tests](https://x/Tests-858_passing-green)")
         self.assertEqual(rc.badge_test_count(self.root), 858)
 
+    def test_release_gate_lists_open_markers_and_a_failing_evidence_gate(self):
+        make_repo(self.root)
+        (self.root / "docs" / "report").mkdir()
+        (self.root / "docs" / "report" / "c.md").write_text("text FILL here\nCONFIRM WITH SIR: java\nclean line\n", encoding="utf-8")
+        data = self.root / "data"
+        (data / "quantum_runs.json").write_text(json.dumps({"schema_version": 1, "runs": []}), encoding="utf-8")
+        (data / "quantum_runs_q6.json").write_text(json.dumps([{"algorithm": "BB84"}]), encoding="utf-8")
+        problems = rc.check_release(self.root, data_dir=data)
+        text = "\n".join(problems)
+        self.assertIn("open FILL marker at docs/report/c.md:1", text)
+        self.assertIn("open CONFIRM WITH SIR marker at docs/report/c.md:2", text)
+        self.assertIn("quantum_runs_q6.json", text)
+        self.assertNotIn("c.md:3", text)
+
+    def test_release_gate_passes_on_a_clean_tree(self):
+        make_repo(self.root)
+        (self.root / "data" / "quantum_runs.json").write_text(json.dumps({"schema_version": 1, "runs": []}), encoding="utf-8")
+        self.assertEqual([p for p in rc.check_release(self.root, data_dir=self.root / "data")
+                          if not p.startswith("uncommitted")], [])
+
     def test_test_folders_match_run_tests(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
         import run_tests  # type: ignore

@@ -11220,6 +11220,181 @@
         }
       },
       "notes": "chi-square against the theoretical distribution (rule 5) and a second-method cross-check (rule 9) are not done yet; diagram_file is a structure summary"
+    },
+    {
+      "run_id": "q2-shor-N15-a2-20261025-174054",
+      "timestamp_utc": "2026-10-25T12:10:55+00:00",
+      "algorithm": "shor_gate",
+      "question_group": "q2_shor_gate",
+      "inputs": {
+        "N": 15,
+        "a": 2,
+        "phase_bits": 8
+      },
+      "qubits": 11,
+      "depth": 4224,
+      "gate_counts": {
+        "cp": 2880,
+        "h": 1456,
+        "mcphase": 1280,
+        "swap": 576,
+        "p": 320,
+        "x": 129,
+        "cx": 128,
+        "cswap": 32,
+        "if_else": 28,
+        "measure": 8,
+        "reset": 7
+      },
+      "shots": 20,
+      "backend": "AerSimulator",
+      "backend_version": "0.17.2",
+      "qiskit_version": "2.5.2",
+      "seed_simulator": 12345,
+      "seed_transpiler": 12345,
+      "counts": {
+        "10000000": 3,
+        "00000000": 8,
+        "01000000": 3,
+        "11000000": 6
+      },
+      "success_rate": 0.6,
+      "runtime_seconds": 6.808,
+      "diagram_file": "docs/circuits/q2_shor_gate_N15_a2.txt",
+      "label": "Aer simulator, toy size",
+      "simulated": true,
+      "result": {
+        "factors": [
+          3,
+          5
+        ],
+        "factors_found": {
+          "3x5": 12
+        }
+      },
+      "notes": "Stego Analyzer run; chi-square and a second-method cross-check are not done"
+    },
+    {
+      "run_id": "q2-shor-N21-a2-20261025-174107",
+      "timestamp_utc": "2026-10-25T12:11:08+00:00",
+      "algorithm": "shor_gate",
+      "question_group": "q2_shor_gate",
+      "inputs": {
+        "N": 21,
+        "a": 2,
+        "phase_bits": 10
+      },
+      "qubits": 13,
+      "depth": 7680,
+      "gate_counts": {
+        "cp": 6600,
+        "h": 2660,
+        "mcphase": 2400,
+        "swap": 1320,
+        "p": 600,
+        "x": 201,
+        "cx": 200,
+        "cswap": 50,
+        "if_else": 45,
+        "measure": 10,
+        "reset": 9
+      },
+      "shots": 20,
+      "backend": "AerSimulator",
+      "backend_version": "0.17.2",
+      "qiskit_version": "2.5.2",
+      "seed_simulator": 12345,
+      "seed_transpiler": 12345,
+      "counts": {
+        "0110010010": 1,
+        "1010101010": 2,
+        "0000000000": 3,
+        "1101010101": 2,
+        "1000000000": 2,
+        "0101010101": 1,
+        "1010101011": 2,
+        "0010101011": 3,
+        "0100110111": 1,
+        "1101010110": 1,
+        "0010101010": 2
+      },
+      "success_rate": 0.8,
+      "runtime_seconds": 12.115,
+      "diagram_file": "docs/circuits/q2_shor_gate_N21_a2.txt",
+      "label": "Aer simulator, toy size",
+      "simulated": true,
+      "result": {
+        "factors": [
+          3,
+          7
+        ],
+        "factors_found": {
+          "3x7": 16
+        }
+      },
+      "notes": "Stego Analyzer run; chi-square and a second-method cross-check are not done"
+    },
+    {
+      "run_id": "q2-shor-N35-a2-20261025-174143",
+      "timestamp_utc": "2026-10-25T12:11:45+00:00",
+      "algorithm": "shor_gate",
+      "question_group": "q2_shor_gate",
+      "inputs": {
+        "N": 35,
+        "a": 2,
+        "phase_bits": 12
+      },
+      "qubits": 15,
+      "depth": 12624,
+      "gate_counts": {
+        "cp": 13104,
+        "h": 4392,
+        "mcphase": 4032,
+        "swap": 1872,
+        "p": 1008,
+        "x": 289,
+        "cx": 288,
+        "cswap": 72,
+        "if_else": 66,
+        "measure": 12,
+        "reset": 11
+      },
+      "shots": 20,
+      "backend": "AerSimulator",
+      "backend_version": "0.17.2",
+      "qiskit_version": "2.5.2",
+      "seed_simulator": 12345,
+      "seed_transpiler": 12345,
+      "counts": {
+        "100000000000": 3,
+        "110000000000": 1,
+        "101010101010": 1,
+        "000101010101": 3,
+        "100100110111": 1,
+        "011010101011": 4,
+        "011010101010": 1,
+        "010110010010": 1,
+        "000000000000": 1,
+        "101010101011": 1,
+        "100101010110": 1,
+        "111010101010": 1,
+        "001010101010": 1
+      },
+      "success_rate": 0.85,
+      "runtime_seconds": 34.079,
+      "diagram_file": "docs/circuits/q2_shor_gate_N35_a2.txt",
+      "label": "Aer simulator, toy size",
+      "simulated": true,
+      "result": {
+        "factors": [
+          5,
+          7
+        ],
+        "factors_found": {
+          "5x7": 17
+        }
+      },
+      "notes": "Stego Analyzer run; chi-square and a second-method cross-check are not done"
     }
   ]
 }

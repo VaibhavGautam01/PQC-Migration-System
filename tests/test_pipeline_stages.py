@@ -73,14 +73,48 @@ class PipelineStageTests(unittest.TestCase):
                 if args[0] != "-m":
                     self.assertTrue((run_pipeline.ROOT / args[0]).is_file(), (title, args[0]))
 
-    def test_input_option_is_a_clear_not_built_yet_message(self):
+    def _run_input(self, path):
         import contextlib
         import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = run_pipeline.main(["--input", "some_image.png"])
+            code = run_pipeline.main(["--input", str(path)])
+        return code, buf.getvalue()
+
+    def test_input_with_a_missing_file_says_so(self):
+        code, out = self._run_input("no_such_image.png")
         self.assertEqual(code, 2)
-        self.assertIn("not implemented yet", buf.getvalue())
+        self.assertIn("file not found", out)
+
+    def test_input_without_the_pinned_project_stops_clearly_and_invents_no_result(self):
+        import tempfile
+        from unittest import mock
+        from stego_analyzer import extract
+        with tempfile.TemporaryDirectory() as tmp:
+            img = Path(tmp) / "x.png"
+            img.write_bytes(b"not an image")
+            with mock.patch.object(extract, "PINNED_DIR", Path(tmp) / "none"):
+                code, out = self._run_input(img)
+        self.assertEqual(code, 3)
+        self.assertIn("stopped at detect_method", out)
+        self.assertIn("git submodule update --init", out)
+        self.assertNotIn("Result:", out)
+
+    def test_public_key_option_is_parsed_and_checked(self):
+        self.assertEqual(run_pipeline.parse_public_key("15,7"), {"n": 15, "e": 7})
+        self.assertEqual(run_pipeline.parse_public_key(" 21 , 5 "), {"n": 21, "e": 5})
+        for bad in ("15", "15,7,3", "a,b", "15,-7", ""):
+            with self.assertRaises(ValueError):
+                run_pipeline.parse_public_key(bad)
+
+    def test_bad_public_key_gives_exit_code_2(self):
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = run_pipeline.main(["--input", "x.png", "--public-key", "oops"])
+        self.assertEqual(code, 2)
+        self.assertIn("N,E", buf.getvalue())
 
     def test_unknown_project_rejected(self):
         with self.assertRaises(ValueError):

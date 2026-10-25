@@ -31,12 +31,17 @@ Write-Host "`nEvidence gate, strict (this fails until the Q6 and Q7 records are 
 & .\venv\Scripts\python.exe -m src.evidence_gate --strict
 $gate = $LASTEXITCODE
 
+Write-Host "`nStego Analyzer test set (needs the pinned project; this is the real run on images made by our own project)"
+& .\venv\Scripts\python.exe scripts\make_analyzer_testset.py
+& .\venv\Scripts\python.exe scripts\analyzer_testset_run.py
+$analyzer = $LASTEXITCODE
+
 Write-Host "`nRepository consistency check"
 & .\venv\Scripts\python.exe scripts\repo_check.py
 $check = $LASTEXITCODE
 
 Write-Host "`n=== Result (0 = pass) ==="
-Write-Host "pipeline: $pipeline    evidence gate (strict): $gate    repo_check: $check"
+Write-Host "pipeline: $pipeline    evidence gate (strict): $gate    analyzer test set: $analyzer    repo_check: $check"
 Write-Host "Clone folder: $dir"
 if (-not $Keep) { Write-Host "Delete it when you are done: Remove-Item -Recurse -Force '$dir'" }
 if ($pipeline -ne 0) { exit 1 }

@@ -22,6 +22,7 @@ import math
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from fractions import Fraction
 
@@ -200,7 +201,7 @@ st.markdown(f"""
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
 PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🔁 Before and after", "🧭 PQC advisor", "📈 Qubit calculator",
-         "🎬 Shor's demo (live)", "🔬 Quantum Lab", "🛡️ Migration demo", "⚙️ Pipeline"]
+         "🎬 Shor's demo (live)", "🔬 Quantum Lab", "🛡️ Migration demo", "🕵️ Stego Analyzer", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
 st.sidebar.caption("Refresh the page after re-running the pipeline.")
@@ -896,6 +897,90 @@ def page_quantum_lab():
                    "every circuit builder.")
 
 
+def page_stego_analyzer():
+    """Upload a stego image; the analyzer detects, extracts, identifies, breaks or estimates, and scores it."""
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from stego_analyzer import pipeline as sa
+    st.caption("Flow agreed with sir on 22 October 2026: a stego image goes in, it is broken, then the full "
+               "pipeline runs. Our limit, not yet confirmed with sir: images made by our own image project; "
+               "a real Shor circuit on the simulator (Aer simulator, toy size) only when the key is toy size; "
+               "a labelled estimate for larger keys; 'resists' for ML-KEM + AES-GCM; 'unrecognised' for "
+               "anything else. Real-size RSA cannot be broken here. Design: docs/analyzer_spec.md.")
+    up = st.file_uploader("Stego image made by our image project", type=["png", "bmp"], key="sa_upload")
+    st.markdown("**Public key** (the attacker has it; the image does not carry it). Needed to attack an RSA "
+                "payload; leave empty for an ML-KEM image.")
+    k1, k2 = st.columns(2)
+    n_text = k1.text_input("Modulus N", key="sa_n", placeholder="for example 15")
+    e_text = k2.text_input("Exponent e", key="sa_e", placeholder="for example 7")
+    key = None
+    if n_text.strip() or e_text.strip():
+        if n_text.strip().isdigit() and e_text.strip().isdigit():
+            key = {"n": int(n_text), "e": int(e_text)}
+        else:
+            st.error("N and e must both be whole numbers.")
+            return
+    if up is None:
+        st.info("Upload an image to start. The stages are: detect the hiding method, extract the blob, "
+                "identify the cipher, break or estimate, score with the same engine, report.")
+        return
+    with tempfile.NamedTemporaryFile(suffix=os.path.splitext(up.name)[1], delete=False) as fh:
+        fh.write(up.getvalue())
+        tmp = fh.name
+    try:
+        report = sa.analyze(tmp, public_key=key)
+    except ValueError as exc:
+        st.error(str(exc))
+        return
+    finally:
+        os.remove(tmp)
+    report["input"]["file"] = up.name
+
+    status = report["pipeline_status"]
+    state = (report.get("attack") or {}).get("state")
+    if status != "complete":
+        st.warning("Pipeline " + status + ". Nothing is guessed for the stages that did not run.")
+    elif state:
+        (st.error if state.startswith("broken") else st.info)("Result: " + state.replace("_", " "))
+    for problem in report.get("problems", []):
+        st.error("Report problem: " + problem)
+
+    st.markdown("#### Stages")
+    st.dataframe(pd.DataFrame(sa.stage_rows(report)), hide_index=True)
+    s = report.get("score")
+    if s:
+        kpi_row([("Overall", f"{s['overall']}%", rpd.BAND_COLORS.get(s["band"], "#90A4AE")),
+                 ("Quantum", f"{s['quantum']}%", "#7C4DFF"), ("Classical", f"{s['classical']}%", "#00B0FF"),
+                 ("Weights", s["weights_version"], "#90A4AE")])
+        st.caption("Same engine as the Risk score page. A weighted score, not a probability.")
+    for title, field in (("Hiding method", "hiding"), ("Cipher", "cipher"), ("Technique", "technique"),
+                         ("Attack", "attack"), ("Estimate (not measured)", "estimate")):
+        if report.get(field):
+            with st.expander(title):
+                st.json(report[field])
+    evidence = sa.evidence_rows(report)
+    if evidence:
+        st.markdown("#### Evidence")
+        st.dataframe(pd.DataFrame(evidence), hide_index=True)
+        if (report.get("attack") or {}).get("state") == "broken_toy":
+            st.caption("Aer simulator, toy size. Live runs are saved to outputs/tmp_quantum_runs_analyzer.json "
+                       "(not tracked). scripts/analyzer_testset_run.py --save-evidence writes them to "
+                       "data/quantum_runs.json.")
+    st.markdown("#### Download")
+    d1, d2, d3 = st.columns(3)
+    d1.download_button("Report (JSON)", json.dumps(report, indent=2, default=str).encode("utf-8"),
+                       "analyzer_report.json", "application/json", key="sa_dl_json")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        from stego_analyzer import report as sa_report
+        csv_path = sa_report.export_csv(report, os.path.join(tmpdir, "r.csv"))
+        d2.download_button("Report (CSV)", csv_path.read_bytes(), "analyzer_report.csv", "text/csv", key="sa_dl_csv")
+        pdf_path = sa_report.export_pdf(report, os.path.join(tmpdir, "r.pdf"))
+        d3.download_button("Report (PDF)", pdf_path.read_bytes(), "analyzer_report.pdf", "application/pdf",
+                           key="sa_dl_pdf")
+    for line in report["limits"]:
+        st.caption("- " + line)
+
+
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
@@ -958,4 +1043,5 @@ def page_pipeline():
  "🔁 Before and after": page_before_after,
  "🧭 PQC advisor": page_advisor,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo, "🔬 Quantum Lab": page_quantum_lab,
- "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()
+ "🛡️ Migration demo": page_migration, "🕵️ Stego Analyzer": page_stego_analyzer,
+ "⚙️ Pipeline": page_pipeline}[page]()

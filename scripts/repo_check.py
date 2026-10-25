@@ -9,9 +9,12 @@ Checks, with no network and no simulator:
   4. no known stale number is left in README.md or docs/final_report.md
   5. (--count-tests) the test count in the README badge equals the tests run_tests.py runs
   6. open FILL markers in the report chapters are listed (information, not a failure)
+  7. (--release) the release gate: no FILL marker and no "CONFIRM WITH SIR" marker left in docs/, the evidence
+     gate passes in strict mode, and no tracked file has uncommitted changes
 
   python scripts/repo_check.py                 # fast checks
   python scripts/repo_check.py --count-tests   # also compare the README test count (about 10 seconds)
+  python scripts/repo_check.py --release       # everything above, before the v2.0.0 tag
 
 Exit code 0 = no problem found, 1 = at least one problem.
 """
@@ -149,6 +152,36 @@ def fill_markers(root):
     return out
 
 
+def marker_lines(root, word):
+    """docs/ lines that still contain the marker word (case sensitive)."""
+    out = []
+    for path in sorted((Path(root) / "docs").rglob("*.md")):
+        for i, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), 1):
+            if word in line and not line.lstrip().startswith(("Status:", "#")) and "markers" not in line.lower():
+                out.append(f"{path.relative_to(root).as_posix()}:{i}")
+    return out
+
+
+def check_release(root=ROOT, data_dir=None):
+    """The extra checks for the release tag. Returns problems only."""
+    problems = []
+    for word, what in (("FILL", "open FILL marker"), ("CONFIRM WITH SIR", "open CONFIRM WITH SIR marker")):
+        for where in marker_lines(root, word):
+            problems.append(f"{what} at {where}")
+    sys.path[:0] = [str(Path(root))]
+    from src import evidence_gate
+    _, errors, warnings = evidence_gate.run_gate(root=Path(root), strict=True, data_dir=data_dir)
+    problems += [f"evidence gate (strict): {e}" for e in errors + warnings]
+    try:
+        p = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=str(root),
+                           capture_output=True, text=True, timeout=30)
+        if p.returncode == 0:
+            problems += [f"uncommitted change: {line[3:]}" for line in p.stdout.splitlines() if line.strip()]
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return problems
+
+
 def run_checks(root=ROOT, tracked="auto", count_tests=False):
     """Return (notes, problems). tracked='auto' asks git."""
     tracked = tracked_files(root) if tracked == "auto" else tracked
@@ -168,8 +201,11 @@ def run_checks(root=ROOT, tracked="auto", count_tests=False):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--count-tests", action="store_true")
+    ap.add_argument("--release", action="store_true", help="also run the release gate")
     args = ap.parse_args(argv)
-    notes, problems = run_checks(count_tests=args.count_tests)
+    notes, problems = run_checks(count_tests=args.count_tests or args.release)
+    if args.release:
+        problems += check_release()
     for n in notes:
         print(n)
     for p in problems:

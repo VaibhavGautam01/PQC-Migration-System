@@ -27,6 +27,23 @@ buttons during the demo: Scan, Rebuild CBOM and Full pipeline are switched off u
 | 6 | 3 | Quantum Lab | "Real circuits on a simulator, with a record for every run." | Evidence table. Shor N = 15, 21, 35 at gate level: 11, 13 and 15 qubits, success 60, 80 and 85 percent on 20 shots. Grover on a toy cipher. Evidence gate and static guard cards. "Simulator, toy size: this does not show RSA-2048 is broken." |
 | 7 | 1.5 | Migration demo | "The recommended migration really runs." | Keep the message "PQC!" and press "Run the comparison". Textbook RSA gives the same ciphertext twice, and an attacker with only the public key factors the tiny modulus and reads the message (a classical attack on a small key; at real sizes this is Shor's job). ML-KEM-768 + AES-256-GCM: a wrong private key fails to decrypt. "Educational library, not production crypto." |
 
+## Stego Analyzer segment (3 minutes, add after the Migration demo once the pinned test set exists)
+
+Before the demo: python scripts/make_analyzer_testset.py, then python scripts/analyzer_testset_run.py (about 1 minute).
+Say what it measured, on our own images only. If the pinned project is not checked out, skip this segment and say
+the Analyzer is built but not demonstrated.
+
+| Step | Do | Expected |
+|---|---|---|
+| 1 | Page "Stego Analyzer", upload toy_rsa_N15.png, enter N = 15, e = 7 | Result: broken toy. Message HELLO recovered. Label "Aer simulator, toy size". Risk 95.5 (Critical). Evidence table names the Shor run records. |
+| 2 | Upload toy_rsa_N21.png with N = 21 and its e | Different factors (3 x 7), no code change. |
+| 3 | Upload ml_kem_aes_gcm.png, no key | Result: resists. Risk 4.7 (Low). "Extraction works, nothing to factor." |
+| 4 | Upload toy_rsa_N15.png with no key | Unrecognised: "modulus unknown, give the public key". Nothing is guessed. |
+| 5 | Upload clean_image.png | Unrecognised. |
+| 6 | Download the PDF | One page with the result, the label and "not a probability". |
+
+Say: "It only handles images from our own project, and a real RSA-2048 key would give a labelled estimate, never a time."
+
 ## If something fails
 
 | Failure | Do this |

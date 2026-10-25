@@ -116,7 +116,7 @@ def time_one_iteration(a: int, N: int) -> dict:
             "estimate_note": f"ESTIMATE: {m} iterations x one-iteration run time; real time per shot may differ"}
 
 
-def write_diagram(qc, N: int, a: int) -> str:
+def write_diagram(qc, N: int, a: int, out_dir=None) -> str:
     """Write a structure file for the circuit and return its path relative to the repo root.
 
     The full text drawing of a gate-level Shor circuit is megabytes long (N=15 alone is 2.6 MB), so
@@ -146,10 +146,19 @@ def write_diagram(qc, N: int, a: int) -> str:
              "",
              f"First 60 of {len(runs)} runs of identical instructions (name x count):"]
     lines += [f"  {name} x {cnt}" for name, cnt in runs[:60]]
-    DIAGRAM_DIR.mkdir(parents=True, exist_ok=True)
-    out = DIAGRAM_DIR / f"q2_shor_gate_N{N}_a{a}.txt"
+    folder = Path(out_dir) if out_dir else DIAGRAM_DIR
+    folder.mkdir(parents=True, exist_ok=True)
+    out = folder / f"q2_shor_gate_N{N}_a{a}.txt"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return out.relative_to(ROOT).as_posix()
+    try:
+        return out.relative_to(ROOT).as_posix()
+    except ValueError:                      # a folder outside the repository: keep the absolute path
+        return str(out)
+
+
+def _backend_name(name: str) -> str:
+    """Same spelling as the Q1 and Q3 records ("AerSimulator"); a real backend keeps its own name."""
+    return "AerSimulator" if "aer" in name.lower() else name
 
 
 def to_evidence(record: dict, diagram_file: str) -> dict:
@@ -163,7 +172,7 @@ def to_evidence(record: dict, diagram_file: str) -> dict:
         "question_group": QUESTION_GROUP,
         "inputs": {"N": record["N"], "a": record["a"], "phase_bits": record["phase_bits"]},
         "qubits": record["qubits"], "depth": record["depth"], "gate_counts": record["gate_counts"],
-        "shots": record["shots"], "backend": record["backend"],
+        "shots": record["shots"], "backend": _backend_name(record["backend"]),
         "backend_version": record["qiskit_aer_version"], "qiskit_version": record["qiskit_version"],
         "seed_simulator": record["seed_simulator"], "seed_transpiler": record["seed_transpiler"],
         "counts": record["counts"], "success_rate": record["success_rate"],
@@ -175,9 +184,15 @@ def to_evidence(record: dict, diagram_file: str) -> dict:
     }
 
 
-def save_record(record, qc, path=RUNS_FILE):
-    """Validate and append the run to data/quantum_runs.json ({"schema_version": 1, "runs": [...]})."""
-    QR.append_run(to_evidence(record, write_diagram(qc, record["N"], record["a"])), path)
+def save_record(record, qc, path=RUNS_FILE, diagram_dir=None, notes=None):
+    """Validate and append the run to data/quantum_runs.json ({"schema_version": 1, "runs": [...]}).
+
+    path and diagram_dir let a caller keep the record outside the tracked files (the Stego Analyzer does
+    this for live runs). notes replaces the default note when given."""
+    ev = to_evidence(record, write_diagram(qc, record["N"], record["a"], diagram_dir))
+    if notes:
+        ev["notes"] = notes
+    QR.append_run(ev, path)
 
 
 def print_record(r):

@@ -5,10 +5,13 @@ Chain: scan -> risk score -> mapper + estimator (risk report) -> PQC advisor rep
        -> before/after migration score -> evidence gate -> tests.
 Phir check karta hai ki committed outputs badle ya nahi.
 Usage (repo root se): python run_pipeline.py [--project image|video|both]
-Exit code: 0 = sab pass aur outputs unchanged, 1 = kuch fail ya badla, 2 = --input (not built yet)
+Exit code: 0 = sab pass aur outputs unchanged, 1 = kuch fail ya badla
+--input IMAGE (Stego Analyzer): 0 = pipeline complete, 1 = report broke a rule, 2 = file not found,
+                               3 = stopped at a stage that is not built yet
 """
 import argparse
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -76,16 +79,48 @@ def digest(path):
     return hashlib.sha256(data).hexdigest()[:12]
 
 
+def parse_public_key(text):
+    """'N,E' -> {"n": N, "e": E}; ValueError if it is not two whole numbers."""
+    parts = [p.strip() for p in str(text).split(",")]
+    if len(parts) != 2 or not all(p.isdigit() for p in parts):
+        raise ValueError("--public-key must look like N,E (two whole numbers), for example 15,7")
+    return {"n": int(parts[0]), "e": int(parts[1])}
+
+
+def run_analyzer(path, public_key=None):
+    """Stego Analyzer on one image. The report goes to outputs/tmp_analyzer_report.json (not tracked)."""
+    sys.path.insert(0, str(ROOT))
+    from stego_analyzer import pipeline as sa
+    try:
+        key = parse_public_key(public_key) if public_key else None
+    except ValueError as exc:
+        print(exc)
+        return 2
+    try:
+        report = sa.analyze(path, public_key=key)
+    except FileNotFoundError:
+        print(f"--input: file not found: {path}")
+        return 2
+    print(sa.summary_text(report))
+    out = ROOT / sa.SESSION_REPORT
+    out.parent.mkdir(exist_ok=True)
+    out.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
+    print("Report written to", out)
+    if report["problems"]:
+        return 1
+    return 0 if report["pipeline_status"] == "complete" else 3
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Run the whole pipeline.")
     ap.add_argument("--project", choices=PROJECTS, default="both")
     ap.add_argument("--input", metavar="STEGO_IMAGE",
-                    help="Stego Analyzer: not built yet (planned Week 6)")
+                    help="Stego Analyzer: analyse one stego image instead of running the project pipeline")
+    ap.add_argument("--public-key", metavar="N,E",
+                    help="with --input: the attacker's public key, needed to attack an RSA payload (example: 15,7)")
     args = ap.parse_args(argv)
     if args.input:
-        print("--input (Stego Analyzer) is not implemented yet. Planned for Week 6: upload, detect the "
-              "hiding method, extract, identify the cipher, attack (toy size) or estimate, report.")
-        return 2
+        return run_analyzer(args.input, args.public_key)
     project = args.project
     outputs = outputs_for(project)
 

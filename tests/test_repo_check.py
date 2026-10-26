@@ -102,6 +102,14 @@ class RepoCheckTests(unittest.TestCase):
         self.assertEqual([p for p in rc.check_release(self.root, data_dir=self.root / "data")
                           if not p.startswith("uncommitted")], [])
 
+    def test_test_count_in_final_report_and_readme_table_must_match(self):
+        make_repo(self.root, readme="| Tests | **976** passing (17 skipped) |\n(frozen as v1.0, see x)",
+                  final="**31 findings**. | 976 tests, all pass (17 skipped) |")
+        out = rc.report_count_problems(self.root, 1016)
+        self.assertEqual(len(out), 2)
+        self.assertTrue(any("docs/final_report.md: says 976 tests" in x for x in out))
+        self.assertEqual(rc.report_count_problems(self.root, 976), [])
+
     def test_test_folders_match_run_tests(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
         import run_tests  # type: ignore

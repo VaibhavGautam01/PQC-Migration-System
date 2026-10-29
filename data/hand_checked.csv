@@ -1,0 +1,32 @@
+file,line,pattern_id,primitive,snippet,correct
+app.py,263,RSA-WRAPPER-CALL,RSA,"priv_path, pub_path = rsa_crypto.generate_keypair(",yes
+frame_selector.py,32,HASH-SHA2-HASHLIB,SHA,"digest_hex = hashlib.sha256(secret_key.encode(""utf-8"")).hexdigest()",yes
+rsa_crypto.py,45,RSA-PUBLIC-EXP,RSA,e = 65537,yes
+rsa_crypto.py,48,RSA-MANUAL-PRIME,RSA,p = number.getPrime(half),yes
+rsa_crypto.py,49,RSA-MANUAL-PRIME,RSA,q = number.getPrime(half),yes
+rsa_crypto.py,52,RSA-MANUAL-MODULUS,RSA,n = p * q,yes
+rsa_crypto.py,53,RSA-MANUAL-PHI,RSA,phi = (p - 1) * (q - 1),yes
+rsa_crypto.py,56,RSA-MANUAL-INVFUNC,RSA,"d = number.inverse(e, phi)",yes
+rsa_crypto.py,142,RSA-MODEXP,RSA,"c = pow(m, e, n)",yes
+rsa_crypto.py,170,RSA-MODEXP,RSA,"m = pow(c, d, n)",yes
+app.py,229,RSA-WRAPPER-CALL,RSA,"pub, priv = generate_small_keypair()",yes
+app.py,239,RSA-WRAPPER-CALL,RSA,"pub, priv = generate_keypair(bits=128)",yes
+app.py,373,RSA-WRAPPER-CALL,RSA,"pub_s, priv_s = generate_small_keypair()",yes
+app.py,385,RSA-WRAPPER-CALL,RSA,"pub, priv = generate_keypair(bits=128)",yes
+main.py,83,RSA-WRAPPER-CALL,RSA,"pub, priv = generate_small_keypair()",yes
+main.py,101,RSA-WRAPPER-CALL,RSA,"pub, priv = generate_keypair(bits=128)",yes
+r_channel_stego.py,42,RSA-MANUAL-PRIME-ISPRIME,RSA,"primes = [p for p in range(2, 40) if isprime(p)]",yes
+r_channel_stego.py,52,RSA-MANUAL-PHI,RSA,phi = (p - 1) * (q - 1),yes
+r_channel_stego.py,54,RSA-MANUAL-PRIME-ISPRIME,RSA,"e_candidates = [c for c in range(3, phi) if isprime(c) and phi % c != 0]",yes
+r_channel_stego.py,59,RSA-MANUAL-MODINV,RSA,"d = pow(e, -1, phi)",yes
+rsa_utils.py,22,RSA-MANUAL-PRIME-LIB,RSA,"return randprime(low, high)",yes
+rsa_utils.py,27,RSA-MANUAL-PRIME-LIB,RSA,p = generate_prime(bits),yes
+rsa_utils.py,28,RSA-MANUAL-PRIME-LIB,RSA,q = generate_prime(bits),yes
+rsa_utils.py,30,RSA-MANUAL-PRIME-LIB,RSA,q = generate_prime(bits),yes
+rsa_utils.py,32,RSA-MANUAL-MODULUS,RSA,n = p * q,yes
+rsa_utils.py,33,RSA-MANUAL-PHI,RSA,phi = (p - 1) * (q - 1),yes
+rsa_utils.py,35,RSA-PUBLIC-EXP,RSA,e = 65537,yes
+rsa_utils.py,37,RSA-MANUAL-PRIME-LIB,RSA,e = nextprime(e),yes
+rsa_utils.py,39,RSA-MANUAL-INVFUNC,RSA,"d = mod_inverse(e, phi)",yes
+rsa_utils.py,45,RSA-MODEXP,RSA,"return pow(m, e, n)",yes
+rsa_utils.py,50,RSA-MODEXP,RSA,"return pow(c, d, n)",yes

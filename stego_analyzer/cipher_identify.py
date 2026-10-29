@@ -25,8 +25,13 @@ except ImportError:
 
 def identify(blob, public_key=None):
     text = blob.decode("ascii", errors="replace") if isinstance(blob, (bytes, bytearray)) else str(blob)
-    if public_key and toyformat.is_hex(text):
-        n = int(public_key["n"])
+    n = None
+    if public_key:
+        try:
+            n = int(public_key["n"])
+        except (KeyError, TypeError, ValueError):
+            n = None
+    if n is not None and n > 1 and toyformat.is_hex(text):
         blocks = toyformat.split_blocks(text, n)
         if blocks is not None and len(blocks) >= 2:
             return {"kind": "textbook_rsa", "n": n, "modulus_bits": n.bit_length(),

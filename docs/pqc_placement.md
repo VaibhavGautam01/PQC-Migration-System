@@ -11,8 +11,9 @@ Measured with: kyber-py <ver>, dilithium-py <ver> (educational, not hardened; pr
 | Hiding | LSB / XOR-LSB | not a PQC question | n/a | n/a | key-dependent pixel order; measure steganalysis |
 
 ## Status of NIST IR 8547
-The official NIST page lists it as an initial public draft (12 Nov 2024). The 2030 / 2035 dates are PROPOSED.
+NIST IR 8547 is final (published 27 October 2026; csrc.nist.gov/pubs/ir/8547/final). Quantum-vulnerable public-key algorithms are deprecated after 2030 and disallowed after 2035. Applies to federal systems; elsewhere it is guidance.
 Checked on: <date>. Source: csrc.nist.gov/pubs/ir/8547
 
 ## Approval-deck references checked
 See docs/deck_check.md.
+

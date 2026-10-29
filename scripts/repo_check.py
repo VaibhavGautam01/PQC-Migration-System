@@ -136,11 +136,27 @@ def count_tests(root=ROOT):
 
 def check_test_count(root):
     actual, badge = count_tests(root), badge_test_count(root)
+    problems = []
     if badge is None:
         return [], ["README.md: no 'Tests-N_passing' badge found"]
     if badge != actual:
-        return [], [f"README.md: badge says {badge} tests, run_tests.py runs {actual} (fix: set both README numbers to {actual})"]
-    return [f"OK: README test count {badge} matches"], []
+        problems.append(f"README.md: badge says {badge} tests, run_tests.py runs {actual} "
+                        f"(fix: set both README numbers to {actual})")
+    problems += report_count_problems(root, actual)
+    return ([f"OK: README test count {badge} matches"] if not problems else []), problems
+
+
+def report_count_problems(root, actual):
+    """The test count written in README.md's table and in docs/final_report.md must equal the real count."""
+    out = []
+    for rel, pattern in (("README.md", r"\*\*(\d+)\*\* passing"), ("docs/final_report.md", r"(\d+) tests, all pass")):
+        text = read(root, rel)
+        if text is None:
+            continue
+        for m in re.finditer(pattern, text):
+            if int(m.group(1)) != actual:
+                out.append(f"{rel}: says {m.group(1)} tests, run_tests.py runs {actual}")
+    return out
 
 
 def fill_markers(root):

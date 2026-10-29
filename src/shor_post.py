@@ -91,12 +91,6 @@ def factors_from_period(a: int, N: int, r: int):
     return None
 
 
-def factors_from_measurement(y: int, m: int, a: int, N: int):
-    """One measured value y -> factors of N (or None). Post-processing only:
-    decode_outcome (continued fractions) then the gcd step."""
-    return factors_from_period(a, N, decode_outcome(y, m, a, N))
-
-
 def analyse_counts(counts: dict, m: int, a: int, N: int) -> dict:
     """Post-process a whole measured histogram (bitstring -> count).
 
@@ -245,3 +239,23 @@ def chi_square_vs_theory(counts: dict, probs: list, min_expected: float = 5.0) -
     dof = max(len(bins) - 1, 1)
     return {"statistic": round(statistic, 4), "dof": dof,
             "p_value": chi2_sf(statistic, dof), "bins": len(bins), "shots": shots}
+    return {"statistic": round(statistic, 4), "dof": dof,
+            "p_value": chi2_sf(statistic, dof), "bins": len(bins), "shots": shots}
+
+
+# --------------------------------------------------------------------------
+# 5. Convenience wrapper (one measured value -> factors, or None), for callers that want
+#    period-finding and the gcd step combined. q2_shor_run.py (Yatharth's Q2 runner) calls
+#    this; it is a thin wrapper around decode_outcome() + factors_from_period() above, so the
+#    actual period-finding and gcd logic exists in exactly one place.
+# --------------------------------------------------------------------------
+def factors_from_measurement(y: int, m: int, a: int, N: int):
+    """One measured phase-estimation outcome y -> (p, q) with p*q == N, or None.
+
+    Same two steps as analyse_counts() uses per shot: decode_outcome() turns y into a
+    candidate period r (continued fractions, then try multiples), and factors_from_period()
+    turns r into two factors of N via gcd. Returns None if this single measurement does not
+    yield a factorisation (try another shot or another base a).
+    """
+    r = decode_outcome(y, m, a, N)
+    return factors_from_period(a, N, r)

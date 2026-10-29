@@ -1,6 +1,6 @@
 # Attack evidence: Week 2 (Vaibhav)
 
-How to use this file: numbers marked **[FILL]** must be pasted from your own run output. Do not invent numbers.
+How to use this file: numbers must be pasted from your own run output. Do not invent numbers.
 If an attack_evidence.md already exists on main, move these sections into it and delete this file.
 Every result names the version it was measured on.
 

@@ -29,7 +29,7 @@ tag (16 B) + AES ciphertext, so the overhead is 1,116 B. Optional signing adds a
 | ML-DSA-44 | 2 | 1,312 | 2,420 |
 | ML-DSA-65 | 3 | 1,952 | 3,309 |
 | ML-DSA-87 | 5 | 2,592 | 4,627 |
-Default: ML-KEM-768 and ML-DSA-65. [FILL: when to choose another, from Yatharth's parameter-set comparison.]
+Default: ML-KEM-768 and ML-DSA-65. Choose ML-KEM-512 only when payload capacity is the binding limit: its KEM ciphertext is 768 B instead of 1,088 B, 320 B less. Choose ML-KEM-1024 for data that must stay secret longest: its ciphertext is 1,568 B, 480 B more. For signatures, ML-DSA-44 saves 889 B per payload (2,420 B against 3,309 B) and ML-DSA-87 adds 1,318 B (4,627 B). Sizes are from the FIPS parameter tables and are checked by tests/test_sizes_match_libraries.py
 
 ## 5. Cost of the larger payload
 The ML-KEM blob is far bigger than an RSA ciphertext and may be easier to detect when hidden.
@@ -48,7 +48,7 @@ error correction, and only noiseless runs produce a key. ML-KEM stays the softwa
 
 ## 8. Standards status
 FIPS 203, 204 and 205 were published in August 2024. NIST IR 8547 (quantum-vulnerable public-key algorithms deprecated after 2030
-and disallowed after 2035) was an initial public draft when last checked on [FILL: date], so these dates are proposed.
+and disallowed after 2035) was finalised on 27 October 2026 (csrc.nist.gov/pubs/ir/8547/final; last checked on 2026-10-29). Outside federal systems it is guidance.
 
 ## 9. Not shown
 [FILL: list of what we did not do, from docs/attack_evidence.md.]

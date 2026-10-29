@@ -1,7 +1,8 @@
-# Risk Model (v0.1)
+# Risk Model (v1.0)
 
-Status: weights v0.1, frozen in Week 1 Day 5. Changed only if the sensitivity
-study shows an unstable ranking; each change is documented here.
+Status: weights v1.0 (v0.1 was frozen in Week 1 Day 5). Changed only if the
+sensitivity study shows an unstable ranking or a layer cannot be scored; each
+change is documented in the change log at the end of this file.
 
 ## What the percentage is
 
@@ -26,7 +27,7 @@ the quantum percentage.
 
 | Factor | How it is scored |
 |---|---|
-| F1 Quantum exposure | Shor-broken public-key = 100. Grover-weakened symmetric or hash: effective bits >= 128 = 10, 112 to 127 = 30, below 112 = 60. NIST PQC (ML-KEM, ML-DSA, SLH-DSA) with AES-256 = 5 |
+| F1 Quantum exposure | Shor-broken public-key = 100. Grover-weakened symmetric or hash: effective bits >= 128 = 10, 112 to 127 = 30, below 112 = 60. NIST PQC (ML-KEM, ML-DSA, SLH-DSA) with AES-256 = 5. No quantum-vulnerable algorithm in the layer (`none`, for example CRC32) = 0 |
 | F2 Qubit cost | q = 2n+3. Score = 100 x (1 - (log10(q) - 2) / 3), limited to 20 to 100. Shor-broken layers only |
 | F3 Classical key weakness | Modulus up to 512 bits = 100, below 1024 = 80, below 2048 = 50, 2048 or more = 10. Uses the size in use; default-only sizes are flagged |
 | F4 Construction weakness | No padding and deterministic = 100. Deterministic framing or key-check oracle = 80. Padding without AEAD = 40. AES-GCM or OAEP = 0 to 10 |
@@ -95,3 +96,62 @@ used is Gidney and Ekera (2021) for RSA-2048 under their stated assumptions
 (`data/published_estimates.json`, marked unverified until checked against the
 paper). Their logical-qubit formula describes a different circuit from 2n + 3,
 so the two are never mixed. F2 does not use physical qubits.
+
+## Change log
+
+| Version | Date | Change | Why |
+|---|---|---|---|
+| v0.1 | Week 1 Day 5 | First frozen weights | |
+| v1.0 | 2026-10-22 | Added F1 category `none` = 0 (no quantum-vulnerable algorithm in the layer) | The video integrity layer (L3, CRC32) could not be scored. Existing weights are unchanged; image scores are unchanged. Video L3 now scores 30.4 (Moderate, quantum 0, classical 76); the video project score moves from 66.4 to 64.1. CRC32 is not cryptography, so Shor and Grover have nothing to break; its weakness is classical (key-check oracle). |
+
+
+## Signature layer (L5) and the migrated layers
+
+How each primitive is described to the engine (`src/layer_presets.py`). A
+"provisional" F4 category is the closest existing one, not an exact match.
+
+| Primitive | F1 category | F4 construction | Provisional |
+|---|---|---|---|
+| Textbook RSA | shor_broken | no_padding_deterministic | no |
+| RSA with OAEP | shor_broken | oaep | no |
+| RSA signature (PSS) | shor_broken | oaep | yes |
+| ML-KEM-768 + AES-256-GCM | nist_pqc | aead | no |
+| ML-DSA-65, SLH-DSA | nist_pqc | aead | yes |
+| SHA-256 of a passphrase (video L2 today) | symmetric, 128 effective bits | deterministic_or_oracle | no |
+| Random 256-bit key with HMAC-SHA256 (video L2 after v2) | symmetric, 128 effective bits | aead | yes |
+| CRC32 (video L3 today) | none | deterministic_or_oracle | no |
+
+Signature options for L5 (image exposure keyless, X = 5, Y = 2, Z = 10):
+
+| Option | Overall % | Band |
+|---|---|---|
+| None | not scored | "no protection" |
+| RSA-2048 with PSS | 50.8 | High |
+| ML-DSA-65 | 4.7 | Low |
+| SLH-DSA | 4.7 | Low |
+
+Rules:
+- A layer with no cryptography, including a missing signature, is not scored and
+  is listed as "no protection".
+- After migration the integrity layer is the AES-GCM tag inside L1; the CRC32
+  layer disappears and no separate L3 is scored.
+- Exposure (F6) is the project's own. A signature is public by design, and F6 is
+  gated by F4, so keyless against bypassable moves a signature layer by about
+  0.6 points.
+
+Project scores (weakest-link rule):
+
+| Project | Before | Migrated, unsigned | Migrated, signed |
+|---|---|---|---|
+| Image | 91.9 | 4.7 | 4.7 |
+| Video | 64.1 | 6.9 | 6.8 |
+
+Limits specific to signatures:
+- F5 (Mosca) is defined for secrecy. For a signature, X would mean the years the
+  signature must stay trustworthy; this is not parameterised separately. With
+  ML-DSA, F1 = 5 limits F5_eff to 3.5 points.
+- The model scores risk, not protection. Adding a signature layer does not
+  lower any layer's score and authenticity is not credited. It lowers the
+  project score only through the average (0.13 points for the video project).
+- The F4 categories for ML-DSA, SLH-DSA, the RSA signature and the v2 frame key
+  are provisional until the team agrees on one.

@@ -92,6 +92,42 @@ def load_runs(path=None):
         return json.load(fh)["runs"]
 
 
+def extra_run_paths(data_dir=None):
+    """data/quantum_runs_*.json (for example the Q6 and Q7 files), sorted. quantum_runs.json is not included."""
+    data_dir = Path(data_dir) if data_dir else RUNS_PATH.parent
+    return sorted(data_dir.glob("quantum_runs_*.json"))
+
+
+def load_extra_runs(data_dir=None):
+    """Records from the extra run files as (runs, problems).
+
+    A file may hold {"runs": [...]} (the evidence format) or a bare list. A file that cannot be read
+    gives a problem string, never a crash. Each returned run carries "_source" (the file name) so the
+    gate can say where a bad record came from; remove it with run.pop("_source") before saving.
+    """
+    runs, problems = [], []
+    for path in extra_run_paths(data_dir):
+        try:
+            with open(path, encoding="utf-8-sig") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError) as exc:
+            problems.append(f"{path.name}: cannot read file ({exc.__class__.__name__})")
+            continue
+        items = data.get("runs") if isinstance(data, dict) else data
+        if not isinstance(items, list) or not all(isinstance(x, dict) for x in items):
+            problems.append(f"{path.name}: expected {{\"runs\": [...]}} or a list of records")
+            continue
+        runs += [dict(x, _source=path.name) for x in items]
+    return runs, problems
+
+
+def load_all_valid_runs(data_dir=None):
+    """quantum_runs.json plus every record from the extra files that is already in the evidence format."""
+    main = load_runs(Path(data_dir) / "quantum_runs.json" if data_dir else None)
+    extra, _ = load_extra_runs(data_dir)
+    return main + [{k: v for k, v in r.items() if k != "_source"} for r in extra if not validate_run(r)]
+
+
 def append_run(run, path=None):
     """Validate, then append. Raises ValueError listing every problem."""
     problems = validate_run(run)

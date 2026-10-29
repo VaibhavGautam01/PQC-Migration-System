@@ -15,9 +15,9 @@ class TestWeightsFrozen(unittest.TestCase):
         ok, msg = wl.check_lock()
         self.assertTrue(ok, msg)
 
-    def test_lock_records_version_v0_1(self):
+    def test_lock_records_version_v1_0(self):
         rec = json.loads(wl.LOCK.read_text(encoding="utf-8"))
-        self.assertEqual(rec["version"], "v0.1")
+        self.assertEqual(rec["version"], "v1.0")
         self.assertEqual(len(rec["sha256"]), 64)
 
     def test_fingerprint_ignores_spacing(self):

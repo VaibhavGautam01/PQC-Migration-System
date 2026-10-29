@@ -1,0 +1,73 @@
+Shor order finding, gate level (Beauregard, iterative phase estimation). Aer simulator, toy size.
+N = 15, a = 2, qubits = 11, phase bits = 8, depth = 4224, instructions = 6844
+This is a structure summary, not a full drawing (the full text drawing is megabytes long).
+
+Registers (qubit indices):
+  x (value register, 4 qubits): [0, 1, 2, 3]
+  b (accumulator, 5 qubits): [4, 5, 6, 7, 8]
+  anc (overflow ancilla): 9
+  c (single control qubit, reused each round): 10
+
+Gate counts (before transpiling): cp 2880, cswap 32, cx 128, h 1456, if_else 28, mcphase 1280, measure 8, p 320, reset 7, swap 576, x 129
+
+First 60 of 3382 runs of identical instructions (name x count):
+  x x 1
+  h x 2
+  cp x 4
+  h x 1
+  cp x 3
+  h x 1
+  cp x 2
+  h x 1
+  cp x 1
+  h x 1
+  swap x 2
+  mcphase x 5
+  p x 5
+  swap x 2
+  h x 1
+  cp x 1
+  h x 1
+  cp x 2
+  h x 1
+  cp x 3
+  h x 1
+  cp x 4
+  h x 1
+  cx x 1
+  h x 1
+  cp x 4
+  h x 1
+  cp x 3
+  h x 1
+  cp x 2
+  h x 1
+  cp x 1
+  h x 1
+  swap x 2
+  mcphase x 10
+  swap x 2
+  h x 1
+  cp x 1
+  h x 1
+  cp x 2
+  h x 1
+  cp x 3
+  h x 1
+  cp x 4
+  h x 1
+  x x 1
+  cx x 1
+  x x 1
+  h x 1
+  cp x 4
+  h x 1
+  cp x 3
+  h x 1
+  cp x 2
+  h x 1
+  cp x 1
+  h x 1
+  swap x 2
+  mcphase x 10
+  p x 5

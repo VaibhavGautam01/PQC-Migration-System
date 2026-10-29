@@ -55,7 +55,7 @@ class TestFloorAndSensitivity(unittest.TestCase):
 
     def test_run_names_version_and_label(self):
         res = ba.run((256,), n_draws=20)
-        self.assertEqual(res["weights_version"], "v0.1")
+        self.assertEqual(res["weights_version"], "v1.0")
         self.assertIn("not a probability", res["label"])
         self.assertEqual(len(res["rows"]), 1)
 

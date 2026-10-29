@@ -1,6 +1,6 @@
 # Before and After: Image Project (L1 message encryption)
 
-Weights v0.1, same engine for both rows (`src/before_after.py`).
+Weights v1.0, same engine for both rows (`src/before_after.py`).
 Inputs: X = 5, Y = 2, Z = 10 years. Weighted score, not a probability.
 Formulas and weights only; no quantum simulation is involved.
 

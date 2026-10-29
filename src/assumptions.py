@@ -68,6 +68,25 @@ def validate(a):
             date.fromisoformat(dl.get("agreed_date"))
         except (TypeError, ValueError):
             raise AssumptionError("deadline: agreed_date must be YYYY-MM-DD")
+    an = a.get("analyzer")
+    if an is not None:
+        if not isinstance(an, dict):
+            raise AssumptionError("analyzer must be an object")
+        for name in ("flow", "scope"):
+            if not isinstance(an.get(name), str) or not an[name]:
+                raise AssumptionError(f"analyzer: {name} must be a non-empty string")
+        try:
+            date.fromisoformat(an.get("flow_agreed_date"))
+        except (TypeError, ValueError):
+            raise AssumptionError("analyzer: flow_agreed_date must be YYYY-MM-DD")
+        confirmed = an.get("scope_confirmed_with_sir")
+        if not isinstance(confirmed, bool):
+            raise AssumptionError("analyzer: scope_confirmed_with_sir must be true or false")
+        if confirmed:
+            try:
+                date.fromisoformat(an.get("scope_confirmed_date"))
+            except (TypeError, ValueError):
+                raise AssumptionError("analyzer: scope is confirmed, so scope_confirmed_date must be YYYY-MM-DD")
     for proj, ov in a.get("project_overrides", {}).items():
         if proj not in PROJECTS:
             raise AssumptionError(f"unknown project in overrides: {proj}")
@@ -107,6 +126,18 @@ def load_deadline(path=None):
         raw = json.load(fh)
     a = validate(raw["assumptions"])
     return a.get("deadline")
+
+
+def load_analyzer(path=None):
+    """What sir agreed for the Stego Analyzer, or None.
+
+    The flow is what sir asked for. The scope (our own formats, estimates for large keys) stays
+    scope_confirmed_with_sir = false until sir confirms it; the report must not call it agreed before.
+    """
+    path = Path(path) if path else FACTS_PATH
+    with open(path, encoding="utf-8-sig") as fh:
+        raw = json.load(fh)
+    return validate(raw["assumptions"]).get("analyzer")
 
 
 def z_scenarios(a):

@@ -14,7 +14,11 @@ from risk_score import (  # noqa: E402 # type: ignore
 
 class TestWeightsFile(unittest.TestCase):
     def test_loads_and_has_version(self):
-        self.assertEqual(load_weights()["version"], "v0.1")
+        self.assertEqual(load_weights()["version"], "v1.0")
+
+    def test_f1_none_category_is_zero(self):
+        # no quantum-vulnerable algorithm in the layer (for example CRC32)
+        self.assertEqual(f1_quantum_exposure("none"), 0.0)
 
     def test_weight_groups_sum_to_one(self):
         w = load_weights()

@@ -1,6 +1,6 @@
 {
   "note": "Transparent weighted score, not a probability. Simulator-based quantum inputs, toy size.",
-  "weights_version": "v0.1",
+  "weights_version": "v1.0",
   "assumptions": {
     "X_secret_years": 5,
     "Y_migration_years": 2,
@@ -117,12 +117,11 @@
       "repo": "Secure-Video-Steganography",
       "layers_scored": [
         "L1",
-        "L2"
-      ],
-      "layers_not_scored_yet": [
+        "L2",
         "L3"
       ],
-      "pending_reason": "F1 category 'none' is not in data/risk_weights.json yet (comes with weights v1.0)",
+      "layers_not_scored_yet": [],
+      "pending_reason": null,
       "no_protection": [
         "L5"
       ],
@@ -181,6 +180,64 @@
               "quantum": 7.8,
               "classical": 76.0,
               "overall": 35.1,
+              "band": "Moderate"
+            }
+          }
+        },
+        "L3": {
+          "name": "Integrity",
+          "today": "CRC32 (not cryptographic)",
+          "evidence": "rsa_crypto.py:137 and :180",
+          "category": "none",
+          "construction": "deterministic_or_oracle",
+          "exposure": "bypassable",
+          "score": {
+            "f1": 0.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 0.0,
+            "f6_eff": 72.0,
+            "quantum": 0.0,
+            "classical": 76.0,
+            "overall": 30.4,
+            "band": "Moderate"
+          },
+          "z_scenarios": {
+            "10": {
+              "f1": 0.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 0.0,
+              "f6_eff": 72.0,
+              "quantum": 0.0,
+              "classical": 76.0,
+              "overall": 30.4,
+              "band": "Moderate"
+            },
+            "5": {
+              "f1": 0.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 0.0,
+              "f6_eff": 72.0,
+              "quantum": 0.0,
+              "classical": 76.0,
+              "overall": 30.4,
+              "band": "Moderate"
+            },
+            "20": {
+              "f1": 0.0,
+              "f2": null,
+              "f3": null,
+              "f4": 80.0,
+              "f5_eff": 0.0,
+              "f6_eff": 72.0,
+              "quantum": 0.0,
+              "classical": 76.0,
+              "overall": 30.4,
               "band": "Moderate"
             }
           }
@@ -261,11 +318,11 @@
           }
         ]
       },
-      "project_score": 66.4,
+      "project_score": 64.1,
       "band": "High",
       "z_range": {
-        "min": 61.9,
-        "max": 70.3
+        "min": 59.8,
+        "max": 67.7
       },
       "evidence": {
         "L1_findings": 9

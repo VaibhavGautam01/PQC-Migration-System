@@ -22,6 +22,7 @@ import math
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from fractions import Fraction
 
@@ -50,15 +51,27 @@ try:
 except ImportError:
     import quantum_lab_page_data as ql
 
+try:
+    from src import qubit_cost_page_data as qcd
+except ImportError:
+    import qubit_cost_page_data as qcd
+
+try:
+    from src import dashboard_safety as dsafe
+except ImportError:
+    import dashboard_safety as dsafe
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS = os.path.join(ROOT, "outputs", "findings.json")
 CBOM = os.path.join(ROOT, "docs", "cbom.json")
 CBOM_MD = os.path.join(ROOT, "docs", "cbom.md")
 FACTS = os.path.join(ROOT, "data", "manual_facts.json")
 DEMO = os.path.join(ROOT, "data", "demo_results.json")
+DEMO_SESSION = str(dsafe.session_path(ROOT))     # untracked: a demo click never changes DEMO
 RISK = os.path.join(ROOT, "outputs", "risk_scores.json")
 ADVISOR = os.path.join(ROOT, "data", "pqc_recommendations.json")
 BEFORE_AFTER = os.path.join(ROOT, "outputs", "before_after_image.json")
+BEFORE_AFTER_VIDEO = os.path.join(ROOT, "outputs", "before_after_video.json")
 TARGETS = [os.path.join(ROOT, "data", "targets", "steganography"),
            os.path.join(ROOT, "data", "targets", "final-year-part1")]
 
@@ -188,7 +201,7 @@ st.markdown(f"""
 <span class="chip">HCST Mathura · AKTU</span></div>""", unsafe_allow_html=True)
 
 PAGES = ["📊 Overview", "🔎 Findings", "🧾 CBOM and risk", "🎯 Risk score", "🔁 Before and after", "🧭 PQC advisor", "📈 Qubit calculator",
-         "🎬 Shor's demo (live)", "🔬 Quantum Lab", "🛡️ Migration demo", "⚙️ Pipeline"]
+         "🎬 Shor's demo (live)", "🔬 Quantum Lab", "🛡️ Migration demo", "🕵️ Stego Analyzer", "⚙️ Pipeline"]
 page = st.sidebar.radio("Navigate", PAGES, key="nav")
 st.sidebar.caption("Data: outputs/findings.json, docs/cbom.json")
 st.sidebar.caption("Refresh the page after re-running the pipeline.")
@@ -401,17 +414,21 @@ def _demo_cases():
 
 
 def save_demo(n, shots, successes, factors, env):
-    """Write one real run into data/demo_results.json (replaces an earlier run of the same N)."""
-    doc = get_json(DEMO) or {"_readme": "Real simulator runs saved from the dashboard.",
-                              "environment": env, "cases": [], "recordings": []}
+    """Save one real run to outputs/tmp_demo_results.json (replaces an earlier run of the same N).
+
+    The tracked data/demo_results.json is only read, never written, so a demo click cannot change a
+    committed file. To keep a run, copy the session file over data/demo_results.json and commit it."""
+    doc = get_json(DEMO_SESSION) or get_json(DEMO) or {
+        "_readme": "Real simulator runs saved from the dashboard.",
+        "environment": env, "cases": [], "recordings": []}
     doc = json.loads(json.dumps(doc))
     doc["environment"] = env
     doc["cases"] = [c for c in doc.get("cases", []) if c.get("N") != n]
     doc["cases"].append({"N": n, "expected_factors": list(factors), "runs": shots, "successes": successes,
                          "backend": "simulator", "notes": "saved from live_dashboard.py"})
     doc["cases"].sort(key=lambda c: c["N"])
-    os.makedirs(os.path.dirname(DEMO), exist_ok=True)
-    with open(DEMO, "w", encoding="utf-8") as fh:
+    os.makedirs(os.path.dirname(DEMO_SESSION), exist_ok=True)
+    with open(DEMO_SESSION, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=2)
         fh.write("\n")
     st.cache_data.clear()
@@ -506,9 +523,11 @@ def page_demo():
         st.warning("No successful outcome this time. Run again, it is random.")
     st.caption("Toy sizes on a simulator. This shows the algorithm works. It does not show RSA-1024 or "
                "RSA-2048 can be broken today.")
-    if st.button("💾 Save this run to data/demo_results.json (replaces an earlier N = %d run)" % n):
+    if st.button("💾 Save this run for this session (replaces an earlier N = %d run)" % n):
         save_demo(n, total, ok, expected, run["env"])
-        st.success("Saved. Rebuild the final dashboard so its Demo section shows it.")
+        st.success("Saved to outputs/tmp_demo_results.json (not tracked by git). The committed "
+                   "data/demo_results.json is unchanged. To keep this run, copy that file over "
+                   "data/demo_results.json and commit it.")
 
 
 # ================================================================ MIGRATION
@@ -638,9 +657,9 @@ def page_risk():
         return
     st.caption("A transparent weighted score from 0 to 100. It is not a probability that someone "
                "attacks the project. Weights " + str(scores.get("weights_version", "?")) +
-               " are our choice and live in data/risk_weights.json. Only layer L1 (message "
-               "encryption) is scored so far. The quantum part uses logical-qubit estimates "
-               "(2n+3), not a simulator run.")
+               " are our choice and live in data/risk_weights.json. The quantum part uses "
+               "logical-qubit estimates (2n+3), not a simulator run. Measured circuit sizes "
+               "(Q4, toy size) and published estimates are shown below the factor breakdown.")
     text, agreed = rpd.assumptions_note(scores)
     st.markdown(f'<div class="note {"good" if agreed else ""}">{esc(text)}</div>', unsafe_allow_html=True)
 
@@ -681,8 +700,89 @@ def page_risk():
         if left:
             st.markdown(f'<div class="note">Layers not scored yet: {esc(left)}.</div>', unsafe_allow_html=True)
 
+    qubit_cost_section()
+
+
+def qubit_cost_section():
+    """F2 qubit cost: the formula the score uses, next to measured Q4 circuits and published estimates."""
+    with st.expander("Qubit cost (F2): formula, measured circuits and published estimates"):
+        st.caption("Three kinds of number, never mixed. FORMULA: F2 uses 2n+3 logical qubits. MEASURED: "
+                   + qcd.LABEL_MEASURED + ". ESTIMATE: published figures and any extrapolation, "
+                   "not measured. Real key sizes (1024 bits and up) cannot be run here.")
+        st.markdown("**Formula and published estimates, by RSA size**")
+        st.dataframe(pd.DataFrame(qcd.size_rows()), hide_index=True)
+        st.caption("The Gidney-Ekera circuit is a different circuit from 2n+3, so the two logical counts "
+                   "are shown side by side and never combined. Published values are marked unverified "
+                   "in data/published_estimates.json until checked against the paper.")
+        measured = qcd.measured_rows()
+        st.markdown("**Measured: gate-level Shor circuits (Q2), transpiled (Q4)**")
+        if measured:
+            st.caption(qcd.summary_text())
+            st.dataframe(pd.DataFrame(measured), hide_index=True)
+        else:
+            st.info("outputs/q4_metrics.json not found. Run: python src/metrics_run.py")
+        extra = qcd.extrapolation_rows()
+        st.markdown("**Extrapolated to real key sizes (ESTIMATE)**")
+        if extra:
+            st.dataframe(pd.DataFrame(extra), hide_index=True)
+        else:
+            st.caption("Not available yet: the Q4 fit and extrapolation (outputs/q4_fit.json) has not been written.")
+
 
 def page_before_after():
+    """Before and after migration for the image or the video project, scored by the same engine."""
+    project = st.radio("Project", ["Image", "Video"], horizontal=True, key="ba_project")
+    if project == "Video":
+        page_before_after_video()
+    else:
+        page_before_after_image()
+
+
+def page_before_after_video():
+    """Video project before and after migration (L1 to L3), scored by the same engine."""
+    data = ba.load_video(BEFORE_AFTER_VIDEO)
+    if data is None:
+        st.info("outputs/before_after_video.json not found. Run: python src/before_after_video.py")
+        return
+    st.caption("Video project, layers L1 (message encryption), L2 (frame-selection key) and L3 (integrity). "
+               "Both rows use the same engine and weights " + str(data.get("weights_version", "?"))
+               + ". A weighted score, not a probability. Formulas and weights only; no simulator result. "
+               "The prototype is educational code, not production crypto.")
+    bits = st.radio("RSA modulus size in the code", ba.size_options(data), horizontal=True,
+                    format_func=lambda b: f"{b} bits", key="bav_bits")
+    row = ba.row_for(data, bits)
+    s = ba.video_summary(row)
+    kpi_row([("Project before", f"{s['before']:.1f}%", rpd.BAND_COLORS.get(s["before_band"], "#90A4AE")),
+             ("Project after", f"{s['after']:.1f}%", rpd.BAND_COLORS.get(s["after_band"], "#90A4AE")),
+             ("Drop (lower bound)", f"{s['drop']:.1f} points", "#7C4DFF"),
+             ("Band", f"{s['before_band']} to {s['after_band']}", "#00B0FF")])
+
+    c1, c2 = st.columns(2)
+    chart = pd.DataFrame(ba.video_chart_rows(row))
+    c1.plotly_chart(style(px.bar(chart, x="layer", y="overall", color="setup", barmode="group",
+                                 range_y=[0, 100], title="Overall score by layer")), key="bav_layers")
+    sc = pd.DataFrame(ba.video_scenario_rows(row)).melt(id_vars="z", var_name="setup", value_name="overall")
+    c2.plotly_chart(style(px.line(sc, x="z", y="overall", color="setup", markers=True, range_y=[0, 100],
+                                  title="Project score by years until a large quantum computer (Z)")),
+                    key="bav_z")
+
+    st.markdown("#### Layer by layer")
+    lr = pd.DataFrame(ba.video_layer_rows(row))
+    lr["before"] = lr["before"].map(lambda v: f"{v:.1f}")
+    lr["after"] = lr["after"].map(lambda v: "not credited" if pd.isna(v) else f"{v:.1f}")
+    st.dataframe(lr, hide_index=True)
+    st.markdown(f'<div class="note"><b>Not credited:</b> {esc(data.get("not_credited", ""))}. '
+                'The L2 row keeps its "before" value in the project score, so the drop shown is a lower '
+                f'bound and L2 becomes the weakest layer. {esc(data.get("exposure_note", ""))}.</div>',
+                unsafe_allow_html=True)
+
+    st.markdown("#### Does the result depend on the weights?")
+    st.dataframe(pd.DataFrame(ba.video_sensitivity_rows(row)), hide_index=True)
+    st.caption(f"{data.get('n_draws', '?')} random weight draws per row (seed {data.get('seed', '?')}). "
+               "A value of 1.0 means the after score was lower than the before score in every draw.")
+
+
+def page_before_after_image():
     """Image project before and after migration, scored by the same engine."""
     data = ba.load(BEFORE_AFTER)
     if data is None:
@@ -797,6 +897,90 @@ def page_quantum_lab():
                    "every circuit builder.")
 
 
+def page_stego_analyzer():
+    """Upload a stego image; the analyzer detects, extracts, identifies, breaks or estimates, and scores it."""
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from stego_analyzer import pipeline as sa
+    st.caption("Flow agreed with sir on 22 October 2026: a stego image goes in, it is broken, then the full "
+               "pipeline runs. Our limit, not yet confirmed with sir: images made by our own image project; "
+               "a real Shor circuit on the simulator (Aer simulator, toy size) only when the key is toy size; "
+               "a labelled estimate for larger keys; 'resists' for ML-KEM + AES-GCM; 'unrecognised' for "
+               "anything else. Real-size RSA cannot be broken here. Design: docs/analyzer_spec.md.")
+    up = st.file_uploader("Stego image made by our image project", type=["png", "bmp"], key="sa_upload")
+    st.markdown("**Public key** (the attacker has it; the image does not carry it). Needed to attack an RSA "
+                "payload; leave empty for an ML-KEM image.")
+    k1, k2 = st.columns(2)
+    n_text = k1.text_input("Modulus N", key="sa_n", placeholder="for example 15")
+    e_text = k2.text_input("Exponent e", key="sa_e", placeholder="for example 7")
+    key = None
+    if n_text.strip() or e_text.strip():
+        if n_text.strip().isdigit() and e_text.strip().isdigit():
+            key = {"n": int(n_text), "e": int(e_text)}
+        else:
+            st.error("N and e must both be whole numbers.")
+            return
+    if up is None:
+        st.info("Upload an image to start. The stages are: detect the hiding method, extract the blob, "
+                "identify the cipher, break or estimate, score with the same engine, report.")
+        return
+    with tempfile.NamedTemporaryFile(suffix=os.path.splitext(up.name)[1], delete=False) as fh:
+        fh.write(up.getvalue())
+        tmp = fh.name
+    try:
+        report = sa.analyze(tmp, public_key=key)
+    except ValueError as exc:
+        st.error(str(exc))
+        return
+    finally:
+        os.remove(tmp)
+    report["input"]["file"] = up.name
+
+    status = report["pipeline_status"]
+    state = (report.get("attack") or {}).get("state")
+    if status != "complete":
+        st.warning("Pipeline " + status + ". Nothing is guessed for the stages that did not run.")
+    elif state:
+        (st.error if state.startswith("broken") else st.info)("Result: " + state.replace("_", " "))
+    for problem in report.get("problems", []):
+        st.error("Report problem: " + problem)
+
+    st.markdown("#### Stages")
+    st.dataframe(pd.DataFrame(sa.stage_rows(report)), hide_index=True)
+    s = report.get("score")
+    if s:
+        kpi_row([("Overall", f"{s['overall']}%", rpd.BAND_COLORS.get(s["band"], "#90A4AE")),
+                 ("Quantum", f"{s['quantum']}%", "#7C4DFF"), ("Classical", f"{s['classical']}%", "#00B0FF"),
+                 ("Weights", s["weights_version"], "#90A4AE")])
+        st.caption("Same engine as the Risk score page. A weighted score, not a probability.")
+    for title, field in (("Hiding method", "hiding"), ("Cipher", "cipher"), ("Technique", "technique"),
+                         ("Attack", "attack"), ("Estimate (not measured)", "estimate")):
+        if report.get(field):
+            with st.expander(title):
+                st.json(report[field])
+    evidence = sa.evidence_rows(report)
+    if evidence:
+        st.markdown("#### Evidence")
+        st.dataframe(pd.DataFrame(evidence), hide_index=True)
+        if (report.get("attack") or {}).get("state") == "broken_toy":
+            st.caption("Aer simulator, toy size. Live runs are saved to outputs/tmp_quantum_runs_analyzer.json "
+                       "(not tracked). scripts/analyzer_testset_run.py --save-evidence writes them to "
+                       "data/quantum_runs.json.")
+    st.markdown("#### Download")
+    d1, d2, d3 = st.columns(3)
+    d1.download_button("Report (JSON)", json.dumps(report, indent=2, default=str).encode("utf-8"),
+                       "analyzer_report.json", "application/json", key="sa_dl_json")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        from stego_analyzer import report as sa_report
+        csv_path = sa_report.export_csv(report, os.path.join(tmpdir, "r.csv"))
+        d2.download_button("Report (CSV)", csv_path.read_bytes(), "analyzer_report.csv", "text/csv", key="sa_dl_csv")
+        pdf_path = sa_report.export_pdf(report, os.path.join(tmpdir, "r.pdf"))
+        d3.download_button("Report (PDF)", pdf_path.read_bytes(), "analyzer_report.pdf", "application/pdf",
+                           key="sa_dl_pdf")
+    for line in report["limits"]:
+        st.caption("- " + line)
+
+
 def run_cmd(args, timeout):
     """Run a project command and return (exit code, combined output)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
@@ -826,14 +1010,16 @@ def page_pipeline():
         st.markdown(f'<div class="note bad">Target repos missing: {esc(", ".join(missing))}. '
                     'Run <code>git submodule update --init</code> before scanning.</div>', unsafe_allow_html=True)
     st.markdown("#### ▶️ Run a step")
-    st.caption("These buttons run the real project scripts and overwrite their outputs. "
-               "Refresh the page afterwards to see new numbers.")
+    st.caption("Scan, Rebuild CBOM and Full pipeline overwrite tracked output files (findings, CBOM, "
+               "risk report, scores), so they stay switched off until you tick the box below. After a "
+               "run this page lists the tracked files that changed and the command that restores them.")
+    allow = st.checkbox("I understand these buttons can change tracked files", key="allow_overwrite")
     steps = {
-        "🔍 Scan targets": (["src/run_all.py"], 300, bool(missing)),
+        "🔍 Scan targets": (["src/run_all.py"], 300, bool(missing) or not allow),
         "🧾 Rebuild CBOM": (["src/cbom.py", "outputs/findings.json", "--facts", "data/manual_facts.json",
-                             "--json", "docs/cbom.json", "--md", "docs/cbom.md", "--check"], 120, False),
+                             "--json", "docs/cbom.json", "--md", "docs/cbom.md", "--check"], 120, not allow),
         "🧪 Run tests": (["run_tests.py"], 300, False),
-        "🚀 Full pipeline": (["run_pipeline.py"], 900, bool(missing)),
+        "🚀 Full pipeline": (["run_pipeline.py"], 900, bool(missing) or not allow),
     }
     cols = st.columns(len(steps))
     for col, (label, (args, timeout, disabled)) in zip(cols, steps.items()):
@@ -844,6 +1030,12 @@ def page_pipeline():
             (st.success if code == 0 else st.error)(f"{label}: exit code {code}")
             tail = "\n".join(out.strip().splitlines()[-40:])
             st.code(tail or "(no output)", language="text")
+            changed = dsafe.git_changes(ROOT)
+            if changed:
+                st.warning("Tracked files that now differ from the last commit: " + ", ".join(changed))
+                st.code(dsafe.restore_hint(changed), language="text")
+            else:
+                st.caption("No tracked file changed (or git is not available here).")
 
 
 {"📊 Overview": page_overview, "🔎 Findings": page_findings, "🧾 CBOM and risk": page_cbom,
@@ -851,4 +1043,5 @@ def page_pipeline():
  "🔁 Before and after": page_before_after,
  "🧭 PQC advisor": page_advisor,
  "📈 Qubit calculator": page_calculator, "🎬 Shor's demo (live)": page_demo, "🔬 Quantum Lab": page_quantum_lab,
- "🛡️ Migration demo": page_migration, "⚙️ Pipeline": page_pipeline}[page]()
+ "🛡️ Migration demo": page_migration, "🕵️ Stego Analyzer": page_stego_analyzer,
+ "⚙️ Pipeline": page_pipeline}[page]()

@@ -1,0 +1,338 @@
+{
+  "weights_version": "v1.0",
+  "weights_sha256": "b8d2153f20afd4191d61b98be35a2a143714b53f6909dbc0f19d57e8c5792a3a",
+  "project": "video",
+  "layers": [
+    "L1",
+    "L2",
+    "L3"
+  ],
+  "seed": 42,
+  "n_draws": 1000,
+  "label": "formulas and weights only; no simulator result; weighted score, not a probability",
+  "not_credited": "L2 frame-selection fix: the engine has no factor for key entropy or frame coverage",
+  "exposure_note": "header scan still finds the frames, so exposure stays bypassable in every layer",
+  "rows": [
+    {
+      "modulus_bits": 1024,
+      "layers": {
+        "L1": {
+          "before": {
+            "f1": 100.0,
+            "f2": 56.26781132105445,
+            "f3": 50.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 90.0,
+            "quantum": 81.56695283026362,
+            "classical": 77.0,
+            "overall": 79.74017169815816,
+            "band": "Critical"
+          },
+          "after": {
+            "f1": 5.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 3.5,
+            "f6_eff": 4.5,
+            "quantum": 4.5,
+            "classical": 4.75,
+            "overall": 4.6,
+            "band": "Low"
+          }
+        },
+        "L2": {
+          "before": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 7.0,
+            "f6_eff": 72.0,
+            "quantum": 9.0,
+            "classical": 76.0,
+            "overall": 35.800000000000004,
+            "band": "Moderate"
+          },
+          "after": null
+        },
+        "L3": {
+          "before": {
+            "f1": 0.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 0.0,
+            "f6_eff": 72.0,
+            "quantum": 0.0,
+            "classical": 76.0,
+            "overall": 30.400000000000002,
+            "band": "Moderate"
+          },
+          "after": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 7.0,
+            "f6_eff": 4.5,
+            "quantum": 9.0,
+            "classical": 4.75,
+            "overall": 7.3,
+            "band": "Low"
+          }
+        }
+      },
+      "project_before": 70.41213735852654,
+      "project_after": 29.830000000000002,
+      "project_drop": 40.58213735852654,
+      "z_scenarios": {
+        "5": {
+          "before": 74.07213735852653,
+          "after": 30.400000000000006
+        },
+        "10": {
+          "before": 70.41213735852654,
+          "after": 29.830000000000002
+        },
+        "20": {
+          "before": 66.14213735852653,
+          "after": 29.165
+        }
+      },
+      "sensitivity": {
+        "narrow_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 66.0943881628551,
+          "before_max": 74.48437105238727,
+          "after_min": 24.46967335919677,
+          "after_max": 36.39668198234367,
+          "smallest_drop": 35.56215084032902
+        },
+        "wide_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 25.82140879720472,
+          "before_max": 94.4157562421363,
+          "after_min": 6.596129983198653,
+          "after_max": 76.59546381952269,
+          "smallest_drop": 0.27550643246701156
+        }
+      }
+    },
+    {
+      "modulus_bits": 2048,
+      "layers": {
+        "L1": {
+          "before": {
+            "f1": 100.0,
+            "f2": 46.24406938944995,
+            "f3": 10.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 90.0,
+            "quantum": 79.06101734736248,
+            "classical": 61.0,
+            "overall": 71.83661040841749,
+            "band": "High"
+          },
+          "after": {
+            "f1": 5.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 3.5,
+            "f6_eff": 4.5,
+            "quantum": 4.5,
+            "classical": 4.75,
+            "overall": 4.6,
+            "band": "Low"
+          }
+        },
+        "L2": {
+          "before": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 7.0,
+            "f6_eff": 72.0,
+            "quantum": 9.0,
+            "classical": 76.0,
+            "overall": 35.800000000000004,
+            "band": "Moderate"
+          },
+          "after": null
+        },
+        "L3": {
+          "before": {
+            "f1": 0.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 0.0,
+            "f6_eff": 72.0,
+            "quantum": 0.0,
+            "classical": 76.0,
+            "overall": 30.400000000000002,
+            "band": "Moderate"
+          },
+          "after": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 7.0,
+            "f6_eff": 4.5,
+            "quantum": 9.0,
+            "classical": 4.75,
+            "overall": 7.3,
+            "band": "Low"
+          }
+        }
+      },
+      "project_before": 64.08928832673399,
+      "project_after": 29.830000000000002,
+      "project_drop": 34.259288326733994,
+      "z_scenarios": {
+        "5": {
+          "before": 67.74928832673399,
+          "after": 30.400000000000006
+        },
+        "10": {
+          "before": 64.08928832673399,
+          "after": 29.830000000000002
+        },
+        "20": {
+          "before": 59.81928832673398,
+          "after": 29.165
+        }
+      },
+      "sensitivity": {
+        "narrow_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 59.31649649447972,
+          "before_max": 68.2868644255058,
+          "after_min": 24.46967335919677,
+          "after_max": 36.39668198234367,
+          "smallest_drop": 27.3728943547897
+        },
+        "wide_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 23.21191574264515,
+          "before_max": 93.67499002457544,
+          "after_min": 6.596129983198653,
+          "after_max": 76.59546381952269,
+          "smallest_drop": 0.11661213177147545
+        }
+      }
+    },
+    {
+      "modulus_bits": 3072,
+      "layers": {
+        "L1": {
+          "before": {
+            "f1": 100.0,
+            "f2": 40.377892895971414,
+            "f3": 10.0,
+            "f4": 100.0,
+            "f5_eff": 70.0,
+            "f6_eff": 90.0,
+            "quantum": 77.59447322399285,
+            "classical": 61.0,
+            "overall": 70.95668393439571,
+            "band": "High"
+          },
+          "after": {
+            "f1": 5.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 3.5,
+            "f6_eff": 4.5,
+            "quantum": 4.5,
+            "classical": 4.75,
+            "overall": 4.6,
+            "band": "Low"
+          }
+        },
+        "L2": {
+          "before": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 7.0,
+            "f6_eff": 72.0,
+            "quantum": 9.0,
+            "classical": 76.0,
+            "overall": 35.800000000000004,
+            "band": "Moderate"
+          },
+          "after": null
+        },
+        "L3": {
+          "before": {
+            "f1": 0.0,
+            "f2": null,
+            "f3": null,
+            "f4": 80.0,
+            "f5_eff": 0.0,
+            "f6_eff": 72.0,
+            "quantum": 0.0,
+            "classical": 76.0,
+            "overall": 30.400000000000002,
+            "band": "Moderate"
+          },
+          "after": {
+            "f1": 10.0,
+            "f2": null,
+            "f3": null,
+            "f4": 5.0,
+            "f5_eff": 7.0,
+            "f6_eff": 4.5,
+            "quantum": 9.0,
+            "classical": 4.75,
+            "overall": 7.3,
+            "band": "Low"
+          }
+        }
+      },
+      "project_before": 63.38534714751657,
+      "project_after": 29.830000000000002,
+      "project_drop": 33.55534714751657,
+      "z_scenarios": {
+        "5": {
+          "before": 67.04534714751657,
+          "after": 30.400000000000006
+        },
+        "10": {
+          "before": 63.38534714751657,
+          "after": 29.830000000000002
+        },
+        "20": {
+          "before": 59.115347147516566,
+          "after": 29.165
+        }
+      },
+      "sensitivity": {
+        "narrow_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 58.44543863365591,
+          "before_max": 67.58200578318701,
+          "after_min": 24.46967335919677,
+          "after_max": 36.39668198234367,
+          "smallest_drop": 26.80766356558076
+        },
+        "wide_random": {
+          "after_below_before_fraction": 1.0,
+          "before_min": 21.73060756108053,
+          "before_max": 93.53148955797191,
+          "after_min": 6.596129983198653,
+          "after_max": 76.59546381952269,
+          "smallest_drop": 0.11529412682162388
+        }
+      }
+    }
+  ]
+}

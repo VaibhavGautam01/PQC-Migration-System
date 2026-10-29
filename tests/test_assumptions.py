@@ -44,6 +44,25 @@ class AssumptionTests(unittest.TestCase):
             with self.assertRaises(A.AssumptionError):
                 A.validate(g)
 
+    def test_analyzer_flow_and_scope_confirmation_are_recorded_with_dates(self):
+        from datetime import date
+        an = A.load_analyzer()
+        self.assertEqual(an["flow_agreed_date"], "2026-10-22")
+        date.fromisoformat(an["flow_agreed_date"])
+        # the scope may be unconfirmed (false) or confirmed (true with a date); never confirmed without a date
+        self.assertIsInstance(an["scope_confirmed_with_sir"], bool)
+        if an["scope_confirmed_with_sir"]:
+            date.fromisoformat(an["scope_confirmed_date"])
+
+    def test_analyzer_scope_confirmed_needs_a_date(self):
+        g = good()
+        g["analyzer"] = {"flow": "f", "flow_agreed_date": "2026-10-22", "scope": "s",
+                         "scope_confirmed_with_sir": True}
+        with self.assertRaises(A.AssumptionError):
+            A.validate(g)
+        g["analyzer"]["scope_confirmed_date"] = "2026-10-25"
+        A.validate(g)
+
     def test_good_block_is_valid(self):
         self.assertEqual(A.validate(good()), good())
 

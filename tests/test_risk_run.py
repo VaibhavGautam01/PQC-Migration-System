@@ -46,8 +46,15 @@ class RiskRunTests(unittest.TestCase):
             covered = set(p["layers_scored"]) | set(p["layers_not_scored_yet"]) | set(p["no_protection"])
             self.assertEqual(covered, {"L1", "L2", "L3", "L5"})
 
+    def test_video_crc32_layer_is_scored(self):
+        self.assertEqual(self.video["layers_not_scored_yet"], [])
+        self.assertIsNone(self.video["pending_reason"])
+        s = self.video["other_layers"]["L3"]["score"]
+        self.assertEqual(s["quantum"], 0.0)
+        self.assertEqual((s["overall"], s["band"]), (30.4, "Moderate"))
+
     def test_assumptions_and_weights_version_recorded(self):
-        self.assertEqual(self.out["weights_version"], "v0.1")
+        self.assertEqual(self.out["weights_version"], "v1.0")
         self.assertEqual(self.out["assumptions"]["X_secret_years"], 5)
         self.assertEqual(sorted(self.out["assumptions"]["Z_scenarios"]), [5, 10, 20])
 

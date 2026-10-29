@@ -33,6 +33,7 @@ BUILDER_PREFIXES = ("build_", "c_amod", "controlled_", "qft", "phi_", "modular_"
 GUARDED = {
     "src/q2_arith.py": "all",
     "notebook/shors_demo.py": "builders",
+    "stego_analyzer/quantum_stage.py": "all",     # the analyzer's Shor stage (plan Section 9, Analyzer rule)
 }
 
 

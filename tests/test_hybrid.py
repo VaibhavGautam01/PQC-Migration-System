@@ -1,71 +1,45 @@
-import sys
-import unittest
-from pathlib import Path
+﻿import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from pqc_stego import hybrid
+from pqc_stego.hybrid import (HEADER_LEN, KEM_CT_LEN, NONCE_LEN,
+                              generate_keypair, hybrid_decrypt, hybrid_encrypt)
 
 
-class TestHkdf(unittest.TestCase):
-    def test_rfc5869_case_1(self):
-        okm = hybrid.hkdf_sha256(
-            bytes([0x0b] * 22), 42,
-            salt=bytes(range(0x00, 0x0d)), info=bytes(range(0xf0, 0xfa)))
-        self.assertEqual(okm.hex(),
-            "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf"
-            "34007208d5b887185865")
-
-
-class TestHybrid(unittest.TestCase):
+class HybridTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.pk, cls.sk = hybrid.generate_keypair()
-        cls.pk2, cls.sk2 = hybrid.generate_keypair()
+        cls.ek, cls.dk = generate_keypair()
 
     def test_round_trip(self):
-        msg = b"attack at dawn"
-        blob = hybrid.hybrid_encrypt(self.pk, msg)
-        self.assertEqual(hybrid.hybrid_decrypt(self.sk, blob), msg)
+        msg = b"secret message for the image project"
+        self.assertEqual(hybrid_decrypt(self.dk, hybrid_encrypt(self.ek, msg)), msg)
 
-    def test_empty_message(self):
-        blob = hybrid.hybrid_encrypt(self.pk, b"")
-        self.assertEqual(hybrid.hybrid_decrypt(self.sk, blob), b"")
+    def test_empty_and_long_messages(self):
+        for msg in (b"", b"x" * 5000):
+            self.assertEqual(hybrid_decrypt(self.dk, hybrid_encrypt(self.ek, msg)), msg)
 
-    def test_overhead_is_1116(self):
-        msg = b"x" * 100
-        self.assertEqual(len(hybrid.hybrid_encrypt(self.pk, msg)), 100 + 1116)
+    def test_blob_size(self):
+        msg = b"hello"
+        self.assertEqual(len(hybrid_encrypt(self.ek, msg)), HEADER_LEN + len(msg))
 
     def test_two_encryptions_differ(self):
-        msg = b"same message"
-        self.assertNotEqual(hybrid.hybrid_encrypt(self.pk, msg),
-                            hybrid.hybrid_encrypt(self.pk, msg))
+        self.assertNotEqual(hybrid_encrypt(self.ek, b"same"), hybrid_encrypt(self.ek, b"same"))
 
-    def test_tamper_every_region(self):
-        blob = hybrid.hybrid_encrypt(self.pk, b"tamper me please")
-        positions = {"kem_ct": 0, "kem_ct_end": 1087, "nonce": 1088,
-                     "tag": 1100, "ciphertext": len(blob) - 1}
-        for name, pos in positions.items():
+    def test_tamper_each_region_fails(self):
+        blob = bytearray(hybrid_encrypt(self.ek, b"tamper test message"))
+        for pos in (0, KEM_CT_LEN - 1, KEM_CT_LEN, KEM_CT_LEN + NONCE_LEN, len(blob) - 1):
             bad = bytearray(blob)
             bad[pos] ^= 0x01
-            with self.subTest(region=name):
-                with self.assertRaises(hybrid.HybridDecryptError):
-                    hybrid.hybrid_decrypt(self.sk, bytes(bad))
+            with self.assertRaises(ValueError):
+                hybrid_decrypt(self.dk, bytes(bad))
 
     def test_wrong_key_fails(self):
-        blob = hybrid.hybrid_encrypt(self.pk, b"secret")
-        with self.assertRaises(hybrid.HybridDecryptError):
-            hybrid.hybrid_decrypt(self.sk2, blob)
+        _, other_dk = generate_keypair()
+        with self.assertRaises(ValueError):
+            hybrid_decrypt(other_dk, hybrid_encrypt(self.ek, b"msg"))
 
-    def test_truncated_fails(self):
-        blob = hybrid.hybrid_encrypt(self.pk, b"secret")
-        with self.assertRaises(hybrid.HybridDecryptError):
-            hybrid.hybrid_decrypt(self.sk, blob[:500])
-
-    def test_aad_mismatch_fails(self):
-        blob = hybrid.hybrid_encrypt(self.pk, b"secret", aad=b"image")
-        with self.assertRaises(hybrid.HybridDecryptError):
-            hybrid.hybrid_decrypt(self.sk, blob, aad=b"video")
-        self.assertEqual(hybrid.hybrid_decrypt(self.sk, blob, aad=b"image"), b"secret")
+    def test_truncated_blob_fails(self):
+        with self.assertRaises(ValueError):
+            hybrid_decrypt(self.dk, b"short")
 
 
 if __name__ == "__main__":

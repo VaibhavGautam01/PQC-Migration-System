@@ -1,6 +1,6 @@
 ﻿"""Every percentage in a report must appear in outputs/risk_scores.json (rounded to 1 decimal).
 
-Usage: python scripts\numbers_check.py docs\some_report.md
+Usage: python scripts\numbers_check.py docs\report\chapter_risk_score.md
 Non-score percentages (QBER 11%, 0.1% gate error) get flagged; review those by hand.
 """
 import json

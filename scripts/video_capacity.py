@@ -1,13 +1,16 @@
 ﻿"""Capacity of N frames vs the hybrid payload, with and without an ML-DSA-65 signature.
 
 Usage: python scripts\video_capacity.py --width 640 --height 480 --bits-per-pixel 1 --frames 60
-Take bits-per-pixel and header bytes from pqc_stego/video_pqc.py, not from guesswork.
+Take bits-per-pixel and any header bytes from pqc_stego/video_pqc.py, not from guesswork.
 """
 import argparse
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pqc_stego import hybrid
 
-OVERHEAD = hybrid.OVERHEAD      # KEM ciphertext + nonce + tag, from the real module
+OVERHEAD = hybrid.OVERHEAD      # 1,116 B: KEM ciphertext + nonce + tag
 SIG = 3309                      # ML-DSA-65 signature
 
 p = argparse.ArgumentParser()
@@ -20,7 +23,7 @@ a = p.parse_args()
 
 per_frame = a.width * a.height * a.bits_per_pixel // 8
 total = per_frame * a.frames - a.header_bytes
-print(f"per frame {per_frame} B, {a.frames} frames {total} B usable (hybrid overhead {OVERHEAD} B, signature {SIG} B)")
+print(f"per frame {per_frame} B, {a.frames} frames {total} B usable (overhead {OVERHEAD} B, signature {SIG} B)")
 for msg in (16, 256, 1024, 4096):
     for label, size in (("hybrid", OVERHEAD + msg), ("hybrid+ML-DSA-65", OVERHEAD + msg + SIG)):
         frames_needed = -(-(size + a.header_bytes) // per_frame)

@@ -1,14 +1,13 @@
 ﻿# Q14: published resource estimates for factoring RSA-2048 (estimates, not measurements)
 
-Checked on: <date>. Every row needs a primary source (arXiv or journal) before it is quoted.
+Checked on: <date>. Primary source needed for every row before it is quoted in the report.
 
 | Source | Logical qubits | Toffoli gates | Physical qubits | Runtime | Assumptions | Verified? |
 |---|---|---|---|---|---|---|
-| Beauregard 2n+3 (our formula, F2) | 4,099 | n/a | n/a | n/a | textbook circuit, no error correction | VERIFY |
-| Gidney and Ekera (arXiv 2019, journal year VERIFY) | about 3n | 3 billion | 20 million | 8 hours | grid, 0.1% error, 1 us cycle, 10 us reaction | VERIFY |
-| Gidney, arXiv 2505.15917 (May 2025) | about 0.5n | 2 trillion | under 1 million | under 1 week | same as above | VERIFY |
-| Iceberg Quantum (Feb 2026, secondary source only) | VERIFY | VERIFY | under 100,000 | VERIFY | different architecture | VERIFY |
-| Our Q4 measured circuits (Yatharth) | measured, n = 4 to 8 | n/a | n/a | n/a | Aer simulator, toy size | after Q4 |
+| Beauregard 2n+3 (our F2 formula) | 4,099 for n = 2048 | n/a (not used by F2) | n/a | n/a | textbook circuit, no error correction | formula only |
+| Gidney and Ekera (arXiv 2019; journal year VERIFY) | VERIFY | VERIFY | 20 million | 8 hours | square grid, 0.1% gate error, 1 us cycle, 10 us reaction | abstract of 2025 paper |
+| Gidney, arXiv 2505.15917 (21 May 2025) | VERIFY | VERIFY | under 1 million | under 1 week | same assumptions as 2019 | abstract checked |
+| Our Q4 measured circuits | measured, n = 4 to 8 | n/a | n/a | n/a | Aer simulator, toy size | after Q4 |
 
 ## Notes
 - All rows are published estimates under stated hardware assumptions. None is a measurement of ours.

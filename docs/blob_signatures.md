@@ -1,12 +1,18 @@
-﻿# Blob signatures (analyzer draft, image project formats only)
+﻿# Blob signatures for the Stego Analyzer (our own formats only)
 
-| Payload | Length rule | Recognition |
+Source of truth: stego_analyzer/cipher_identify.py and pqc_stego/hybrid.py (hybrid.OVERHEAD = 1,116 B).
+
+| Verdict | Rule | What it does NOT prove |
 |---|---|---|
-| ML-KEM-768 + AES-256-GCM | length >= 1,116 B; message length = length - 1,116 | first 1,088 B = KEM ciphertext; then 12 B nonce, 16 B tag |
-| Textbook RSA | length = modulus bytes (128 B for 1024-bit, 256 B for 2048-bit) | modulus size read from length |
-| OAEP-style RSA | same length as textbook RSA at the same modulus size | NOT separable by length alone |
+| textbook_rsa | hex text, public key given, whole number of blocks for N (2 or more), every block below N | The padding scheme: one OAEP block also looks like a textbook block |
+| ml_kem_aes_gcm | hex text of at least 1,116 B (1,088 KEM ciphertext + 12 nonce + 16 tag), not a textbook layout | The structure inside: any 1,088-byte string is a valid ML-KEM ciphertext, so only the secret key can confirm it. Report as "consistent with ML-KEM + AES-GCM (length rule only)". |
+| unrecognised | anything else | Nothing: no guess is made |
 
-Open question: how does the image project's own format mark OAEP versus textbook? Check the pinned code before
-Week 6; if there is no marker, the analyzer must say "RSA, padding unknown" rather than guess.
+## Known ambiguity
+A long RSA blob read without its public key can exceed 1,116 B and match the ML-KEM length rule.
+OAEP versus textbook cannot be separated by length. Repeated blocks prove determinism (so not OAEP) only when the
+block count is small compared with N. Padding is confirmed only after a successful break.
 
-Sizes cross-checked against FIPS 203 (ML-KEM-768 ciphertext = 1,088 B). Test set: generated from our own projects only.
+## Scoring consequence
+When padding is undetermined, F4 is shown as a range (textbook to OAEP) or as the labelled worst case.
+Sizes come from FIPS 203 and are locked by tests/test_sizes_match_libraries.py.

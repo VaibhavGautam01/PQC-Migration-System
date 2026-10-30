@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Qiskit](https://img.shields.io/badge/Qiskit-Shor's_Demo-6929C4?style=for-the-badge&logo=ibm&logoColor=white)
 ![Target](https://img.shields.io/badge/Migrate_To-ML--KEM--768-00C853?style=for-the-badge&logo=letsencrypt&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-984_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-1056_passing-22C55E?style=for-the-badge&logo=pytest&logoColor=white)
 ![Scanner](https://img.shields.io/badge/Scanner-v0.4.0-2196F3?style=for-the-badge)
 ![Patterns](https://img.shields.io/badge/Patterns-48-9C27B0?style=for-the-badge)
 ![Dashboard](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -159,7 +159,7 @@ The pipeline was run on `Final-Year-project-part1` and `Secure-Video-Steganograp
 | 🧾 CBOM entries | **6** |
 | ⚠️ Entries with a classical key-strength problem | **2** |
 | ❓ Entries with unknown key size | **2** |
-| 🧪 Automated tests | **984** passing (17 skipped) |
+| 🧪 Automated tests | **1056** passing (23 skipped) |
 
 **Risk summary** (logical-qubit estimates, no error-correction overhead):
 

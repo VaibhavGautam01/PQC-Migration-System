@@ -74,8 +74,9 @@
     "analyzer": {
       "flow": "A stego image is given as input, it is broken, then the full pipeline runs.",
       "flow_agreed_date": "2026-10-22",
-      "scope": "Images made by our own projects. The break runs only where a method applies: real Shor circuit at toy size, or the existing small-key attack. Larger keys get a labelled estimate. ML-KEM + AES-GCM payloads resist. Images from other tools are reported unrecognised.",
-      "scope_confirmed_with_sir": false
+      "scope": "Images made by our own projects. The break runs only where a method applies: real Shor circuit at toy size, or the existing small-key attack. Larger keys get a labelled estimate. ML-KEM + AES-GCM payloads resist. Images from other tools are reported unrecognised. The public key (N, e) is a second input. The R-channel module and the video formats are not covered; sir has not said whether they must be.",
+      "scope_confirmed_with_sir": true,
+      "scope_confirmed_date": "2026-10-27"
     },
     "project_overrides": {}
   },

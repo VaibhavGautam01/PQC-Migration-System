@@ -5,8 +5,9 @@ Week 5 Day 3. Plan reference: Team Task Plan v3, Section 10A. Owner of this spec
 Status of what sir agreed (data/manual_facts.json, assumptions.analyzer):
 
 - Flow, agreed on 22 October 2026: a stego image is given as input, it is broken, then the full pipeline runs.
-- Scope, NOT confirmed yet: our own formats only; real Shor at toy size; labelled estimates for larger keys;
-  "resists" for ML-KEM + AES-GCM; "unrecognised" for anything else.
+- Scope, confirmed on 27 October 2026: our own formats only; real Shor at toy size; labelled estimates for larger keys;
+  "resists" for ML-KEM + AES-GCM; "unrecognised" for anything else. The public key as a second input was
+  confirmed the same day. Not answered yet: whether the R-channel module or the video formats must be covered.
 
 ## Command line and dashboard
 
@@ -25,7 +26,7 @@ for N = 15, 21 and 35. The attacker in the plan (Section 5) holds the stego imag
 analyzer takes the public key (n, e) as a second input: --public-key N,E on the command line and two fields on
 the dashboard page. Without it the analyzer still detects, extracts and recognises an ML-KEM payload by length,
 but it does not attack an RSA payload and says "modulus unknown, give the public key". It never guesses N.
-Sir has not been asked about this yet.
+Sir confirmed this on 27 October 2026.
 
 ## Stages
 
@@ -143,7 +144,7 @@ Quote only the numbers this prints, and say they were measured on images made by
 
 ## Not decided yet (who)
 
-1. Sir confirms the scope above (Tarun asks).
+1. (Done, 27 October 2026) Sir confirmed the scope and the public key as a second input.
 2. The exposure rule for XOR-LSB and the largest modulus for the small-key attack (Yatharth, Vaibhav).
-3. Whether the public key as a second input is acceptable (Tarun asks sir), and which formats count as ours.
+3. Whether the R-channel module or the video formats must be covered (Tarun asks sir).
 4. The pinned message layout for a non-toy modulus, so attack_classical.py and a real-size test case can be built (Vaibhav).

@@ -39,14 +39,14 @@ The Stego Analyzer takes a stego image as input, breaks it where a method applie
 pipeline. Sir agreed this flow on 22 October 2026. What it covers today is narrow, and the report must say so.
 It reads the plain LSB format of our image project through the pinned project's own extractor. The image does
 not carry the RSA modulus, so breaking an RSA payload needs the public key (N, e) together with the image; this
-matches the attacker in our model, who holds the stego file and the public key. CONFIRM WITH SIR: that the public
+matches the attacker in our model, who holds the stego file and the public key. Sir confirmed on 27 October 2026 that the public
 key is a second input. For a toy-size key (N up to 35) it factors N with the gate-level Shor circuit on the Aer
 simulator, saves an evidence record for every run, and recovers the message. For larger keys it gives a labelled
 estimate (2n+3 logical qubits and the published figure) and never a time. An ML-KEM + AES-GCM payload is reported
 as "resists", and anything else, including the image project's R-channel module and the video project's
 XOR-LSB, is reported as "unrecognised". RSA payloads of real size are not attacked, and the small-key attack for
-mid-size moduli is not built yet. CONFIRM WITH SIR: that this limit on formats and key sizes is acceptable, and
-whether the R-channel module or the video formats must be covered. On the generated test set of 6 images made by
+mid-size moduli is not built yet. Sir accepted this limit on 27 October 2026. CONFIRM WITH SIR: whether the R-channel module or the video
+formats must be covered. On the generated test set of 6 images made by
 our own project (three toy RSA keys, one RSA image without the key, one ML-KEM image, one clean cover) the analyzer
 gave the expected result for all 6; the set is small, it was made by the same team, and the numbers say nothing
 about images from other tools. Accuracy on other tools' images is unknown.
@@ -70,7 +70,7 @@ be quoted as delivered for them until he has said how he wants them treated.
 ## Open items before this text is final
 
 1. Sir's answer on Java, JavaScript, the LLM classifier and the repository count.
-2. Sir's confirmation of the Stego Analyzer scope: the public key as a second input, the limit on formats and
-   key sizes, and whether R-channel or video formats must be covered.
+2. Sir's answer on whether the R-channel module or the video formats must be covered by the Analyzer (the public
+   key input and the limit were accepted on 27 October 2026).
 3. Pinned backends and the two patches (then remove the reference-backend sentence).
 4. Re-check every number in this file against code output (python scripts/repo_check.py and run_pipeline.py).

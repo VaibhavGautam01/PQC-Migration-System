@@ -159,7 +159,7 @@ The pipeline was run on `Final-Year-project-part1` and `Secure-Video-Steganograp
 | 🧾 CBOM entries | **6** |
 | ⚠️ Entries with a classical key-strength problem | **2** |
 | ❓ Entries with unknown key size | **2** |
-| 🧪 Automated tests | **1056** passing (23 skipped) |
+| 🧪 Automated tests | **1056** passing (17 skipped) |
 
 **Risk summary** (logical-qubit estimates, no error-correction overhead):
 

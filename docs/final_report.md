@@ -172,3 +172,7 @@ These ran on local copies with reduced keys, not on the pinned commits:
 - Toy N = 15 and N = 21 versions of the image pipeline exist as targets for Shor's circuit.
 
 No time in this section was measured on the pinned code. The break needs only public information, but factoring a 256-bit or larger modulus needs a sieve method. All quantum results in this project are simulator, toy size.
+
+## Stego Analyzer
+
+The Stego Analyzer is described in docs/report/chapter_stego_analyzer.md.

@@ -94,7 +94,7 @@ from other tools. Accuracy on other tools' images is unknown. The score is a wei
 
     python scripts/make_analyzer_testset.py                   # generate the 6 test images (needs the pinned project)
     python scripts/analyzer_testset_run.py                    # run all of them and print the table
-    python run_pipeline.py --input IMAGE.png --public-key 15,7
+    python run_pipeline.py --input IMAGE.png --public-key 15,3
     streamlit run src/live_dashboard.py                       # page "Stego Analyzer": upload, stages, evidence, downloads
 
 Live runs write their evidence records to outputs/tmp_quantum_runs_analyzer.json, which git ignores. Running

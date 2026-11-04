@@ -83,7 +83,7 @@ def parse_public_key(text):
     """'N,E' -> {"n": N, "e": E}; ValueError if it is not two whole numbers."""
     parts = [p.strip() for p in str(text).split(",")]
     if len(parts) != 2 or not all(p.isdigit() for p in parts):
-        raise ValueError("--public-key must look like N,E (two whole numbers), for example 15,7")
+        raise ValueError("--public-key must look like N,E (two whole numbers), for example 15,3")
     return {"n": int(parts[0]), "e": int(parts[1])}
 
 
@@ -117,7 +117,7 @@ def main(argv=None):
     ap.add_argument("--input", metavar="STEGO_IMAGE",
                     help="Stego Analyzer: analyse one stego image instead of running the project pipeline")
     ap.add_argument("--public-key", metavar="N,E",
-                    help="with --input: the attacker's public key, needed to attack an RSA payload (example: 15,7)")
+                    help="with --input: the attacker's public key, needed to attack an RSA payload (example: 15,3)")
     args = ap.parse_args(argv)
     if args.input:
         return run_analyzer(args.input, args.public_key)

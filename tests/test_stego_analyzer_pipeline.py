@@ -215,6 +215,25 @@ class AnalyzerTests(unittest.TestCase):
         self.assertEqual(rows[0]["where"], "data/quantum_runs.json")
         self.assertTrue(any(x["what"] == "score" for x in rows))
 
+    def test_scope_line_follows_what_is_recorded_for_sir(self):
+        import json
+        base = json.loads((Path(__file__).resolve().parent.parent / "data" / "manual_facts.json").read_text(encoding="utf-8-sig"))
+        base["assumptions"]["analyzer"]["scope_confirmed_with_sir"] = False
+        base["assumptions"]["analyzer"].pop("scope_confirmed_date", None)
+        p = Path(self.tmp.name) / "unconfirmed.json"
+        p.write_text(json.dumps(base), encoding="utf-8")
+        self.assertEqual(sa.scope_status(p), "not yet confirmed with sir")
+        self.assertIn("is not confirmed yet", sa.scope_limit_line(p))
+        base["assumptions"]["analyzer"]["scope_confirmed_with_sir"] = True
+        base["assumptions"]["analyzer"]["scope_confirmed_date"] = "2026-10-27"
+        p.write_text(json.dumps(base), encoding="utf-8")
+        self.assertEqual(sa.scope_status(p), "accepted by sir on 2026-10-27")
+        self.assertIn("accepted on 2026-10-27", sa.scope_limit_line(p))
+
+    def test_report_limits_end_with_the_scope_line(self):
+        r, _ = self.run_with(cipher={"kind": "ml_kem_aes_gcm"})
+        self.assertTrue(r["limits"][-1].startswith("Scope with sir:"))
+
     def test_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):
             sa.analyze(Path(self.tmp.name) / "nope.png")

@@ -23,10 +23,12 @@ from . import estimate as estimate_stage
 
 ROOT = Path(__file__).resolve().parent.parent
 try:
+    from src import assumptions
     from src import quantum_runs as QR
     from src import risk_score as rs
 except ImportError:                                    # root not on sys.path (streamlit run src/...)
     sys.path.insert(0, str(ROOT))
+    from src import assumptions
     from src import quantum_runs as QR
     from src import risk_score as rs
 
@@ -38,8 +40,31 @@ LIMITS = ["The image does not carry the modulus: breaking an RSA payload needs t
           "Detector and identifier accuracy are measured only on images made by our own projects; "
           "accuracy on other tools' images is unknown.",
           "A weighted score, not a probability.",
-          "Quantum results are simulator results at toy size; real-size keys get labelled estimates, never a time.",
-          "Scope with sir: flow agreed on 22 October 2026; the format limit is not confirmed yet."]
+          "Quantum results are simulator results at toy size; real-size keys get labelled estimates, never a time."]
+
+
+def scope_status(path=None):
+    """What sir has confirmed, read from data/manual_facts.json so the page and the report never disagree with it."""
+    try:
+        an = assumptions.load_analyzer(path)
+    except Exception:
+        an = None
+    if an and an.get("scope_confirmed_with_sir"):
+        return f"accepted by sir on {an['scope_confirmed_date']}"
+    return "not yet confirmed with sir"
+
+
+def scope_limit_line(path=None):
+    """The last line of every report's limits."""
+    try:
+        an = assumptions.load_analyzer(path)
+    except Exception:
+        an = None
+    flow = (an or {}).get("flow_agreed_date", "an unrecorded date")
+    if an and an.get("scope_confirmed_with_sir"):
+        return (f"Scope with sir: flow agreed on {flow}; the limits and the public key input were accepted on "
+                f"{an['scope_confirmed_date']}; whether the R-channel or video formats must be covered is not answered yet.")
+    return f"Scope with sir: flow agreed on {flow}; the limit on formats and key sizes is not confirmed yet."
 
 DEFAULT_STAGES = {"detect": detect_method.detect, "extract": extract.extract,
                   "identify": cipher_identify.identify, "attack_toy": quantum_stage.attack_toy,
@@ -159,7 +184,7 @@ def analyze(path, stages=None, public_key=None):
                         "public_key": public_key},
               "pipeline_status": "complete", "stage_log": [{"stage": "accept", "status": "ok"}],
               "hiding": None, "extraction": None, "cipher": None, "technique": None, "attack": None,
-              "estimate": None, "score": None, "limits": list(LIMITS)}
+              "estimate": None, "score": None, "limits": list(LIMITS) + [scope_limit_line()]}
     try:
         hiding = _call(report, "detect_method", st["detect"], str(path))
         report["hiding"] = hiding

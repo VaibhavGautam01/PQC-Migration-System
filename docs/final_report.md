@@ -50,7 +50,7 @@ The key size decides the qubit cost, so it is extracted carefully:
 | Miss hunt | 166 crypto-looking lines without a finding triaged by hand (first scan) | 109 comments, docstrings or UI text; 36 other code; 21 candidates read manually. Re-run on commit 68d92a2: 164 lines (158 code, 6 comments), not yet triaged by hand |
 | Real gap found | `isprime()` prime selection in `r_channel_stego.py` | Fixed with pattern `RSA-MANUAL-PRIME-ISPRIME` |
 | Not bugs | `GCD(e, phi)` and `phi % e` loops | Public-exponent helpers with no size or algorithm information |
-| Tests | `run_tests.py` and the files in `tests/` | 1056 tests, all pass (23 skipped), run in October 2026 |
+| Tests | `run_tests.py` and the files in `tests/` | 1096 tests, all pass (23 skipped), run in October 2026 |
 
 ## 3. Stage 1 results on the target projects
 
@@ -172,3 +172,7 @@ These ran on local copies with reduced keys, not on the pinned commits:
 - Toy N = 15 and N = 21 versions of the image pipeline exist as targets for Shor's circuit.
 
 No time in this section was measured on the pinned code. The break needs only public information, but factoring a 256-bit or larger modulus needs a sieve method. All quantum results in this project are simulator, toy size.
+
+## Stego Analyzer
+
+The Stego Analyzer is described in docs/report/chapter_stego_analyzer.md.

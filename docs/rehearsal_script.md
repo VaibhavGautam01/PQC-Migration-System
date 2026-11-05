@@ -35,8 +35,8 @@ the Analyzer is built but not demonstrated.
 
 | Step | Do | Expected |
 |---|---|---|
-| 1 | Page "Stego Analyzer", upload toy_rsa_N15.png, enter N = 15, e = 7 | Result: broken toy. Message HELLO recovered. Label "Aer simulator, toy size". Risk 95.5 (Critical). Evidence table names the Shor run records. |
-| 2 | Upload toy_rsa_N21.png with N = 21 and its e | Different factors (3 x 7), no code change. |
+| 1 | Page "Stego Analyzer", upload toy_rsa_N15.png, enter N = 15, e = 3 (every key is in outputs/tmp_analyzer_testset/labels.json) | Result: broken toy. Message HELLO recovered. Label "Aer simulator, toy size". Risk 95.5 (Critical). Evidence table names the Shor run records. |
+| 2 | Upload toy_rsa_N21.png with N = 21, e = 5 (N = 35 also uses e = 5). A wrong e still factors N but decrypts to a wrong message, so always take e from labels.json | Different factors (3 x 7), no code change. |
 | 3 | Upload ml_kem_aes_gcm.png, no key | Result: resists. Risk 4.7 (Low). "Extraction works, nothing to factor." |
 | 4 | Upload toy_rsa_N15.png with no key | Unrecognised: "modulus unknown, give the public key". Nothing is guessed. |
 | 5 | Upload clean_image.png | Unrecognised. |

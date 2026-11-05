@@ -11,7 +11,7 @@ Status of what sir agreed (data/manual_facts.json, assumptions.analyzer):
 
 ## Command line and dashboard
 
-    python run_pipeline.py --input path/to/stego.png --public-key 15,7
+    python run_pipeline.py --input path/to/stego.png --public-key 15,3
 
 Exit codes: 0 = pipeline complete, 1 = the report broke a rule, 2 = file not found, 3 = stopped at a stage that is
 not built yet. The report is written to outputs/tmp_analyzer_report.json (not tracked by git).

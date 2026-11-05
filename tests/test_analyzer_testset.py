@@ -51,6 +51,12 @@ class TestsetTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             mk.generate(self.root / "nowhere", self.root / "set")
 
+    def test_documents_name_the_real_keys_of_the_test_set(self):
+        root = Path(__file__).resolve().parent.parent
+        script = (root / "docs" / "rehearsal_script.md").read_text(encoding="utf-8")
+        self.assertIn(f"N = 15, e = {mk.toy_public_key(15)['e']}", script)
+        self.assertIn(f"N = 21, e = {mk.toy_public_key(21)['e']}", script)
+
     def test_toy_keys_are_valid_rsa_keys(self):
         from math import gcd
         for n, (p, q) in mk.TOY_PRIMES.items():

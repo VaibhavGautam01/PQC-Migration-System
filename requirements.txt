@@ -19,3 +19,4 @@ plotly>=5.20
 pytest>=8.0
 cryptography>=42
 reportlab==5.0.1
+sympy>=1.13

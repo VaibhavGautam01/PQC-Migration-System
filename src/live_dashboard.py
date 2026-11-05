@@ -903,7 +903,7 @@ def page_stego_analyzer():
         sys.path.insert(0, ROOT)
     from stego_analyzer import pipeline as sa
     st.caption("Flow agreed with sir on 22 October 2026: a stego image goes in, it is broken, then the full "
-               "pipeline runs. Our limit, not yet confirmed with sir: images made by our own image project; "
+               "pipeline runs. Our limit (" + sa.scope_status() + "): images made by our own image project; "
                "a real Shor circuit on the simulator (Aer simulator, toy size) only when the key is toy size; "
                "a labelled estimate for larger keys; 'resists' for ML-KEM + AES-GCM; 'unrecognised' for "
                "anything else. Real-size RSA cannot be broken here. Design: docs/analyzer_spec.md.")

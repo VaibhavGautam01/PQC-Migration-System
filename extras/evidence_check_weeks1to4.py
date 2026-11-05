@@ -31,6 +31,23 @@ DEFAULT_DOCS = ["docs/attack_evidence.md", "docs/attack_evidence_week2.md",
                 "docs/attack_evidence_week3.md", "docs/attack_evidence_master.md"]
 
 # Patterns that look like a specific, checkable quantum claim in prose.
+# The standard instructional sentence every doc in this project uses to EXPLAIN the [FILL]
+# convention. It uses the exact same **[FILL]** bold syntax as a real unfilled placeholder,
+# so it cannot be told apart by pattern alone - it is excluded by this known, fixed wording.
+EXPLANATORY_SENTENCE_MARKERS = ("need your own fresh run output", "must be pasted from your own run output")
+
+
+def find_real_fill_markers(text: str) -> list:
+    """Every **[FILL...]** token that is a GENUINE unfilled placeholder, excluding the one
+    standard sentence that explains the convention (see EXPLANATORY_SENTENCE_MARKERS)."""
+    found = []
+    for line in text.splitlines():
+        if any(marker in line for marker in EXPLANATORY_SENTENCE_MARKERS):
+            continue                                      # the explanatory sentence itself
+        found += re.findall(r"\*\*\[FILL[^\]]*\]\*\*", line)
+    return found
+
+
 N_PATTERN = re.compile(r"\bN\s*=\s*(\d+)\b")
 P_PATTERN = re.compile(r"\bp\s*=\s*(\d+)\b")
 PERIOD_PATTERN = re.compile(r"\bperiod\s*(?:found\s*)?(?:r\s*=\s*|is\s*|was\s*)?(\d+)\b", re.I)
@@ -83,9 +100,11 @@ def check_doc(path: Path, backed: dict) -> dict:
         shown = str(path.relative_to(ROOT))
     except ValueError:
         shown = str(path)
+    real_markers = find_real_fill_markers(text)
     return {"file": shown, "claimed": claimed, "orphaned_claims": orphans,
            "version_word_mentions": version_mentions,
-           "has_fill_markers_remaining": "[FILL" in text}
+           "has_fill_markers_remaining": len(real_markers) > 0,
+           "fill_markers_found": real_markers}
 
 
 def main() -> int:
